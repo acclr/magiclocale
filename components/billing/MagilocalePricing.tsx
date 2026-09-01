@@ -4,6 +4,7 @@ import { useTranslation } from 'next-i18next';
 
 import useTeam from 'hooks/useTeam';
 import type { MagilocalePlan } from '@/domain/billing';
+import { CheckIcon } from '@heroicons/react/24/outline';
 
 type CatalogPlan = MagilocalePlan & {
   priceId: string | null;
@@ -95,7 +96,9 @@ const MagilocalePricing = ({ plans, projectId }: MagilocalePricingProps) => {
             <ul className="mb-10 mt-5 space-y-4 px-8">
               {plan.features.map((feature) => (
                 <li className="flex space-x-4" key={`${plan.id}-${feature}`}>
-                  <span className="mt-0.5 text-black">✓</span>
+                  <span className="mt-0.5 text-black">
+                    <CheckIcon className="h-3.5 w-3.5" />
+                  </span>
                   <p className="text-gray-600">{feature}</p>
                 </li>
               ))}
