@@ -1,10 +1,10 @@
-import micromatch from 'micromatch';
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 import { isPublicSdkApiPath } from './lib/api/public-sdk-paths';
 import env from './lib/env';
+import { isGlobMatch } from './lib/path-glob';
 
 // Constants for security headers
 const SECURITY_HEADERS = {
@@ -80,7 +80,7 @@ export default async function middleware(req: NextRequest) {
   // Public SDK endpoints authenticate bearer API keys in their handlers.
   if (
     isPublicSdkApiPath(pathname) ||
-    micromatch.isMatch(pathname, unAuthenticatedRoutes)
+    isGlobMatch(pathname, unAuthenticatedRoutes)
   ) {
     return NextResponse.next();
   }

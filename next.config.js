@@ -2,6 +2,20 @@
 const { i18n } = require('./next-i18next.config');
 const { withSentryConfig } = require('@sentry/nextjs');
 
+const appUrl =
+  process.env.APP_URL ||
+  process.env.NEXTAUTH_URL ||
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+
+if (appUrl) {
+  if (!process.env.APP_URL) {
+    process.env.APP_URL = appUrl;
+  }
+  if (!process.env.NEXTAUTH_URL) {
+    process.env.NEXTAUTH_URL = appUrl;
+  }
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -61,4 +75,6 @@ const sentryWebpackPluginOptions = {
   hideSourceMaps: true,
 };
 
-module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions);
+module.exports = process.env.NEXT_PUBLIC_SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;
