@@ -88,8 +88,20 @@ const useTranslationWorkspace = (
     isRefreshing: isValidating,
     isError: error,
     refresh,
-    saveManual: (input: CellInput & { value: string }) =>
-      mutateAndRefresh<Translation>(`${baseUrl}/translations/manual`, input),
+    saveManual: async (
+      input: CellInput & { value: string },
+      options?: { refresh?: boolean }
+    ) => {
+      const result = await send<Translation>(
+        `${baseUrl}/translations/manual`,
+        'POST',
+        input
+      );
+      if (options?.refresh !== false) {
+        await refresh();
+      }
+      return result;
+    },
     suggest: (input: CellInput) =>
       send<{ value: string }>(
         `${baseUrl}/translations/suggestion`,
@@ -123,6 +135,11 @@ const useTranslationWorkspace = (
         `${baseUrl}/translations/fill-missing`,
         { locale }
       ),
+    retranslate: (locales: string[], sourceLocale?: string) =>
+      mutateAndRefresh<{ filled: number; skipped: number; failed: number }>(
+        `${baseUrl}/translations/retranslate`,
+        { locales, sourceLocale }
+      ),
   };
 };
 
@@ -134,6 +151,7 @@ export type TranslationWorkspaceActions = Pick<
   | 'markReviewed'
   | 'addLocale'
   | 'fillMissing'
+  | 'retranslate'
 >;
 
 export default useTranslationWorkspace;

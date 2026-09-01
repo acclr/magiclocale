@@ -344,6 +344,119 @@ export class TranslationService {
     return { filled, skipped };
   }
 
+  /**
+   * Rewrite selected locales from the project source text.
+   * Human-owned cells are never replaced. `fromLocale` is the language the
+   * source strings are actually written in, which may differ from the
+   * project's configured source locale.
+   */
+  async retranslateLocales(
+    projectId: string,
+    locales: string[],
+    fromLocale?: string
+  ): Promise<{ filled: number; skipped: number; failed: number }> {
+    const project = await this.requireProject(projectId);
+    const targets = this.uniqueLocales(locales);
+    if (!targets.length) {
+      throw new Error('Select at least one locale to retranslate');
+    }
+    for (const locale of targets) {
+      if (!project.locales.includes(locale)) {
+        throw new Error(`Locale not found in project: ${locale}`);
+      }
+    }
+
+    const sourceLocale = (fromLocale ?? project.sourceLocale).trim();
+    if (!sourceLocale) {
+      throw new Error('Source locale is required');
+    }
+
+    const keys = await this.repository.listKeys(projectId);
+    let filled = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const key of keys) {
+      for (const locale of targets) {
+        try {
+          const result = await this.retranslateCell(
+            project.sourceLocale,
+            key,
+            locale,
+            sourceLocale
+          );
+          if (result.outcome === 'written') {
+            filled += 1;
+          } else {
+            skipped += 1;
+          }
+        } catch (error) {
+          if (!(error instanceof TranslatorError)) {
+            throw error;
+          }
+          failed += 1;
+        }
+      }
+    }
+
+    return { filled, skipped, failed };
+  }
+
+  private async retranslateCell(
+    projectSourceLocale: string,
+    key: TranslationKey,
+    locale: string,
+    fromLocale: string
+  ): Promise<AutomaticAiWriteResult> {
+    const existing = await this.repository.findTranslation(key.id, locale);
+    if (!canAutomaticAiWrite(existing)) {
+      return {
+        outcome: 'skipped',
+        reason: existing?.aiLocked ? 'ai-locked' : 'human-owned',
+        translation: existing ?? undefined,
+      };
+    }
+
+    if (locale === fromLocale) {
+      const patch =
+        locale === projectSourceLocale
+          ? asCodeTranslation(key.sourceText)
+          : asAiTranslation(key.sourceText);
+      const translation = existing
+        ? await this.repository.updateTranslation(existing.id, patch)
+        : await this.repository.createTranslation({
+            translationKeyId: key.id,
+            locale,
+            ...patch,
+          });
+      return { outcome: 'written', translation };
+    }
+
+    const value = await this.translateText({
+      key: key.key,
+      text: key.sourceText,
+      sourceLocale: fromLocale,
+      targetLocale: locale,
+    });
+    const translation = existing
+      ? await this.repository.updateTranslation(
+          existing.id,
+          asAiTranslation(value)
+        )
+      : await this.repository.createTranslation({
+          translationKeyId: key.id,
+          locale,
+          ...asAiTranslation(value),
+        });
+    return { outcome: 'written', translation };
+  }
+
+  private uniqueLocales(locales: string[]): string[] {
+    return Array.from(
+      new Set(locales.map((locale) => locale.trim()).filter(Boolean))
+    );
+  }
+
   private async writeAutomaticAiValue(
     translation: Translation,
     input: {

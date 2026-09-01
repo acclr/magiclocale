@@ -8,6 +8,7 @@ type CreateProjectInput = {
   name: string;
   sourceLocale: string;
   locales?: string[];
+  localeFormat?: 'language' | 'regional';
   billingScope?: 'team' | 'project';
 };
 

@@ -7,6 +7,9 @@ import { useState } from 'react';
 import { Button } from 'react-daisyui';
 import toast from 'react-hot-toast';
 
+import LocaleName from './LocaleName';
+import LocaleSelect from './LocaleSelect';
+
 type ProjectSettingsFormProps = {
   project: Project;
   canUpdate: boolean;
@@ -116,6 +119,12 @@ const ProjectSettingsForm = ({
               value={project.sourceLocale}
               disabled
             />
+            <InputWithLabel
+              name="localeFormat"
+              label={t('locale-format')}
+              value={t(`locale-format-${project.localeFormat}`)}
+              disabled
+            />
           </Card.Body>
           {canUpdate && (
             <Card.Footer>
@@ -149,10 +158,10 @@ const ProjectSettingsForm = ({
                 className="flex items-center justify-between rounded-md border border-base-300 px-3 py-2"
                 key={code}
               >
-                <span className="font-mono text-sm">
-                  {code}
+                <span className="flex items-center gap-2 text-sm">
+                  <LocaleName code={code} variant="full" />
                   {code === project.sourceLocale ? (
-                    <span className="badge badge-primary badge-sm ml-2">
+                    <span className="badge badge-primary badge-sm">
                       {t('source')}
                     </span>
                   ) : null}
@@ -172,20 +181,19 @@ const ProjectSettingsForm = ({
           </ul>
           {canUpdate && (
             <form className="mt-4 flex items-end gap-2" onSubmit={addLocale}>
-              <label className="form-control">
+              <label className="form-control min-w-64 flex-1">
                 <span className="label-text mb-1">{t('add-locale')}</span>
-                <input
-                  className="input input-bordered input-sm w-32"
-                  maxLength={35}
-                  onChange={(event) => setLocale(event.target.value)}
-                  placeholder="fr"
+                <LocaleSelect
+                  exclude={project.locales}
+                  format={project.localeFormat}
+                  onChange={setLocale}
                   required
                   value={locale}
                 />
               </label>
               <button
                 className="btn btn-primary btn-sm"
-                disabled={isLocaleBusy}
+                disabled={isLocaleBusy || !locale}
                 type="submit"
               >
                 {t('add')}

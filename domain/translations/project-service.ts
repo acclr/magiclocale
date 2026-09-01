@@ -1,3 +1,8 @@
+import {
+  inferLocaleFormat,
+  requireCatalogLocale,
+  type LocaleFormat,
+} from './locale-catalog';
 import type { ProjectRepository } from './repository';
 import type { LocaleCode, Project } from './types';
 
@@ -5,6 +10,7 @@ export type CreateTeamProjectInput = {
   name: string;
   sourceLocale: LocaleCode;
   locales?: LocaleCode[];
+  localeFormat?: LocaleFormat;
   billingScope?: Project['billingScope'];
 };
 
@@ -27,17 +33,23 @@ export class ProjectService {
   ): Promise<Project> {
     const normalizedTeamId = this.requireValue(teamId, 'Team');
     const name = this.requireValue(input.name, 'Project name');
-    const sourceLocale = this.requireValue(input.sourceLocale, 'Source locale');
-    const locales = this.uniqueLocales([
-      sourceLocale,
-      ...(input.locales ?? []),
-    ]);
+    const localeFormat =
+      input.localeFormat ?? inferLocaleFormat(input.sourceLocale);
+    const sourceLocale = requireCatalogLocale(
+      this.requireValue(input.sourceLocale, 'Source locale'),
+      localeFormat
+    );
+    const locales = this.uniqueLocales(
+      [sourceLocale, ...(input.locales ?? [])],
+      localeFormat
+    );
 
     return this.repository.createProject({
       teamId: normalizedTeamId,
       name,
       sourceLocale,
       locales,
+      localeFormat,
       billingScope: input.billingScope ?? 'team',
     });
   }
@@ -76,7 +88,10 @@ export class ProjectService {
     locale: LocaleCode
   ): Promise<Project> {
     const project = await this.requireTeamProject(teamId, projectId);
-    const normalizedLocale = this.requireValue(locale, 'Locale');
+    const normalizedLocale = requireCatalogLocale(
+      this.requireValue(locale, 'Locale'),
+      project.localeFormat
+    );
     if (project.locales.includes(normalizedLocale)) {
       return project;
     }
@@ -122,9 +137,16 @@ export class ProjectService {
     return normalized;
   }
 
-  private uniqueLocales(locales: LocaleCode[]): LocaleCode[] {
+  private uniqueLocales(
+    locales: LocaleCode[],
+    format: LocaleFormat
+  ): LocaleCode[] {
     return Array.from(
-      new Set(locales.map((locale) => this.requireValue(locale, 'Locale')))
+      new Set(
+        locales.map((locale) =>
+          requireCatalogLocale(this.requireValue(locale, 'Locale'), format)
+        )
+      )
     );
   }
 }

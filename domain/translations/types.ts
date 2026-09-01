@@ -1,4 +1,5 @@
 import type { BillingScope } from '../billing';
+import type { LocaleFormat } from './locale-catalog';
 
 export type TranslationSource = 'ai' | 'manual' | 'code';
 
@@ -12,6 +13,7 @@ export type Project = {
   name: string;
   sourceLocale: LocaleCode;
   locales: LocaleCode[];
+  localeFormat: LocaleFormat;
   billingScope: BillingScope;
   billingId: string | null;
 };
@@ -21,6 +23,7 @@ export type CreateProjectInput = {
   name: string;
   sourceLocale: LocaleCode;
   locales: LocaleCode[];
+  localeFormat?: LocaleFormat;
   billingScope?: BillingScope;
 };
 

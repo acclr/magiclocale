@@ -1,4 +1,7 @@
-import { ProjectService } from '../../../domain/translations';
+import {
+  LocaleCatalogError,
+  ProjectService,
+} from '../../../domain/translations';
 import {
   MemoryRepository,
   type StoreState,
@@ -13,6 +16,7 @@ function setup() {
         name: 'Website',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },
@@ -22,6 +26,7 @@ function setup() {
         name: 'Other team',
         sourceLocale: 'de',
         locales: ['de'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },
@@ -63,8 +68,48 @@ describe('ProjectService', () => {
       name: 'Mobile',
       sourceLocale: 'en',
       locales: ['en', 'sv'],
+      localeFormat: 'language',
       billingScope: 'team',
     });
+  });
+
+  it('normalizes regional tags and stores the chosen locale format', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.create('team_a', {
+        name: 'Nordics',
+        sourceLocale: 'en-gb',
+        locales: ['sv-se', 'nb-no'],
+        localeFormat: 'regional',
+      })
+    ).resolves.toMatchObject({
+      sourceLocale: 'en-GB',
+      locales: ['en-GB', 'sv-SE', 'nb-NO'],
+      localeFormat: 'regional',
+    });
+  });
+
+  it('rejects invented locale codes and format mismatches', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.create('team_a', { name: 'Bad', sourceLocale: 'dk' })
+    ).rejects.toThrow(LocaleCatalogError);
+    await expect(
+      service.create('team_a', {
+        name: 'Mixed',
+        sourceLocale: 'en',
+        locales: ['sv-SE'],
+        localeFormat: 'language',
+      })
+    ).rejects.toThrow(LocaleCatalogError);
+    await expect(
+      service.addLocale('team_a', 'project_a', 'en-GB')
+    ).rejects.toThrow(LocaleCatalogError);
+    await expect(
+      service.addLocale('team_a', 'project_a', 'FR')
+    ).resolves.toMatchObject({ locales: ['en', 'sv', 'fr'] });
   });
 
   it('moves a project between team retainer and per-project billing', async () => {

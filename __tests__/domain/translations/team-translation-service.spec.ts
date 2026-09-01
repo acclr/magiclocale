@@ -24,6 +24,7 @@ function setup() {
         name: 'Owned',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },
@@ -33,6 +34,7 @@ function setup() {
         name: 'Foreign',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },
@@ -101,5 +103,13 @@ describe('TeamTranslationService', () => {
       totalKeys: 1,
       totalPages: 1,
     });
+  });
+
+  it('rejects retranslate on a foreign project locale', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.retranslate('team-a', 'owned', ['de'])
+    ).rejects.toThrow('Locale not found in project: de');
   });
 });

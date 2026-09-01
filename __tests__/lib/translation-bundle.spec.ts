@@ -20,6 +20,7 @@ function createRepository(): MemoryRepository {
         name: 'Website',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },

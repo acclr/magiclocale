@@ -2,6 +2,7 @@ import {
   Prisma,
   PrismaClient,
   BillingScope as PrismaBillingScope,
+  LocaleFormat as PrismaLocaleFormat,
   TranslationSource as PrismaTranslationSource,
   TranslationStatus as PrismaTranslationStatus,
   type Translation as PrismaTranslation,
@@ -22,6 +23,7 @@ import type {
   TranslationStatus,
   UpdateProjectInput,
 } from '../../domain/translations/types';
+import type { LocaleFormat } from '../../domain/translations/locale-catalog';
 import type { BillingScope } from '../../domain/billing';
 import { prisma } from '../../lib/prisma';
 
@@ -74,6 +76,18 @@ function billingScopeFromPrisma(
   return scope === 'PROJECT' ? 'project' : 'team';
 }
 
+function localeFormatToPrisma(format: LocaleFormat): PrismaLocaleFormat {
+  return format === 'regional'
+    ? PrismaLocaleFormat.REGIONAL
+    : PrismaLocaleFormat.LANGUAGE;
+}
+
+function localeFormatFromPrisma(format: unknown): LocaleFormat {
+  return format === PrismaLocaleFormat.REGIONAL || format === 'REGIONAL'
+    ? 'regional'
+    : 'language';
+}
+
 function toProject(project: PrismaTranslationProject): Project {
   return {
     id: project.id,
@@ -81,6 +95,7 @@ function toProject(project: PrismaTranslationProject): Project {
     name: project.name,
     sourceLocale: project.sourceLocale,
     locales: project.locales,
+    localeFormat: localeFormatFromPrisma(project.localeFormat),
     billingScope: billingScopeFromPrisma(project.billingScope),
     billingId: project.billingId,
   };
@@ -148,6 +163,7 @@ export class PrismaTranslationRepository
           name: input.name,
           sourceLocale: input.sourceLocale,
           locales: input.locales,
+          localeFormat: localeFormatToPrisma(input.localeFormat ?? 'language'),
           billingScope: billingScopeToPrisma(input.billingScope ?? 'team'),
         },
       });
@@ -167,6 +183,8 @@ export class PrismaTranslationRepository
       }
       if (
         existing.sourceLocale !== input.sourceLocale ||
+        localeFormatFromPrisma(existing.localeFormat) !==
+          (input.localeFormat ?? 'language') ||
         !this.haveSameLocales(existing.locales, input.locales)
       ) {
         throw error;

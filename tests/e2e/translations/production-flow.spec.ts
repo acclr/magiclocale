@@ -43,6 +43,7 @@ test('preserves a manual value after source sync and serves it in the bundle', a
   await page.getByRole('link', { name: new RegExp(projectName) }).click();
 
   await page.getByLabel('Add Locale').fill('sv');
+  await page.getByRole('option', { name: /Swedish \/ Svenska/ }).click();
   await page.getByRole('button', { name: 'Add', exact: true }).click();
 
   const project = await prisma.translationProject.findFirstOrThrow({

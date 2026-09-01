@@ -74,6 +74,7 @@ jobs:
           cache: 'npm'
           check-latest: true
       - run: npm install
+      - run: npm run sdk:build
       - run: npm run check-lint
       - run: npm run check-format
       - run: npm run check-locale

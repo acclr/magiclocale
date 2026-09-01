@@ -1,5 +1,12 @@
 import { z } from 'zod';
 
+import {
+  inferLocaleFormat,
+  isCatalogLocale,
+  localeFormatError,
+  normalizeLocaleTag,
+} from '@/domain/translations/locale-catalog';
+
 const projectId = z.string().uuid();
 const keyId = z.string().uuid();
 const translationId = z.string().uuid();
@@ -13,12 +20,45 @@ const translationValue = z.string().max(10_000);
 
 export const translationProjectParamsSchema = z.object({ projectId });
 
-export const createTranslationProjectSchema = z.object({
-  name: z.string().trim().min(1).max(100),
-  sourceLocale: locale,
-  locales: z.array(locale).max(50).optional(),
-  billingScope: z.enum(['team', 'project']).optional(),
-});
+export const localeFormatSchema = z.enum(['language', 'regional']);
+
+export const createTranslationProjectSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100),
+    sourceLocale: locale,
+    locales: z.array(locale).max(50).optional(),
+    localeFormat: localeFormatSchema.optional(),
+    billingScope: z.enum(['team', 'project']).optional(),
+  })
+  .superRefine((value, ctx) => {
+    const format = value.localeFormat ?? inferLocaleFormat(value.sourceLocale);
+    if (!isCatalogLocale(value.sourceLocale, format)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: localeFormatError(format),
+        path: ['sourceLocale'],
+      });
+    }
+    value.locales?.forEach((item, index) => {
+      if (!isCatalogLocale(item, format)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: localeFormatError(format),
+          path: ['locales', index],
+        });
+      }
+    });
+  })
+  .transform((value) => {
+    const localeFormat =
+      value.localeFormat ?? inferLocaleFormat(value.sourceLocale);
+    return {
+      ...value,
+      localeFormat,
+      sourceLocale: normalizeLocaleTag(value.sourceLocale),
+      locales: value.locales?.map((item) => normalizeLocaleTag(item)),
+    };
+  });
 
 export const renameTranslationProjectSchema = z.object({
   name: z.string().trim().min(1).max(100),
@@ -44,6 +84,11 @@ export const markTranslationReviewedSchema = z.object({
 });
 
 export const translationLocaleSchema = z.object({ locale });
+
+export const retranslateLocalesSchema = z.object({
+  locales: z.array(locale).min(1).max(50),
+  sourceLocale: locale.optional(),
+});
 
 export const translationDashboardQuerySchema = z.object({
   projectId,

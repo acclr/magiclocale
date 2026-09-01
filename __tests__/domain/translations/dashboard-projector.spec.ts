@@ -16,6 +16,7 @@ describe('projectTranslationDashboard', () => {
       name: 'Website',
       sourceLocale: 'en',
       locales: ['en', 'sv', 'de'],
+      localeFormat: 'language',
       billingScope: 'team',
       billingId: null,
     };
@@ -83,6 +84,7 @@ describe('projectTranslationDashboard', () => {
       name: 'Website',
       sourceLocale: 'en',
       locales: ['en'],
+      localeFormat: 'language',
       billingScope: 'team',
       billingId: null,
     };

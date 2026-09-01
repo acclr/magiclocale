@@ -31,6 +31,11 @@ enum BillingScope {
   PROJECT
 }
 
+enum LocaleFormat {
+  LANGUAGE
+  REGIONAL
+}
+
 model Account {
   id                String  @id @default(uuid())
   userId            String
@@ -111,6 +116,7 @@ model TranslationProject {
   name            String
   sourceLocale    String
   locales         String[]     @default([])
+  localeFormat    LocaleFormat @default(LANGUAGE)
   billingScope    BillingScope @default(TEAM)
   billingId       String?
   billingProvider String?

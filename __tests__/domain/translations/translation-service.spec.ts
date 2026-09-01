@@ -13,13 +13,22 @@ import {
 } from '../../../test-support/translations-memory-repository';
 
 class RecordingTranslator implements Translator {
-  readonly calls: { text: string; targetLocale: string }[] = [];
+  readonly calls: {
+    text: string;
+    sourceLocale: string;
+    targetLocale: string;
+  }[] = [];
 
   async translate(input: {
     text: string;
+    sourceLocale: string;
     targetLocale: string;
   }): Promise<string> {
-    this.calls.push({ text: input.text, targetLocale: input.targetLocale });
+    this.calls.push({
+      text: input.text,
+      sourceLocale: input.sourceLocale,
+      targetLocale: input.targetLocale,
+    });
     return `AI(${input.targetLocale}): ${input.text}`;
   }
 }
@@ -40,6 +49,7 @@ function seedState(): StoreState {
         name: 'Acme App',
         sourceLocale: 'en',
         locales: ['en', 'sv', 'de'],
+        localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
       },
@@ -213,7 +223,7 @@ describe('TranslationService', () => {
       status: 'needs-review',
     });
     expect(translator.calls).toEqual([
-      { text: 'Save settings', targetLocale: 'de' },
+      { text: 'Save settings', sourceLocale: 'en', targetLocale: 'de' },
     ]);
   });
 
@@ -358,5 +368,58 @@ describe('TranslationService', () => {
     await expect(
       service.fillMissingForLocale(PROJECT_ID, 'de')
     ).rejects.toBeInstanceOf(TranslatorError);
+  });
+
+  it('retranslates selected locales from an override source language', async () => {
+    const { service, repository, translator } = setup();
+    await service.saveManualEdit(TR_SV_SAVE, 'Spara');
+    translator.calls.length = 0;
+
+    await expect(
+      service.retranslateLocales(PROJECT_ID, ['sv', 'de'], 'en')
+    ).resolves.toEqual({
+      filled: 3,
+      skipped: 1,
+      failed: 0,
+    });
+    expect(await repository.getTranslation(TR_SV_SAVE)).toMatchObject({
+      value: 'Spara',
+      source: 'manual',
+    });
+    expect(await repository.getTranslation(TR_DE_SAVE)).toMatchObject({
+      value: 'AI(de): Save changes',
+      source: 'ai',
+    });
+    expect(await repository.findTranslation(KEY_CANCEL, 'de')).toMatchObject({
+      value: 'AI(de): Cancel',
+      source: 'ai',
+    });
+    expect(translator.calls).toEqual([
+      { text: 'Save changes', sourceLocale: 'en', targetLocale: 'de' },
+      { text: 'Cancel', sourceLocale: 'en', targetLocale: 'sv' },
+      { text: 'Cancel', sourceLocale: 'en', targetLocale: 'de' },
+    ]);
+  });
+
+  it('can rewrite the source column when the source strings are another language', async () => {
+    const { service, repository, translator } = setup();
+    translator.calls.length = 0;
+
+    await expect(
+      service.retranslateLocales(PROJECT_ID, ['en'], 'sv')
+    ).resolves.toEqual({
+      filled: 2,
+      skipped: 0,
+      failed: 0,
+    });
+    expect(await repository.getTranslation('tr_en_save')).toMatchObject({
+      value: 'AI(en): Save changes',
+      source: 'ai',
+      status: 'ai',
+    });
+    expect(translator.calls).toEqual([
+      { text: 'Save changes', sourceLocale: 'sv', targetLocale: 'en' },
+      { text: 'Cancel', sourceLocale: 'sv', targetLocale: 'en' },
+    ]);
   });
 });

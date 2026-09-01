@@ -97,6 +97,23 @@ export class TeamTranslationService {
     return this.translationService.fillMissingForLocale(project.id, locale);
   }
 
+  async retranslate(
+    teamId: string,
+    projectId: string,
+    locales: string[],
+    sourceLocale?: string
+  ): Promise<{ filled: number; skipped: number; failed: number }> {
+    const project = await this.projectService.get(teamId, projectId);
+    for (const locale of locales) {
+      this.requireProjectLocale(project, locale);
+    }
+    return this.translationService.retranslateLocales(
+      project.id,
+      locales,
+      sourceLocale
+    );
+  }
+
   private async requireCell(
     teamId: string,
     projectId: string,

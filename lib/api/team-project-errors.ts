@@ -1,5 +1,6 @@
 import { Prisma } from '@prisma/client';
 
+import { LocaleCatalogError } from '../../domain/translations';
 import { ApiError } from '../errors';
 
 export function normalizeTeamProjectApiError(error: unknown): {
@@ -8,6 +9,9 @@ export function normalizeTeamProjectApiError(error: unknown): {
 } {
   if (error instanceof ApiError) {
     return { status: error.status, message: error.message };
+  }
+  if (error instanceof LocaleCatalogError) {
+    return { status: 422, message: error.message };
   }
   if (
     error instanceof Prisma.PrismaClientKnownRequestError &&

@@ -36,6 +36,7 @@ export class MemoryRepository
       name: input.name,
       sourceLocale: input.sourceLocale,
       locales: input.locales,
+      localeFormat: input.localeFormat ?? 'language',
       billingScope: input.billingScope ?? 'team',
       billingId: null,
     };

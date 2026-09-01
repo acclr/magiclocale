@@ -1,4 +1,5 @@
-import type { Project } from '../../domain/translations';
+import type { LocaleFormat, Project } from '../../domain/translations';
+import { defaultLocaleForFormat } from '../../domain/translations';
 import useTeamProjects from '../../hooks/useTeamProjects';
 import Link from 'next/link';
 import { useTranslation } from 'next-i18next';
@@ -6,6 +7,8 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
+import LocaleName from './LocaleName';
+import LocaleSelect from './LocaleSelect';
 
 type ProjectListProps = {
   slug: string;
@@ -17,7 +20,10 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
   const { projects, isLoading, isError, createProject } = useTeamProjects(slug);
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
-  const [sourceLocale, setSourceLocale] = useState('en');
+  const [localeFormat, setLocaleFormat] = useState<LocaleFormat>('language');
+  const [sourceLocale, setSourceLocale] = useState(
+    defaultLocaleForFormat('language')
+  );
   const [billingScope, setBillingScope] = useState<'team' | 'project'>('team');
   const [isCreating, setIsCreating] = useState(false);
 
@@ -25,7 +31,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
     event.preventDefault();
     setIsCreating(true);
     try {
-      await createProject({ name, sourceLocale, billingScope });
+      await createProject({ name, sourceLocale, localeFormat, billingScope });
       setName('');
       setShowCreate(false);
       toast.success('Project created');
@@ -87,13 +93,48 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
                 value={name}
               />
             </label>
-            <label className="form-control">
+            <label className="form-control md:col-span-2">
+              <span className="label-text mb-2">{t('locale-format')}</span>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(['language', 'regional'] as const).map((format) => (
+                  <label
+                    className={`flex cursor-pointer gap-3 rounded-lg border px-3 py-2 ${
+                      localeFormat === format
+                        ? 'border-primary bg-primary/5'
+                        : 'border-base-300'
+                    }`}
+                    key={format}
+                  >
+                    <input
+                      checked={localeFormat === format}
+                      className="radio radio-primary radio-sm mt-1"
+                      name="localeFormat"
+                      onChange={() => {
+                        setLocaleFormat(format);
+                        setSourceLocale(defaultLocaleForFormat(format));
+                      }}
+                      type="radio"
+                      value={format}
+                    />
+                    <span>
+                      <span className="block text-sm font-medium">
+                        {t(`locale-format-${format}`)}
+                      </span>
+                      <span className="block text-xs text-base-content/60">
+                        {t(`locale-format-${format}-help`)}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </label>
+            <label className="form-control md:col-span-2">
               <span className="label-text mb-2">{t('source-locale')}</span>
-              <input
-                className="input input-bordered"
-                maxLength={35}
-                onChange={(event) => setSourceLocale(event.target.value)}
+              <LocaleSelect
+                format={localeFormat}
+                onChange={setSourceLocale}
                 required
+                size="md"
                 value={sourceLocale}
               />
             </label>
@@ -112,7 +153,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
             </label>
             <button
               className="btn btn-primary md:col-span-2"
-              disabled={isCreating}
+              disabled={isCreating || !sourceLocale}
               type="submit"
             >
               {isCreating ? t('creating') : t('create')}
@@ -132,17 +173,20 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
               <div className="card-body">
                 <h2 className="card-title text-lg">{project.name}</h2>
                 <p className="text-sm text-base-content/60">
-                  {t('source-locale')}: {project.sourceLocale}
+                  {t('source-locale')}:{' '}
+                  <LocaleName code={project.sourceLocale} variant="full" />
                 </p>
                 <p className="mt-1 text-xs text-base-content/50">
+                  {t(`locale-format-${project.localeFormat}`)}
+                  {' · '}
                   {project.billingScope === 'project'
                     ? t('billing-scope-project')
                     : t('billing-scope-team')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {project.locales.map((locale) => (
-                    <span className="badge badge-ghost" key={locale}>
-                      {locale}
+                    <span className="badge badge-ghost gap-1" key={locale}>
+                      <LocaleName code={locale} />
                     </span>
                   ))}
                 </div>
