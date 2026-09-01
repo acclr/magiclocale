@@ -17,10 +17,15 @@ export const createTranslationProjectSchema = z.object({
   name: z.string().trim().min(1).max(100),
   sourceLocale: locale,
   locales: z.array(locale).max(50).optional(),
+  billingScope: z.enum(['team', 'project']).optional(),
 });
 
 export const renameTranslationProjectSchema = z.object({
   name: z.string().trim().min(1).max(100),
+});
+
+export const projectBillingScopeSchema = z.object({
+  billingScope: z.enum(['team', 'project']),
 });
 
 export const translationCellSchema = z.object({
@@ -39,3 +44,11 @@ export const markTranslationReviewedSchema = z.object({
 });
 
 export const translationLocaleSchema = z.object({ locale });
+
+export const translationDashboardQuerySchema = z.object({
+  projectId,
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(100).optional(),
+  filter: z.enum(['all', 'ai', 'manual', 'needs-review', 'missing']).optional(),
+  search: z.string().trim().max(200).optional(),
+});

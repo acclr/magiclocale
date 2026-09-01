@@ -8,6 +8,7 @@ type CreateProjectInput = {
   name: string;
   sourceLocale: string;
   locales?: string[];
+  billingScope?: 'team' | 'project';
 };
 
 async function createProjectRequest(

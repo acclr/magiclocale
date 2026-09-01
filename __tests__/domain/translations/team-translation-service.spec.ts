@@ -24,6 +24,8 @@ function setup() {
         name: 'Owned',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        billingScope: 'team',
+        billingId: null,
       },
       {
         id: 'foreign',
@@ -31,6 +33,8 @@ function setup() {
         name: 'Foreign',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        billingScope: 'team',
+        billingId: null,
       },
     ],
     keys: [
@@ -80,5 +84,22 @@ describe('TeamTranslationService', () => {
     await expect(
       repository.findTranslation('owned-key', 'sv')
     ).resolves.toMatchObject({ value: 'Spara' });
+  });
+
+  it('paginates the dashboard for the owning team', async () => {
+    const { service } = setup();
+
+    const dashboard = await service.dashboard('team-a', 'owned', {
+      page: 1,
+      pageSize: 1,
+    });
+
+    expect(dashboard.rows).toHaveLength(1);
+    expect(dashboard.pagination).toMatchObject({
+      page: 1,
+      pageSize: 1,
+      totalKeys: 1,
+      totalPages: 1,
+    });
   });
 });

@@ -117,6 +117,11 @@ export const resendEmailToken = z.object({
 export const checkoutSessionSchema = z.object({
   price: priceId,
   quantity: quantity.optional(),
+  projectId: z.string().uuid().optional(),
+});
+
+export const billingPortalSchema = z.object({
+  projectId: z.string().uuid().optional(),
 });
 
 export const updateMemberSchema = z.object({

@@ -13,6 +13,8 @@ function setup() {
         name: 'Website',
         sourceLocale: 'en',
         locales: ['en', 'sv'],
+        billingScope: 'team',
+        billingId: null,
       },
       {
         id: 'project_b',
@@ -20,6 +22,8 @@ function setup() {
         name: 'Other team',
         sourceLocale: 'de',
         locales: ['de'],
+        billingScope: 'team',
+        billingId: null,
       },
     ],
     keys: [],
@@ -59,7 +63,19 @@ describe('ProjectService', () => {
       name: 'Mobile',
       sourceLocale: 'en',
       locales: ['en', 'sv'],
+      billingScope: 'team',
     });
+  });
+
+  it('moves a project between team retainer and per-project billing', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.setBillingScope('team_a', 'project_a', 'project')
+    ).resolves.toMatchObject({ billingScope: 'project' });
+    await expect(
+      service.setBillingScope('team_b', 'project_a', 'team')
+    ).rejects.toThrow('Project not found: project_a');
   });
 
   it('renames and deletes only within the owning team', async () => {

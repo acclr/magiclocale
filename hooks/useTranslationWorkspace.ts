@@ -4,6 +4,7 @@ import type {
   Project,
   Translation,
   TranslationDashboard,
+  TranslationFilter,
 } from '../domain/translations';
 import type { ApiResponse } from 'types';
 import useSWR from 'swr';
@@ -11,6 +12,13 @@ import useSWR from 'swr';
 type CellInput = {
   keyId: string;
   locale: string;
+};
+
+export type WorkspaceQuery = {
+  page?: number;
+  pageSize?: number;
+  filter?: TranslationFilter;
+  search?: string;
 };
 
 async function send<T>(url: string, method: string, body?: object): Promise<T> {
@@ -31,12 +39,34 @@ async function send<T>(url: string, method: string, body?: object): Promise<T> {
   return json.data;
 }
 
-const useTranslationWorkspace = (slug: string, projectId: string) => {
+const useTranslationWorkspace = (
+  slug: string,
+  projectId: string,
+  query: WorkspaceQuery = {}
+) => {
   const baseUrl = `/api/teams/${slug}/projects/${projectId}`;
-  const dashboardUrl = `${baseUrl}/dashboard`;
+  const params = new URLSearchParams();
+  if (query.page) {
+    params.set('page', String(query.page));
+  }
+  if (query.pageSize) {
+    params.set('pageSize', String(query.pageSize));
+  }
+  if (query.filter && query.filter !== 'all') {
+    params.set('filter', query.filter);
+  }
+  if (query.search) {
+    params.set('search', query.search);
+  }
+  const queryString = params.toString();
+  const dashboardUrl = `${baseUrl}/dashboard${
+    queryString ? `?${queryString}` : ''
+  }`;
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     ApiResponse<TranslationDashboard>
-  >(slug && projectId ? dashboardUrl : null, fetcher);
+  >(slug && projectId ? dashboardUrl : null, fetcher, {
+    keepPreviousData: true,
+  });
 
   const refresh = async () => {
     await mutate();

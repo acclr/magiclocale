@@ -36,6 +36,7 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
                 ? t('plan-language-limit', { count: entitlement.maxLocales })
                 : t('plan-language-unlimited')}
             </p>
+            <p className="text-base-content/60">{t('team-retainer-settings-help')}</p>
             <Link
               className="btn btn-outline btn-sm mt-2"
               href={`/teams/${slug}/billing`}

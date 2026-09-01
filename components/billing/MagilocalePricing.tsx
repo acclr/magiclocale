@@ -12,9 +12,10 @@ type CatalogPlan = MagilocalePlan & {
 
 type MagilocalePricingProps = {
   plans: CatalogPlan[];
+  projectId?: string;
 };
 
-const MagilocalePricing = ({ plans }: MagilocalePricingProps) => {
+const MagilocalePricing = ({ plans, projectId }: MagilocalePricingProps) => {
   const { team } = useTeam();
   const { t } = useTranslation('common');
 
@@ -24,7 +25,11 @@ const MagilocalePricing = ({ plans }: MagilocalePricingProps) => {
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ price: priceId, quantity: 1 }),
+        body: JSON.stringify({
+          price: priceId,
+          quantity: 1,
+          ...(projectId ? { projectId } : {}),
+        }),
       }
     );
     const data = await res.json();

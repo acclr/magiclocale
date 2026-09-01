@@ -18,13 +18,14 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
   const [showCreate, setShowCreate] = useState(false);
   const [name, setName] = useState('');
   const [sourceLocale, setSourceLocale] = useState('en');
+  const [billingScope, setBillingScope] = useState<'team' | 'project'>('team');
   const [isCreating, setIsCreating] = useState(false);
 
   const submit = async (event: React.FormEvent) => {
     event.preventDefault();
     setIsCreating(true);
     try {
-      await createProject({ name, sourceLocale });
+      await createProject({ name, sourceLocale, billingScope });
       setName('');
       setShowCreate(false);
       toast.success('Project created');
@@ -72,8 +73,8 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           className="card border border-base-300 bg-base-100"
           onSubmit={submit}
         >
-          <div className="card-body grid gap-4 md:grid-cols-[1fr_12rem_auto] md:items-end">
-            <label className="form-control">
+          <div className="card-body grid gap-4 md:grid-cols-2 md:items-end">
+            <label className="form-control md:col-span-2">
               <span className="label-text mb-2">
                 {t('translation-project-name')}
               </span>
@@ -96,8 +97,21 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
                 value={sourceLocale}
               />
             </label>
+            <label className="form-control">
+              <span className="label-text mb-2">{t('project-billing')}</span>
+              <select
+                className="select select-bordered"
+                onChange={(event) =>
+                  setBillingScope(event.target.value as 'team' | 'project')
+                }
+                value={billingScope}
+              >
+                <option value="team">{t('billing-scope-team')}</option>
+                <option value="project">{t('billing-scope-project')}</option>
+              </select>
+            </label>
             <button
-              className="btn btn-primary"
+              className="btn btn-primary md:col-span-2"
               disabled={isCreating}
               type="submit"
             >
@@ -119,6 +133,11 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
                 <h2 className="card-title text-lg">{project.name}</h2>
                 <p className="text-sm text-base-content/60">
                   {t('source-locale')}: {project.sourceLocale}
+                </p>
+                <p className="mt-1 text-xs text-base-content/50">
+                  {project.billingScope === 'project'
+                    ? t('billing-scope-project')
+                    : t('billing-scope-team')}
                 </p>
                 <div className="mt-2 flex flex-wrap gap-2">
                   {project.locales.map((locale) => (

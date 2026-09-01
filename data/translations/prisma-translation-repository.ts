@@ -1,6 +1,7 @@
 import {
   Prisma,
   PrismaClient,
+  BillingScope as PrismaBillingScope,
   TranslationSource as PrismaTranslationSource,
   TranslationStatus as PrismaTranslationStatus,
   type Translation as PrismaTranslation,
@@ -21,6 +22,7 @@ import type {
   TranslationStatus,
   UpdateProjectInput,
 } from '../../domain/translations/types';
+import type { BillingScope } from '../../domain/billing';
 import { prisma } from '../../lib/prisma';
 
 const MAX_TRANSACTION_ATTEMPTS = 3;
@@ -62,6 +64,16 @@ function statusFromPrisma(status: PrismaTranslationStatus): TranslationStatus {
   }
 }
 
+function billingScopeToPrisma(scope: BillingScope): PrismaBillingScope {
+  return (scope === 'project' ? 'PROJECT' : 'TEAM') as PrismaBillingScope;
+}
+
+function billingScopeFromPrisma(
+  scope: PrismaBillingScope | string | null | undefined
+): BillingScope {
+  return scope === 'PROJECT' ? 'project' : 'team';
+}
+
 function toProject(project: PrismaTranslationProject): Project {
   return {
     id: project.id,
@@ -69,6 +81,8 @@ function toProject(project: PrismaTranslationProject): Project {
     name: project.name,
     sourceLocale: project.sourceLocale,
     locales: project.locales,
+    billingScope: billingScopeFromPrisma(project.billingScope),
+    billingId: project.billingId,
   };
 }
 
@@ -129,7 +143,13 @@ export class PrismaTranslationRepository
   async createProject(input: CreateProjectInput): Promise<Project> {
     try {
       const project = await this.client.translationProject.create({
-        data: input,
+        data: {
+          teamId: input.teamId,
+          name: input.name,
+          sourceLocale: input.sourceLocale,
+          locales: input.locales,
+          billingScope: billingScopeToPrisma(input.billingScope ?? 'team'),
+        },
       });
       return toProject(project);
     } catch (error) {
@@ -158,7 +178,18 @@ export class PrismaTranslationRepository
   async updateProject(id: string, patch: UpdateProjectInput): Promise<Project> {
     const project = await this.client.translationProject.update({
       where: { id },
-      data: patch,
+      data: {
+        ...(patch.name !== undefined ? { name: patch.name } : {}),
+        ...(patch.billingScope !== undefined
+          ? { billingScope: billingScopeToPrisma(patch.billingScope) }
+          : {}),
+        ...(patch.billingId !== undefined
+          ? { billingId: patch.billingId }
+          : {}),
+        ...(patch.billingProvider !== undefined
+          ? { billingProvider: patch.billingProvider }
+          : {}),
+      },
     });
     return toProject(project);
   }

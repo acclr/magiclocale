@@ -1,5 +1,5 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
-import { getTeamEntitlement } from '@/lib/billing/entitlement';
+import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import { ApiError } from '@/lib/errors';
 import {
   getProjectService,
@@ -27,7 +27,10 @@ export default createTeamProjectApiHandler({
         projectId
       );
       if (!project.locales.includes(locale)) {
-        const entitlement = await getTeamEntitlement(teamMember.team.billingId);
+        const entitlement = await getProjectEntitlement(
+          project,
+          teamMember.team.billingId
+        );
         if (
           !canAddProjectLocale(project.locales.length, entitlement.maxLocales)
         ) {

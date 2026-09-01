@@ -40,6 +40,8 @@ function seedState(): StoreState {
         name: 'Acme App',
         sourceLocale: 'en',
         locales: ['en', 'sv', 'de'],
+        billingScope: 'team',
+        billingId: null,
       },
     ],
     keys: [

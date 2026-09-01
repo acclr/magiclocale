@@ -13,6 +13,7 @@ import { Error, Loading } from '@/components/shared';
 import LinkToPortal from '@/components/billing/LinkToPortal';
 import MagilocalePricing from '@/components/billing/MagilocalePricing';
 import MagilocaleSubscriptions from '@/components/billing/MagilocaleSubscriptions';
+import BillingProjectList from '@/components/billing/BillingProjectList';
 
 const Payments = ({ teamFeatures }) => {
   const { t } = useTranslation('common');
@@ -37,6 +38,7 @@ const Payments = ({ teamFeatures }) => {
 
   const plans = data?.data?.plans || [];
   const subscriptions = data?.data?.subscriptions || [];
+  const projects = data?.data?.projects || [];
 
   return (
     <>
@@ -48,6 +50,10 @@ const Payments = ({ teamFeatures }) => {
             teamFeatures={teamFeatures}
           />
 
+          <p className="mb-4 max-w-3xl text-sm text-base-content/70">
+            {t('team-billing-intro')}
+          </p>
+
           <div className="flex flex-col gap-6 md:flex-row">
             <LinkToPortal team={team} />
             <Help />
@@ -57,7 +63,17 @@ const Payments = ({ teamFeatures }) => {
             <MagilocaleSubscriptions subscriptions={subscriptions} />
           </div>
 
+          <h2 className="card-title mb-2 text-xl font-medium leading-none tracking-tight">
+            {t('team-retainer-plans')}
+          </h2>
+          <p className="mb-4 text-sm text-base-content/60">
+            {t('team-retainer-plans-help')}
+          </p>
           <MagilocalePricing plans={plans} />
+
+          <div className="py-6">
+            <BillingProjectList projects={projects} slug={team.slug} />
+          </div>
         </>
       )}
     </>

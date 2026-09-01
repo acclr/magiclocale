@@ -30,7 +30,15 @@ export class MemoryRepository
   }
 
   async createProject(input: CreateProjectInput): Promise<Project> {
-    const project = { id: this.id('project'), ...input };
+    const project = {
+      id: this.id('project'),
+      teamId: input.teamId,
+      name: input.name,
+      sourceLocale: input.sourceLocale,
+      locales: input.locales,
+      billingScope: input.billingScope ?? 'team',
+      billingId: null,
+    };
     this.state.projects.push(project);
     return project;
   }

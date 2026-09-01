@@ -33,7 +33,44 @@ export type TranslationDashboard = {
   locales: string[];
   rows: DashboardRow[];
   counts: Record<TranslationFilter, number>;
+  pagination: DashboardPagination;
 };
+
+export type DashboardPagination = {
+  page: number;
+  pageSize: number;
+  totalKeys: number;
+  totalPages: number;
+};
+
+export type DashboardQuery = {
+  page: number;
+  pageSize: number;
+  filter: TranslationFilter;
+  search: string;
+};
+
+export const DEFAULT_DASHBOARD_PAGE_SIZE = 50;
+export const MIN_DASHBOARD_PAGE_SIZE = 1;
+export const MAX_DASHBOARD_PAGE_SIZE = 100;
+
+export function normalizeDashboardQuery(
+  input: Partial<DashboardQuery> = {}
+): DashboardQuery {
+  const pageSize = Math.min(
+    MAX_DASHBOARD_PAGE_SIZE,
+    Math.max(
+      MIN_DASHBOARD_PAGE_SIZE,
+      input.pageSize ?? DEFAULT_DASHBOARD_PAGE_SIZE
+    )
+  );
+  return {
+    page: Math.max(1, input.page ?? 1),
+    pageSize,
+    filter: input.filter ?? 'all',
+    search: (input.search ?? '').trim().toLocaleLowerCase(),
+  };
+}
 
 export function projectTranslationDashboard(
   project: Project,
@@ -102,5 +139,44 @@ export function projectTranslationDashboard(
     };
   });
 
-  return { project, locales: project.locales, rows, counts };
+  return {
+    project,
+    locales: project.locales,
+    rows,
+    counts,
+    pagination: {
+      page: 1,
+      pageSize: Math.max(rows.length, 1),
+      totalKeys: rows.length,
+      totalPages: 1,
+    },
+  };
+}
+
+export function paginateTranslationDashboard(
+  dashboard: TranslationDashboard,
+  queryInput: Partial<DashboardQuery> = {}
+): TranslationDashboard {
+  const query = normalizeDashboardQuery(queryInput);
+  const filtered = dashboard.rows.filter((row) => {
+    if (query.filter !== 'all' && !row.statuses.includes(query.filter)) {
+      return false;
+    }
+    return !query.search || row.searchText.includes(query.search);
+  });
+  const totalKeys = filtered.length;
+  const totalPages = Math.max(1, Math.ceil(totalKeys / query.pageSize));
+  const page = Math.min(query.page, totalPages);
+  const start = (page - 1) * query.pageSize;
+
+  return {
+    ...dashboard,
+    rows: filtered.slice(start, start + query.pageSize),
+    pagination: {
+      page,
+      pageSize: query.pageSize,
+      totalKeys,
+      totalPages,
+    },
+  };
 }

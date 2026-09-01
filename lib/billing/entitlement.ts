@@ -1,10 +1,13 @@
 import 'server-only';
 
 import {
-  MAGILOCALE_PLANS,
+  customerIdForScope,
+  resolveMagilocalePlan,
+  type BillingScope,
   type MagilocaleEntitlement,
   type MagilocalePlanId,
 } from '../../domain/billing';
+import type { Project } from '../../domain/translations';
 import { prisma } from '../prisma';
 
 export function getMagilocaleStripePriceIds(): Record<
@@ -28,8 +31,9 @@ export function planIdForPriceId(priceId: string): MagilocalePlanId | null {
   return null;
 }
 
-export async function getTeamEntitlement(
-  billingId: string | null
+export async function getEntitlementForCustomer(
+  billingId: string | null | undefined,
+  billingScope: BillingScope
 ): Promise<MagilocaleEntitlement> {
   const subscriptions = billingId
     ? await prisma.subscription.findMany({
@@ -37,36 +41,30 @@ export async function getTeamEntitlement(
       })
     : [];
   const now = Date.now();
-  const live = subscriptions.filter(
-    (subscription) => subscription.endDate.getTime() > now
-  );
+  const livePriceIds = subscriptions
+    .filter((subscription) => subscription.endDate.getTime() > now)
+    .map((subscription) => subscription.priceId);
 
-  const hasEnterprise = live.some(
-    (subscription) => planIdForPriceId(subscription.priceId) === 'enterprise'
+  return resolveMagilocalePlan(
+    livePriceIds,
+    getMagilocaleStripePriceIds(),
+    billingScope
   );
-  const starter = live.find(
-    (subscription) => planIdForPriceId(subscription.priceId) === 'starter'
+}
+
+export async function getTeamEntitlement(
+  billingId: string | null
+): Promise<MagilocaleEntitlement> {
+  return getEntitlementForCustomer(billingId, 'team');
+}
+
+export async function getProjectEntitlement(
+  project: Pick<Project, 'billingScope' | 'billingId'>,
+  teamBillingId: string | null
+): Promise<MagilocaleEntitlement> {
+  const billingScope = project.billingScope ?? 'team';
+  return getEntitlementForCustomer(
+    customerIdForScope(billingScope, teamBillingId, project.billingId),
+    billingScope
   );
-
-  if (hasEnterprise) {
-    return {
-      planId: 'enterprise',
-      plan: MAGILOCALE_PLANS.enterprise,
-      subscribed: true,
-      maxLocales: MAGILOCALE_PLANS.enterprise.maxLocales,
-      priceId:
-        live.find(
-          (subscription) =>
-            planIdForPriceId(subscription.priceId) === 'enterprise'
-        )?.priceId ?? null,
-    };
-  }
-
-  return {
-    planId: 'starter',
-    plan: MAGILOCALE_PLANS.starter,
-    subscribed: Boolean(starter),
-    maxLocales: MAGILOCALE_PLANS.starter.maxLocales,
-    priceId: starter?.priceId ?? null,
-  };
 }

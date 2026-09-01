@@ -26,6 +26,11 @@ enum TranslationStatus {
   NEEDS_REVIEW @map("needs-review")
 }
 
+enum BillingScope {
+  TEAM
+  PROJECT
+}
+
 model Account {
   id                String  @id @default(uuid())
   userId            String
@@ -101,19 +106,23 @@ model Team {
 }
 
 model TranslationProject {
-  id           String   @id @default(uuid())
-  teamId       String
-  name         String
-  sourceLocale String
-  locales      String[] @default([])
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id              String       @id @default(uuid())
+  teamId          String
+  name            String
+  sourceLocale    String
+  locales         String[]     @default([])
+  billingScope    BillingScope @default(TEAM)
+  billingId       String?
+  billingProvider String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   team Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
   keys TranslationKey[]
 
   @@unique([teamId, name])
   @@index([teamId])
+  @@index([billingId])
 }
 
 model TranslationKey {

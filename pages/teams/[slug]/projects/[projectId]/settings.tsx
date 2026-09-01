@@ -1,15 +1,19 @@
 import ProjectNav from '@/components/translations/ProjectNav';
 import ProjectSettingsForm from '@/components/translations/ProjectSettingsForm';
+import ProjectBillingSettings from '@/components/translations/ProjectBillingSettings';
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
+import env from '@/lib/env';
 import useCanAccess from 'hooks/useCanAccess';
 import useTranslationWorkspace from 'hooks/useTranslationWorkspace';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { useTranslation } from 'next-i18next';
 import { useRouter } from 'next/router';
-import type { NextPageWithLayout } from 'types';
+import type { NextPageWithLayout, TeamFeature } from 'types';
 
-const ProjectSettingsPage: NextPageWithLayout = () => {
+const ProjectSettingsPage: NextPageWithLayout<{
+  teamFeatures: TeamFeature;
+}> = ({ teamFeatures }) => {
   const { t } = useTranslation('common');
   const { query } = useRouter();
   const { canAccess } = useCanAccess();
@@ -46,6 +50,13 @@ const ProjectSettingsPage: NextPageWithLayout = () => {
         onRename={workspace.renameProject}
         project={workspace.dashboard.project}
       />
+      {teamFeatures.payments && (
+        <ProjectBillingSettings
+          onScopeChanged={workspace.refresh}
+          projectId={projectId}
+          slug={slug}
+        />
+      )}
     </div>
   );
 };
@@ -56,6 +67,7 @@ export async function getServerSideProps({
   return {
     props: {
       ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
+      teamFeatures: env.teamFeatures,
     },
   };
 }

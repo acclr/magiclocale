@@ -4,7 +4,7 @@ import type {
 } from '../../domain/translations';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useTranslation } from 'next-i18next';
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
@@ -17,6 +17,8 @@ type TranslationWorkspaceProps = {
   canEdit: boolean;
   canUpdateProject: boolean;
 };
+
+const PAGE_SIZE_OPTIONS = [25, 50, 100];
 
 const TranslationWorkspace = ({
   slug,
@@ -35,9 +37,17 @@ const TranslationWorkspace = ({
     },
     { id: 'missing', label: t('translation-filter-missing') },
   ];
-  const workspace = useTranslationWorkspace(slug, projectId);
   const [filter, setFilter] = useState<TranslationFilter>('all');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const workspace = useTranslationWorkspace(slug, projectId, {
+    page,
+    pageSize,
+    filter,
+    search: debouncedSearch,
+  });
   const [selected, setSelected] = useState<{
     keyId: string;
     locale: string;
@@ -46,18 +56,19 @@ const TranslationWorkspace = ({
   const [fillLocale, setFillLocale] = useState('');
   const [isRunning, setIsRunning] = useState(false);
   const dashboard = workspace.dashboard;
+  const rows = dashboard?.rows ?? [];
+  const pagination = dashboard?.pagination;
 
-  const rows = useMemo(() => {
-    if (!dashboard) {
-      return [];
-    }
-    const query = search.trim().toLocaleLowerCase();
-    return dashboard.rows.filter(
-      (row) =>
-        (filter === 'all' || row.statuses.includes(filter)) &&
-        (!query || row.searchText.includes(query))
-    );
-  }, [dashboard, filter, search]);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      setDebouncedSearch(search.trim());
+    }, 300);
+    return () => window.clearTimeout(timeout);
+  }, [search]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, filter, pageSize]);
 
   const selectedRow = selected
     ? dashboard?.rows.find((row) => row.keyId === selected.keyId)
@@ -208,7 +219,10 @@ const TranslationWorkspace = ({
               filter === item.id ? 'tab-active' : ''
             }`}
             key={item.id}
-            onClick={() => setFilter(item.id)}
+            onClick={() => {
+              setFilter(item.id);
+              setPage(1);
+            }}
             type="button"
           >
             {item.label}
@@ -288,6 +302,68 @@ const TranslationWorkspace = ({
           </tbody>
         </table>
       </div>
+
+      {pagination && pagination.totalKeys > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-base-content/60">
+            {t('translation-pagination-summary', {
+              from: (pagination.page - 1) * pagination.pageSize + 1,
+              to: Math.min(
+                pagination.page * pagination.pageSize,
+                pagination.totalKeys
+              ),
+              total: pagination.totalKeys,
+            })}
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="flex items-center gap-2 text-sm">
+              <span>{t('rows-per-page')}</span>
+              <select
+                className="select select-bordered select-sm"
+                onChange={(event) => {
+                  setPageSize(Number(event.target.value));
+                  setPage(1);
+                }}
+                value={pageSize}
+              >
+                {PAGE_SIZE_OPTIONS.map((size) => (
+                  <option key={size} value={size}>
+                    {size}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <div className="join">
+              <button
+                className="btn btn-sm join-item"
+                disabled={pagination.page <= 1}
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                type="button"
+              >
+                {t('previous')}
+              </button>
+              <span className="btn btn-sm join-item pointer-events-none">
+                {t('page-of', {
+                  page: pagination.page,
+                  pages: pagination.totalPages,
+                })}
+              </span>
+              <button
+                className="btn btn-sm join-item"
+                disabled={pagination.page >= pagination.totalPages}
+                onClick={() =>
+                  setPage((current) =>
+                    Math.min(pagination.totalPages, current + 1)
+                  )
+                }
+                type="button"
+              >
+                {t('next')}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {selected && selectedRow && (
         <TranslationDrawer

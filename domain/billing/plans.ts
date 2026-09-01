@@ -1,5 +1,7 @@
 export type MagilocalePlanId = 'starter' | 'enterprise';
 
+export type BillingScope = 'team' | 'project';
+
 export type MagilocalePlan = {
   id: MagilocalePlanId;
   name: string;
@@ -20,12 +22,12 @@ export const MAGILOCALE_PLANS: Record<MagilocalePlanId, MagilocalePlan> = {
     interval: 'month',
     maxLocales: STARTER_MAX_LOCALES,
     description:
-      '$5/month for standard usage. Includes up to 4 languages per project.',
+      '$5/month for standard usage. Includes up to 4 languages per billed project.',
     features: [
       'Automatic key discovery',
       'AI fill and human review',
-      'Up to 4 languages per project',
-      'Team dashboard and API keys',
+      'Up to 4 languages per billed project',
+      'Team retainer or per-project billing',
     ],
   },
   enterprise: {
@@ -38,7 +40,7 @@ export const MAGILOCALE_PLANS: Record<MagilocalePlanId, MagilocalePlan> = {
       '$50/month when a project needs 5 or more languages, with higher usage.',
     features: [
       'Everything in Starter',
-      '5+ languages per project',
+      '5+ languages on the billed project or retainer',
       'Unlimited locales',
       'Priority translation usage',
     ],
@@ -68,4 +70,51 @@ export type MagilocaleEntitlement = {
   subscribed: boolean;
   maxLocales: number | null;
   priceId: string | null;
+  billingScope: BillingScope;
 };
+
+export function customerIdForScope(
+  billingScope: BillingScope,
+  teamBillingId: string | null | undefined,
+  projectBillingId: string | null | undefined
+): string | null {
+  if (billingScope === 'project') {
+    return projectBillingId ?? null;
+  }
+  return teamBillingId ?? null;
+}
+
+export function resolveMagilocalePlan(
+  livePriceIds: string[],
+  catalogPriceIds: Record<MagilocalePlanId, string>,
+  billingScope: BillingScope
+): MagilocaleEntitlement {
+  const enterprisePriceId = catalogPriceIds.enterprise;
+  const starterPriceId = catalogPriceIds.starter;
+  const hasEnterprise = Boolean(
+    enterprisePriceId && livePriceIds.includes(enterprisePriceId)
+  );
+  const starterPrice = livePriceIds.find(
+    (priceId) => priceId === starterPriceId
+  );
+
+  if (hasEnterprise) {
+    return {
+      planId: 'enterprise',
+      plan: MAGILOCALE_PLANS.enterprise,
+      subscribed: true,
+      maxLocales: MAGILOCALE_PLANS.enterprise.maxLocales,
+      priceId: enterprisePriceId,
+      billingScope,
+    };
+  }
+
+  return {
+    planId: 'starter',
+    plan: MAGILOCALE_PLANS.starter,
+    subscribed: Boolean(starterPrice),
+    maxLocales: MAGILOCALE_PLANS.starter.maxLocales,
+    priceId: starterPrice ?? null,
+    billingScope,
+  };
+}

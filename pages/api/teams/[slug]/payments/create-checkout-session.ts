@@ -3,10 +3,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/session';
 import { throwIfNoTeamAccess } from 'models/team';
 import { throwIfNotAllowed } from 'models/user';
-import { stripe, getStripeCustomerId } from '@/lib/stripe';
+import {
+  stripe,
+  getStripeCustomerId,
+  getProjectStripeCustomerId,
+} from '@/lib/stripe';
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
 import { getMagilocaleStripePriceIds } from '@/lib/billing/entitlement';
+import { getProjectService } from '@/lib/translations';
 import { checkoutSessionSchema, validateWithSchema } from '@/lib/zod';
 
 export default async function handler(
@@ -33,7 +38,7 @@ export default async function handler(
 }
 
 const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
-  const { price, quantity } = validateWithSchema(
+  const { price, quantity, projectId } = validateWithSchema(
     checkoutSessionSchema,
     req.body
   );
@@ -47,7 +52,30 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
     throw new ApiError(422, 'Unknown Magilocale price.');
   }
   const session = await getSession(req, res);
-  const customer = await getStripeCustomerId(teamMember, session);
+
+  let customer: string;
+  let successPath = `/teams/${teamMember.team.slug}/billing`;
+
+  if (projectId) {
+    const project = await getProjectService().get(
+      teamMember.team.id,
+      projectId
+    );
+    if (project.billingScope !== 'project') {
+      throw new ApiError(
+        422,
+        'Switch this project to per-project billing before checking out.'
+      );
+    }
+    customer = await getProjectStripeCustomerId(
+      project,
+      teamMember.team,
+      session ?? undefined
+    );
+    successPath = `/teams/${teamMember.team.slug}/projects/${project.id}/settings`;
+  } else {
+    customer = await getStripeCustomerId(teamMember, session);
+  }
 
   const checkoutSession = await stripe.checkout.sessions.create({
     customer,
@@ -58,13 +86,20 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
         quantity: quantity ?? 1,
       },
     ],
-
-    // {CHECKOUT_SESSION_ID} is a string literal; do not change it!
-    // the actual Session ID is returned in the query parameter when your customer
-    // is redirected to the success page.
-
-    success_url: `${env.appUrl}/teams/${teamMember.team.slug}/billing`,
-    cancel_url: `${env.appUrl}/teams/${teamMember.team.slug}/billing`,
+    metadata: {
+      teamId: teamMember.team.id,
+      billingScope: projectId ? 'project' : 'team',
+      ...(projectId ? { projectId } : {}),
+    },
+    subscription_data: {
+      metadata: {
+        teamId: teamMember.team.id,
+        billingScope: projectId ? 'project' : 'team',
+        ...(projectId ? { projectId } : {}),
+      },
+    },
+    success_url: `${env.appUrl}${successPath}`,
+    cancel_url: `${env.appUrl}${successPath}`,
   });
 
   res.json({ data: checkoutSession });

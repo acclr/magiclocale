@@ -11,9 +11,10 @@ import type { ApiResponse } from 'types';
 
 interface LinkToPortalProps {
   team: Team;
+  projectId?: string;
 }
 
-const LinkToPortal = ({ team }: LinkToPortalProps) => {
+const LinkToPortal = ({ team, projectId }: LinkToPortalProps) => {
   const [loading, setLoading] = useState(false);
   const { t } = useTranslation('common');
 
@@ -26,12 +27,14 @@ const LinkToPortal = ({ team }: LinkToPortalProps) => {
         method: 'POST',
         headers: defaultHeaders,
         credentials: 'same-origin',
+        body: JSON.stringify(projectId ? { projectId } : {}),
       }
     );
 
     const result = (await response.json()) as ApiResponse<{ url: string }>;
 
     if (!response.ok) {
+      setLoading(false);
       toast.error(result.error.message);
       return;
     }

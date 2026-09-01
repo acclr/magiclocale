@@ -5,6 +5,7 @@ export type CreateTeamProjectInput = {
   name: string;
   sourceLocale: LocaleCode;
   locales?: LocaleCode[];
+  billingScope?: Project['billingScope'];
 };
 
 export class ProjectService {
@@ -37,7 +38,20 @@ export class ProjectService {
       name,
       sourceLocale,
       locales,
+      billingScope: input.billingScope ?? 'team',
     });
+  }
+
+  async setBillingScope(
+    teamId: string,
+    projectId: string,
+    billingScope: Project['billingScope']
+  ): Promise<Project> {
+    const project = await this.requireTeamProject(teamId, projectId);
+    if (project.billingScope === billingScope) {
+      return project;
+    }
+    return this.repository.updateProject(project.id, { billingScope });
   }
 
   async rename(

@@ -1,5 +1,7 @@
 import {
+  paginateTranslationDashboard,
   projectTranslationDashboard,
+  type DashboardQuery,
   type TranslationDashboard,
 } from './dashboard-projector';
 import type { TranslationRepository } from './repository';
@@ -16,14 +18,18 @@ export class TeamTranslationService {
 
   async dashboard(
     teamId: string,
-    projectId: string
+    projectId: string,
+    query?: Partial<DashboardQuery>
   ): Promise<TranslationDashboard> {
     const project = await this.projectService.get(teamId, projectId);
     const [keys, translations] = await Promise.all([
       this.repository.listKeys(project.id),
       this.repository.listTranslations(project.id),
     ]);
-    return projectTranslationDashboard(project, keys, translations);
+    return paginateTranslationDashboard(
+      projectTranslationDashboard(project, keys, translations),
+      query
+    );
   }
 
   async saveManual(

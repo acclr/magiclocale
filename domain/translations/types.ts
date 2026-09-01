@@ -1,3 +1,5 @@
+import type { BillingScope } from '../billing';
+
 export type TranslationSource = 'ai' | 'manual' | 'code';
 
 export type TranslationStatus = 'ai' | 'manual' | 'source' | 'needs-review';
@@ -10,6 +12,8 @@ export type Project = {
   name: string;
   sourceLocale: LocaleCode;
   locales: LocaleCode[];
+  billingScope: BillingScope;
+  billingId: string | null;
 };
 
 export type CreateProjectInput = {
@@ -17,10 +21,14 @@ export type CreateProjectInput = {
   name: string;
   sourceLocale: LocaleCode;
   locales: LocaleCode[];
+  billingScope?: BillingScope;
 };
 
 export type UpdateProjectInput = {
   name?: string;
+  billingScope?: BillingScope;
+  billingId?: string | null;
+  billingProvider?: string | null;
 };
 
 export type TranslationKey = {
