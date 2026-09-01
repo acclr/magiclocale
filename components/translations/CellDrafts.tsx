@@ -56,11 +56,14 @@ export function CellDraftsProvider({ children }: { children: ReactNode }) {
   );
 
   const saveAll = useCallback(async () => {
-    const batch = [...handles.current.values()];
+    const batch: CellDraftHandle[] = [];
+    handles.current.forEach((handle) => {
+      batch.push(handle);
+    });
     setIsSavingAll(true);
     try {
-      for (const handle of batch) {
-        await handle.save({ silent: true, refresh: false });
+      for (let index = 0; index < batch.length; index += 1) {
+        await batch[index].save({ silent: true, refresh: false });
       }
     } finally {
       setIsSavingAll(false);
@@ -69,7 +72,7 @@ export function CellDraftsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const discardAll = useCallback(() => {
-    [...handles.current.values()].forEach((handle) => handle.discard());
+    handles.current.forEach((handle) => handle.discard());
   }, []);
 
   const value = useMemo(
