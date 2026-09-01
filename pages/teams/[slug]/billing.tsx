@@ -11,15 +11,15 @@ import { TeamTab } from '@/components/team';
 import Help from '@/components/billing/Help';
 import { Error, Loading } from '@/components/shared';
 import LinkToPortal from '@/components/billing/LinkToPortal';
-import Subscriptions from '@/components/billing/Subscriptions';
-import ProductPricing from '@/components/billing/ProductPricing';
+import MagilocalePricing from '@/components/billing/MagilocalePricing';
+import MagilocaleSubscriptions from '@/components/billing/MagilocaleSubscriptions';
 
 const Payments = ({ teamFeatures }) => {
   const { t } = useTranslation('common');
   const { canAccess } = useCanAccess();
   const { isLoading, isError, team } = useTeam();
   const { data } = useSWR(
-    team?.slug ? `/api/teams/${team?.slug}/payments/products` : null,
+    team?.slug ? `/api/teams/${team.slug}/payments/products` : null,
     fetcher
   );
 
@@ -35,7 +35,7 @@ const Payments = ({ teamFeatures }) => {
     return <Error message={t('team-not-found')} />;
   }
 
-  const plans = data?.data?.products || [];
+  const plans = data?.data?.plans || [];
   const subscriptions = data?.data?.subscriptions || [];
 
   return (
@@ -48,16 +48,16 @@ const Payments = ({ teamFeatures }) => {
             teamFeatures={teamFeatures}
           />
 
-          <div className="flex gap-6 flex-col md:flex-row">
+          <div className="flex flex-col gap-6 md:flex-row">
             <LinkToPortal team={team} />
             <Help />
           </div>
 
           <div className="py-6">
-            <Subscriptions subscriptions={subscriptions} />
+            <MagilocaleSubscriptions subscriptions={subscriptions} />
           </div>
 
-          <ProductPricing plans={plans} subscriptions={subscriptions} />
+          <MagilocalePricing plans={plans} />
         </>
       )}
     </>

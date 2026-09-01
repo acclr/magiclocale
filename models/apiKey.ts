@@ -1,14 +1,13 @@
 import { prisma } from '@/lib/prisma';
-import { createHash, randomBytes } from 'crypto';
+import { hashPublicApiKey } from '@/lib/api/public-sdk-auth';
+import { randomBytes } from 'crypto';
 
 interface CreateApiKeyParams {
   name: string;
   teamId: string;
 }
 
-const hashApiKey = (apiKey: string) => {
-  return createHash('sha256').update(apiKey).digest('hex');
-};
+export const hashApiKey = hashPublicApiKey;
 
 const generateUniqueApiKey = () => {
   const apiKey = randomBytes(16).toString('hex');

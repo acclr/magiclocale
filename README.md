@@ -1,271 +1,237 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://github.com/boxyhq/jackson/assets/66887028/871d9c0f-d351-49bb-9458-2542830d7910">
-  <source media="(prefers-color-scheme: light)" srcset="https://github.com/boxyhq/jackson/assets/66887028/4073c181-0653-4d5b-b74f-e7e84fe79da8">
-  <img alt="BoxyHQ Banner" src="https://github.com/boxyhq/jackson/assets/66887028/b40520b7-dbce-400b-88d3-400d1c215ea1">
-</picture>
+# Magilocale
 
-# ⭐ Enterprise SaaS Starter Kit
+Magilocale is a team-based translation platform for application copy. The
+dashboard manages projects, locales, translation status, and human review,
+while `@magilocale/sdk` discovers source keys and loads translated bundles at
+runtime.
 
-<p>
-    <a href="https://github.com/boxyhq/saas-starter-kit/stargazers"><img src="https://img.shields.io/github/stars/boxyhq/saas-starter-kit" alt="Github stargazers"></a>
-    <a href="https://github.com/boxyhq/saas-starter-kit/issues"><img src="https://img.shields.io/github/issues/boxyhq/saas-starter-kit" alt="Github issues"></a>
-    <a href="https://github.com/boxyhq/saas-starter-kit/blob/main/LICENSE"><img src="https://img.shields.io/github/license/boxyhq/saas-starter-kit" alt="license"></a>
-    <a href="https://twitter.com/BoxyHQ"><img src="https://img.shields.io/twitter/follow/BoxyHQ?style=social" alt="Twitter"></a>
-    <a href="https://www.linkedin.com/company/boxyhq"><img src="https://img.shields.io/badge/LinkedIn-blue" alt="LinkedIn"></a>
-    <a href="https://discord.gg/uyb7pYt4Pa"><img src="https://img.shields.io/discord/877585485235630130" alt="Discord"></a>
-</p>
+## Architecture
 
-The Open Source Next.js SaaS boilerplate for Enterprise SaaS app development.
+- **Next.js dashboard and API** — team-authenticated project management lives
+  under `/teams/:slug`; bearer-authenticated SDK endpoints live under
+  `/api/v1`.
+- **PostgreSQL and Prisma** — projects, source keys, translations, ownership,
+  and review state are persisted in Postgres.
+- **Translation domain services** — project and translation rules are kept out
+  of UI and route handlers. The OpenAI translator and Prisma repository are
+  injected behind domain interfaces.
+- **OpenAI-compatible translation provider** — automatic translations use the
+  configured model, requesting temperature `0` when the model allows it.
+- **Workspace SDK** — `packages/sdk` contains framework-neutral, React, and
+  Next.js entry points.
 
-Please star ⭐ the repo if you want us to continue developing and improving the SaaS Starter Kit! 😀
+The central ownership rule is:
 
-## 📖 Additional Resources
+> Once a human saves a translation, automatic AI never overwrites it.
 
-Video - [BoxyHQ's SaaS Starter Kit: Your Ultimate Enterprise-Compliant Boilerplate](https://www.youtube.com/watch?v=oF8QIwQIhyo) <br>
-Blog - [Enterprise-ready Saas Starter Kit](https://boxyhq.com/blog/enterprise-ready-saas-starter-kit)
+A dashboard edit immediately persists `source: "manual"` and
+`aiLocked: true`. If source text later changes, the human value remains
+unchanged and its status becomes `needs-review`. Suggestions do not change
+ownership until accepted.
 
-Next.js-based SaaS starter kit saves you months of development by starting you off with all the features that are the same in every product, so you can focus on what makes your app unique.
+## Prerequisites
 
-## 🛠️ Built With
+- Node.js 20 or newer
+- npm
+- PostgreSQL 16 (or Docker Compose)
+- An OpenAI API key and an available chat-completions model for AI translation
 
-- [Next.js](https://nextjs.org)
-  This is a React framework that provides features such as server-side rendering and static site generation. It's used for building the user interface of your application. The main configuration for Next.js can be found in `next.config.js`.
-- [Tailwind CSS](https://tailwindcss.com)
-  This is a utility-first CSS framework for rapidly building custom user interfaces. It's used for styling the application. The configuration for Tailwind CSS can be found in `postcss.config.js`.
-- [Postgres](https://www.postgresql.org)
-  This is a powerful, open source object-relational database system. It's used for storing application data. The connection to Postgres is likely managed through Prisma.
-- [React](https://reactjs.org)
-  This is a JavaScript library for building user interfaces. It's used for creating the interactive elements of your application. The React components are located in the components directory.
-- [Prisma](https://www.prisma.io)
-  This is an open-source database toolkit. It's used for object-relational mapping, which simplifies the process of writing database queries. Prisma configuration and schema can be found in the prisma directory.
-- [TypeScript](https://www.typescriptlang.org)
-  This is a typed superset of JavaScript that compiles to plain JavaScript. It's used to make the code more robust and maintainable. TypeScript definitions and configurations can be found in files like `next-env.d.ts` and `i18next.d.ts`.
-- [SAML Jackson](https://github.com/boxyhq/jackson) (Provides SAML SSO, Directory Sync)
-  This is a service for handling SAML SSO (Single Sign-On). It's used to allow users to sign in with a single ID and password to any of several related systems i.e (using a single set of credentials). The implementation of SAML Jackson is primarily located within the files associated with authentication.
-- [Svix](https://www.svix.com/) (Provides Webhook Orchestration)
-  This is a service for handling webhooks. It's used to emit events on user/team CRUD operations, which can then be caught and handled by other parts of the application or external services. The integration of Svix is distributed throughout the codebase, primarily in areas where Create, Read, Update, and Delete (CRUD) operations are executed.
-- [Retraced](https://github.com/retracedhq/retraced) (Provides Audit Logs Service)
-  This is a service for audit logging and data visibility. It helps track user activities within the application i.e (who did what and when in the application). The usage of Retraced would be dispersed throughout the codebase, likely in the files where important actions are performed.
-- [Stripe](https://stripe.com) (Provides Payments)
-  This is a service for handling payments. It's used to process payments for the application. The integration of Stripe is likely found in the files associated with billing and subscriptions.
-- [Playwright](https://playwright.dev) (Provides E2E tests)
-  This is a Node.js library for automating browsers. It's used to run end-to-end tests on the application. The Playwright configuration and tests can be found in the tests directory.
-- [Docker](https://www.docker.com) (Provides Docker Compose)
-  This is a platform for developing, shipping, and running applications. It's used to containerize the application and its dependencies. The Docker configuration can be found in the Dockerfile and docker-compose.yml.
-- [NextAuth.js](https://next-auth.js.org) (Provides Authentication)
-  This is a complete open-source authentication solution for Next.js applications. It's used to handle user authentication and authorization. The NextAuth.js configuration and providers can be found in the `pages/api/auth/[...nextauth].ts` file.
+## Local setup
 
-## 🚀 Deployment
+1. Install all root and workspace dependencies:
 
-<a href="https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fboxyhq%2Fsaas-starter-kit&env=NEXTAUTH_SECRET,SMTP_HOST,SMTP_PORT,SMTP_USER,SMTP_PASSWORD,SMTP_FROM,DATABASE_URL,APP_URL">
-<img width="90" alt="Deploy with Vercel" src="https://vercel.com/button" />
-</a>
+   ```bash
+   npm install
+   ```
 
-<a href="https://heroku.com/deploy" alt="Deploy to Heroku">
-<img alt="Deploy to Heroku" src="https://www.herokucdn.com/deploy/button.svg" />
-</a>
+2. Start the included Postgres service:
 
-<a href="https://cloud.digitalocean.com/apps/new?repo=https://github.com/boxyhq/saas-starter-kit/tree/main" alt="Deploy to DO">
-<img width="200" alt="Deploy to DO" src="https://www.deploytodo.com/do-btn-blue-ghost.svg" />
-</a>
+   ```bash
+   docker compose up -d db
+   ```
 
-## ✨ Getting Started
+   The compose database uses
+   `postgresql://admin:admin@localhost:55432/saas-starter-kit`.
 
-Please follow these simple steps to get a local copy up and running.
+3. Copy `.env.example` to `.env`, generate `NEXTAUTH_SECRET`, and set the
+   required values:
 
-### Prerequisites
+   ```bash
+   openssl rand -base64 32
+   ```
 
-- Node.js (Version: >=18.x)
-- PostgreSQL
-- NPM
-- Docker compose
+   At minimum configure `DATABASE_URL`, `NEXTAUTH_SECRET`, `APP_URL`,
+   `NEXTAUTH_URL`, `OPENAI_API_KEY`, and `OPENAI_MODEL`. Use a model that
+   supports Chat Completions and is enabled for your account. Set
+   `OPENAI_BASE_URL` only for an OpenAI-compatible provider.
 
-### Development
+4. Apply committed migrations and generate the Prisma client:
 
-#### 1. Setup
+   ```bash
+   npx prisma migrate deploy
+   npx prisma generate
+   ```
 
-- [Fork](https://github.com/boxyhq/saas-starter-kit/fork) the repository
-- Clone the repository by using this command:
+   For a new development migration, use `npx prisma migrate dev`. Production
+   deployments should use `prisma migrate deploy`, not `prisma db push`.
 
-```bash
-git clone https://github.com/<your_github_username>/saas-starter-kit.git
-```
+5. Start the dashboard:
 
-#### 2. Go to the project folder
+   ```bash
+   npm run dev
+   ```
 
-```bash
-cd saas-starter-kit
-```
+   The app runs at `http://localhost:4002`.
 
-#### 3. Install dependencies
+## Create a team, project, and API key
 
-```bash
-npm install
-```
+1. Sign up or sign in, then create or select a team.
+2. Open **Translation Projects**, create a project, and choose its source
+   locale.
+3. Add each target locale from the project workspace.
+4. Open **Settings → API Keys** and create a key.
 
-#### 4. Set up your .env file
+The API key is shown only when created. It authenticates SDK requests for
+projects owned by the same team. Keep server-side keys in environment
+variables. Browser use exposes the key to that application’s users, so set
+`MAGILOCALE_ALLOWED_ORIGIN` to the exact browser origin and issue a dedicated
+team key appropriate for that exposure.
 
-Duplicate `.env.example` to `.env`.
+## SDK workspace
+
+Build and verify the SDK from the repository root:
 
 ```bash
-cp .env.example .env
+npm run sdk:check-types
+npm run sdk:test
+npm run sdk:build
 ```
 
-#### 5. Create a database (Optional)
+The workspace package can be referenced by another npm workspace as
+`"@magilocale/sdk": "workspace:*"`. A basic client configuration is:
 
-To make the process of installing dependencies easier, we offer a `docker-compose.yml` with a Postgres container.
+```ts
+import translate, { configureMagicLocale, flush } from '@magilocale/sdk';
+
+configureMagicLocale({
+  baseUrl: 'http://localhost:4002',
+  projectId: process.env.MAGILOCALE_PROJECT_ID!,
+  ingestToken: process.env.MAGILOCALE_API_KEY!,
+  sourceLocale: 'en',
+  locale: 'sv',
+});
+
+const label = translate('settings.save', 'Save changes');
+await flush();
+```
+
+`translate(key, defaultText)` returns the current bundle value or the source
+text fallback, queues source-key ingestion, and batches sync requests. React
+consumers can import `MagiLocaleProvider` and `useMagiLocale` from
+`@magilocale/sdk/react`. Next.js App Router consumers can use
+`createMagiLocaleNext` from `@magilocale/sdk/next`.
+
+## Localize the Magilocale landing page
+
+The public homepage (`pages/index.tsx`) is a customer of this same app. The
+dashboard UI keeps using `next-i18next`; only the marketing page talks to a
+dedicated Magilocale project through `@magilocale/sdk`.
+
+1. In **Translation Projects**, create a project such as `Landing page`.
+2. Add each marketing locale (for example `sv` and `fr`).
+3. Create a team API key intended for this public site.
+4. Set `MAGILOCALE_LANDING_PROJECT_ID` and `MAGILOCALE_LANDING_API_KEY` in
+   `.env`, then restart the app.
+
+Visiting `/` discovers `landing.*` keys automatically. Edit them in that
+project; the homepage refreshes the bundle about every two seconds. Without
+those env values the page still renders English source text.
+
+## Public SDK endpoints
+
+Both endpoints require `Authorization: Bearer <API_KEY>`.
+
+- `POST /api/v1/projects/:projectId/keys/sync`
+
+  ```json
+  {
+    "keys": [{ "key": "settings.save", "sourceText": "Save changes" }]
+  }
+  ```
+
+- `GET /api/v1/projects/:projectId/translations?locale=sv`
+
+  Returns the project ID, requested locale, source locale, translation map,
+  and bundle version. Responses use `Cache-Control: no-store`.
+
+Browser requests are allowed only from `MAGILOCALE_ALLOWED_ORIGIN`. Server-side
+requests without an `Origin` header are supported.
+
+## Commands
 
 ```bash
-docker-compose up -d
+npm run dev                 # Next.js development server on port 4002
+npm run build               # Prisma generate plus Next production build
+npm run build-ci            # Explicit CI production build
+npm run db:migrate          # Apply committed Prisma migrations
+npm run db:validate         # Validate the Prisma schema
+npm run check-locale        # Verify locale files have matching keys
+npm run check-format        # Check Prettier formatting
+npm run check-lint          # Run ESLint
+npm run check-types         # Run root TypeScript checks
+npm test                    # Run root Jest tests
+npm run test:e2e            # Run Playwright
+npm run sdk:check-types     # Type-check @magilocale/sdk
+npm run sdk:test            # Run SDK Vitest tests
+npm run sdk:build           # Build SDK ESM/CJS/types
+npm run stripe:ensure-plans # Create $5 Starter and $50 Enterprise Stripe prices
 ```
 
-#### 6. Set up database schema
+## Billing
+
+Magilocale has two monthly plans:
+
+- **Starter** — $5/mo, standard usage, up to 4 languages per project
+- **Enterprise** — $50/mo, required once a project needs 5 or more languages
+
+Create the Stripe products and copy the printed price IDs into
+`STRIPE_STARTER_PRICE_ID` and `STRIPE_ENTERPRISE_PRICE_ID`:
 
 ```bash
-npx prisma db push
+npm run stripe:ensure-plans
 ```
 
-#### 7. Start the server
+Checkout lives at **Settings → Billing**. Adding a 5th locale is blocked until
+the team is on Enterprise.
 
-In a development environment:
+## Testing the production flow
+
+`tests/e2e/translations/production-flow.spec.ts` authenticates with the
+existing Playwright account setup, creates a project and locale through the
+dashboard, uses an injected deterministic translator to ingest a key, saves a
+manual translation in the browser, changes the source, verifies
+`needs-review`, and fetches the real bearer-authenticated bundle endpoint.
+This avoids external model calls while exercising the production persistence,
+ownership, UI, and public API boundaries.
+
+Playwright requires a migrated test database, the existing authentication
+environment, a production build, and an installed Chromium browser:
 
 ```bash
-npm run dev
+npx playwright install chromium
+npx playwright test tests/e2e/translations/production-flow.spec.ts
 ```
 
-#### 8. Start the Prisma Studio
+## Production deployment
 
-Prisma Studio is a visual editor for the data in your database.
+1. Provision PostgreSQL and set `DATABASE_URL`.
+2. Configure authentication URLs/secrets and any enabled auth providers.
+3. Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally
+   `OPENAI_BASE_URL`.
+4. Set `MAGILOCALE_ALLOWED_ORIGIN` to the deployed client origin.
+5. Run `npx prisma migrate deploy`.
+6. Build with `npm run build-ci` and start with `npm run start`.
 
-```bash
-npx prisma studio
-```
-
-#### 9. Testing
-
-We are using [Playwright](https://playwright.dev/) to execute E2E tests. Add all tests inside the `/tests` folder.
-
-Update `playwright.config.ts` to change the playwright configuration.
-
-##### Install Playwright dependencies
-
-```bash
-npm run playwright:update
-```
-
-##### Run E2E tests
-
-```bash
-npm run test:e2e
-```
-
-_Note: HTML test report is generated inside the `report` folder. Currently supported browsers for test execution `chromium` and `firefox`_
-
-## ⚙️ Feature configuration
-
-To get started you only need to configure the database by following the steps above. For more advanced features, you can configure the following:
-
-### Authentication with NextAuth.js
-
-The default login options are email and GitHub. Configure below:
-
-1. Generate a secret key for NextAuth.js by running `openssl rand -base64 32` and adding it to the `.env` file as `NEXTAUTH_SECRET`.
-2. For email login, configure the `SMTP_*` environment variables in the `.env` file to send magic link login emails. You can use services like [AWS SES](https://aws.amazon.com/ses/), [Sendgrid](https://sendgrid.com/) or [Resend](https://resend.com/).
-3. For social login with GitHub and Google, you need to create OAuth apps in the respective developer consoles and add the client ID and secret to the `.env` file. The default is email login and For GitHub, follow the instructions [here](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app). For Google, follow the instructions [here](https://support.google.com/cloud/answer/6158849?hl=en).
-
-### Svix Webhooks
-
-1. Create an account on [Svix](https://www.svix.com/)
-2. The authenticaton token and add `SVIX_API_KEY` to the `.env` file.
-
-### Stripe Payments
-
-1. Create an account on [Stripe](https://stripe.com/)
-2. Add the [Stripe API secret key](https://dashboard.stripe.com/apikeys) to the `.env` file as `STRIPE_SECRET_KEY`.
-3. Create a webhook in the [Stripe dashboard](https://dashboard.stripe.com/webhooks). The URL is your app hostname plus `/api/webhooks/stripe`. If you want to set this up locally you will need to use the [Stripe CLI forwarder](https://docs.stripe.com/webhooks#test-webhook).
-4. Once created, add the signing secret to the `.env` file as `STRIPE_WEBHOOK_SECRET`.
-
-### Recaptcha
-
-1. Create an account on [Google reCAPTCHA](https://www.google.com/recaptcha/admin/enterprise). This will create a Google Cloud account if you don't have one.
-2. From the Key Details in the [Google Cloud Console](https://console.cloud.google.com/security/recaptcha), add the reCAPTCHA ID to the `.env` file as `RECAPTCHA_SITE_KEY`.
-3. Click Key Details > Integration then click Use legacy key to get the secret key and add it to the `.env` file as `RECAPTCHA_SECRET_KEY`.
-
-### Sentry
-
-1. Create an account on [Sentry](https://sentry.io/), skip the onboarding and create a new Next.js project.
-2. At the bottom of the page, get the DSN and add it to the `.env` file as `SENTRY_DSN`. The other variables are optional.
-
-#### Fully customizable boilerplate out of the box, see images below 👇👇👇
-
-![saas-starter-kit-poster](/public/saas-starter-kit-poster.png)
-
-## 🥇 Features
-
-- Create account
-- Sign in with Email and Password
-- Sign in with Magic Link
-- Sign in with SAML SSO
-- Sign in with Google [[Setting up Google OAuth](https://support.google.com/cloud/answer/6158849?hl=en)]
-- Sign in with GitHub [[Creating a Github OAuth App](https://docs.github.com/en/developers/apps/building-oauth-apps/creating-an-oauth-app)]
-- Directory Sync (SCIM)
-- Update account
-- Create team
-- Delete team
-- Invite users to the team
-- Manage team members
-- Update team settings
-- Webhooks & Events
-- Internationalization
-- Audit logs
-- Roles and Permissions
-- Dark mode
-- Email notifications
-- E2E tests
-- Docker compose
-- Prisma Studio
-- Update member role
-- Directory Sync Events
-- Avatar Upload
-- SAML SSO
-- Audit Log
-- Webhook
-- Payments
-- Security Headers
-
-## ➡️ Coming Soon
-
-- Billing & subscriptions
-- Unit and integration tests
-
-## ✨ Contributing
-
-Thanks for taking the time to contribute! Contributions make the open-source community a fantastic place to learn, inspire, and create. Any contributions you make are greatly appreciated.
-
-Please try to create bug reports that are:
-
-- _Reproducible._ Include steps to reproduce the problem.
-- _Specific._ Include as much detail as possible: which version, what environment, etc.
-- _Unique._ Do not duplicate existing opened issues.
-- _Scoped to a Single Bug._ One bug per report.
-
-[Contributing Guide](https://github.com/boxyhq/saas-starter-kit/blob/main/CONTRIBUTING.md)
-
-## 🤩 Community
-
-- [Discord](https://discord.gg/uyb7pYt4Pa) (For live discussion with the Open-Source Community and BoxyHQ team)
-- [Twitter](https://twitter.com/BoxyHQ) / [LinkedIn](https://www.linkedin.com/company/boxyhq) (Follow us)
-- [Youtube](https://www.youtube.com/@boxyhq) (Watch community events and tutorials)
-- [GitHub Issues](https://github.com/boxyhq/saas-starter-kit/issues) (Contributions, report issues, and product ideas)
-
-## 🌍 Contributors
-
-<a href="https://github.com/boxyhq/saas-starter-kit/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=boxyhq/saas-starter-kit" />
-</a>
-
-Made with [contrib.rocks](https://contrib.rocks).
-
-## 🛡️ License
-
-[Apache 2.0 License](https://github.com/boxyhq/saas-starter-kit/blob/main/LICENSE)
+Run the app and migration commands from the same release so generated Prisma
+types and the deployed schema stay aligned. Never commit `.env` or generated
+API keys.

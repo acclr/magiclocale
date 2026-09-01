@@ -3,4 +3,5 @@ find-dupe-locale.js
 node_modules
 .next
 out
+packages/sdk/dist
 eslint.config.cjs

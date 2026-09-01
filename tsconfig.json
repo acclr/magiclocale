@@ -20,8 +20,11 @@
     "paths": {
       "@/lib/*": ["lib/*"],
       "@/components/*": ["components/*"],
+      "@/domain/*": ["domain/*"],
+      "@magilocale/sdk": ["packages/sdk/dist/index"],
+      "@magilocale/sdk/react": ["packages/sdk/dist/react"]
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],
-  "exclude": ["node_modules"],
+  "exclude": ["node_modules", "packages/sdk"],
 }

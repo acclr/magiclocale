@@ -1,0 +1,31 @@
+import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
+import { getTeamTranslationService } from '@/lib/translations';
+import {
+  translationCellSchema,
+  translationProjectParamsSchema,
+  validateWithSchema,
+} from '@/lib/zod';
+
+export default createTeamProjectApiHandler({
+  POST: {
+    resource: 'team_translation',
+    action: 'update',
+    async handle({ req, res, teamMember }) {
+      const { projectId } = validateWithSchema(
+        translationProjectParamsSchema,
+        req.query
+      );
+      const { keyId, locale } = validateWithSchema(
+        translationCellSchema,
+        req.body
+      );
+      const value = await getTeamTranslationService().suggest(
+        teamMember.team.id,
+        projectId,
+        keyId,
+        locale
+      );
+      res.status(200).json({ data: { value } });
+    },
+  },
+});

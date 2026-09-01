@@ -13,6 +13,19 @@ enum Role {
   MEMBER
 }
 
+enum TranslationSource {
+  AI     @map("ai")
+  MANUAL @map("manual")
+  CODE   @map("code")
+}
+
+enum TranslationStatus {
+  AI           @map("ai")
+  MANUAL       @map("manual")
+  SOURCE       @map("source")
+  NEEDS_REVIEW @map("needs-review")
+}
+
 model Account {
   id                String  @id @default(uuid())
   userId            String
@@ -70,20 +83,71 @@ model User {
 }
 
 model Team {
-  id              String       @id @default(uuid())
-  name            String
-  slug            String       @unique
-  domain          String?      @unique
-  defaultRole     Role         @default(MEMBER)
-  billingId       String?
-  billingProvider String?
-  createdAt       DateTime     @default(now())
-  updatedAt       DateTime     @default(now())
-  members         TeamMember[]
-  invitations     Invitation[]
-  apiKeys         ApiKey[]
+  id                  String               @id @default(uuid())
+  name                String
+  slug                String               @unique
+  domain              String?              @unique
+  defaultRole         Role                 @default(MEMBER)
+  billingId           String?
+  billingProvider     String?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @default(now())
+  members             TeamMember[]
+  invitations         Invitation[]
+  apiKeys             ApiKey[]
+  translationProjects TranslationProject[]
 
   @@index([billingId])
+}
+
+model TranslationProject {
+  id           String   @id @default(uuid())
+  teamId       String
+  name         String
+  sourceLocale String
+  locales      String[] @default([])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  team Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  keys TranslationKey[]
+
+  @@unique([teamId, name])
+  @@index([teamId])
+}
+
+model TranslationKey {
+  id         String   @id @default(uuid())
+  projectId  String
+  key        String
+  sourceText String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  project      TranslationProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  translations Translation[]
+
+  @@unique([projectId, key])
+  @@index([projectId])
+}
+
+model Translation {
+  id               String            @id @default(uuid())
+  translationKeyId String
+  locale           String
+  value            String
+  source           TranslationSource
+  aiLocked         Boolean           @default(false)
+  status           TranslationStatus
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  translationKey TranslationKey @relation(fields: [translationKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([translationKeyId, locale])
+  @@index([translationKeyId])
+  @@index([locale])
+  @@index([status])
 }
 
 model TeamMember {

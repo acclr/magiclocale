@@ -1,32 +1,39 @@
 [
   {
+    "id": "starter",
     "amount": "30k",
     "currency": "USD",
     "duration": "month",
     "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
     "benefits": [
-      "Up to 20 users.",
-      "Free storage upto 1GB",
-      "Lifetime validity"
+      { "id": "users", "text": "Up to 20 users." },
+      { "id": "storage", "text": "Free storage upto 1GB" },
+      { "id": "validity", "text": "Lifetime validity" }
     ]
   },
   {
+    "id": "growth",
     "amount": "120k",
     "currency": "USD",
     "duration": "month",
     "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-    "benefits": ["Up to 500 users.", "Storage upto 50GB", "24*7 support"]
+    "benefits": [
+      { "id": "users", "text": "Up to 500 users." },
+      { "id": "storage", "text": "Storage upto 50GB" },
+      { "id": "support", "text": "24*7 support" }
+    ]
   },
   {
+    "id": "enterprise",
     "amount": "350k",
     "currency": "USD",
     "duration": "month",
     "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
     "benefits": [
-      "Up to 1000 users.",
-      "Storage upto 100GB",
-      "24*7 support",
-      "Data backups"
+      { "id": "users", "text": "Up to 1000 users." },
+      { "id": "storage", "text": "Storage upto 100GB" },
+      { "id": "support", "text": "24*7 support" },
+      { "id": "backups", "text": "Data backups" }
     ]
   }
 ]

@@ -88,6 +88,12 @@ const env = {
     prefix: process.env.OTEL_PREFIX || 'boxyhq.saas',
   },
 
+  openAI: {
+    apiKey: process.env.OPENAI_API_KEY,
+    model: process.env.OPENAI_MODEL,
+    baseURL: process.env.OPENAI_BASE_URL,
+  },
+
   hideLandingPage: process.env.HIDE_LANDING_PAGE === 'true',
 
   darkModeEnabled: process.env.NEXT_PUBLIC_DARK_MODE !== 'false',
@@ -121,5 +127,30 @@ const env = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
   },
 };
+
+export type OpenAITranslationEnv = {
+  apiKey: string;
+  model: string;
+  baseURL?: string;
+};
+
+export function getOpenAITranslationEnv(): OpenAITranslationEnv {
+  const apiKey = env.openAI.apiKey?.trim();
+  const model = env.openAI.model?.trim();
+  const baseURL = env.openAI.baseURL?.trim();
+
+  if (!apiKey) {
+    throw new Error('OPENAI_API_KEY is required for AI translation');
+  }
+  if (!model) {
+    throw new Error('OPENAI_MODEL is required for AI translation');
+  }
+
+  return {
+    apiKey,
+    model,
+    ...(baseURL ? { baseURL } : {}),
+  };
+}
 
 export default env;

@@ -1,14 +1,17 @@
 [
   {
-    "question": "What is BoxyHQ?",
-    "answer": "Enterprise readiness for B2B SaaS, straight out of the box."
+    "id": "what-is",
+    "question": "What is Magilocale?",
+    "answer": "A translation platform for application copy. Your product discovers source keys, Magilocale stores translations, and the dashboard lets a team review and ship every locale."
   },
   {
-    "question": "What BoxyHQ offers?",
-    "answer": "At BoxyHQ we enable you to add plug-and-play enterprise-ready features to your SaaS product. Show enterprise customers and InfoSec teams you are ready to pass their processes with flying colors. We are open-source and free!"
+    "id": "how-editing-works",
+    "question": "Can I edit this landing page from the dashboard?",
+    "answer": "Yes. This page is a Magilocale project. Change a string in Translation Projects, and the live site picks it up on the next refresh."
   },
   {
-    "question": "Is BoxyHQ offers developer security tools?",
-    "answer": "We have curated a list of awesome open-source developer security tools.It includes security principles and controls relevant to popular compliance certifications (like ISO27001, SOC2, MVSP, etc.)"
+    "id": "sdk",
+    "question": "How do customer apps get translations?",
+    "answer": "They install @magilocale/sdk, point it at a project API key, and call translate(key, defaultText). New keys are ingested automatically."
   }
 ]

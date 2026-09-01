@@ -3,6 +3,7 @@ import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
+import { isPublicSdkApiPath } from './lib/api/public-sdk-paths';
 import env from './lib/env';
 
 // Constants for security headers
@@ -76,8 +77,11 @@ const unAuthenticatedRoutes = [
 export default async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // Bypass routes that don't require authentication
-  if (micromatch.isMatch(pathname, unAuthenticatedRoutes)) {
+  // Public SDK endpoints authenticate bearer API keys in their handlers.
+  if (
+    isPublicSdkApiPath(pathname) ||
+    micromatch.isMatch(pathname, unAuthenticatedRoutes)
+  ) {
     return NextResponse.next();
   }
 

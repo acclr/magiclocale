@@ -2,8 +2,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 
 import { getSession } from '@/lib/session';
 import { throwIfNoTeamAccess } from 'models/team';
+import { throwIfNotAllowed } from 'models/user';
 import { stripe, getStripeCustomerId } from '@/lib/stripe';
 import env from '@/lib/env';
+import { ApiError } from '@/lib/errors';
+import { getMagilocaleStripePriceIds } from '@/lib/billing/entitlement';
 import { checkoutSessionSchema, validateWithSchema } from '@/lib/zod';
 
 export default async function handler(
@@ -36,6 +39,13 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
   );
 
   const teamMember = await throwIfNoTeamAccess(req, res);
+  throwIfNotAllowed(teamMember, 'team_payments', 'create');
+  const allowedPrices = Object.values(getMagilocaleStripePriceIds()).filter(
+    Boolean
+  );
+  if (!allowedPrices.includes(price)) {
+    throw new ApiError(422, 'Unknown Magilocale price.');
+  }
   const session = await getSession(req, res);
   const customer = await getStripeCustomerId(teamMember, session);
 
@@ -45,7 +55,7 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
     line_items: [
       {
         price,
-        quantity,
+        quantity: quantity ?? 1,
       },
     ],
 
