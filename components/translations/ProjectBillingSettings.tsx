@@ -12,7 +12,7 @@ import type {
 import type { ApiResponse } from 'types';
 import useCanAccess from 'hooks/useCanAccess';
 import useTeam from 'hooks/useTeam';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 import useSWR from 'swr';
@@ -102,10 +102,10 @@ const ProjectBillingSettings = ({
             </Card.Description>
           </Card.Header>
           {isLoading || !billing ? (
-            <p className="text-sm text-base-content/60">{t('loading')}</p>
+            <p className="text-sm text-muted-foreground">{t('loading')}</p>
           ) : (
             <div className="space-y-4">
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-base-300 p-3">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3">
                 <input
                   checked={billing.billingScope === 'team'}
                   className="radio radio-sm mt-1"
@@ -118,12 +118,12 @@ const ProjectBillingSettings = ({
                   <span className="block font-medium">
                     {t('billing-scope-team')}
                   </span>
-                  <span className="text-sm text-base-content/60">
+                  <span className="text-sm text-muted-foreground">
                     {t('billing-scope-team-help')}
                   </span>
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-base-300 p-3">
+              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3">
                 <input
                   checked={billing.billingScope === 'project'}
                   className="radio radio-sm mt-1"
@@ -136,7 +136,7 @@ const ProjectBillingSettings = ({
                   <span className="block font-medium">
                     {t('billing-scope-project')}
                   </span>
-                  <span className="text-sm text-base-content/60">
+                  <span className="text-sm text-muted-foreground">
                     {t('billing-scope-project-help')}
                   </span>
                 </span>

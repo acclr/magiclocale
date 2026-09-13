@@ -25,7 +25,11 @@ export function resolveConfig(
     ingestToken: config.ingestToken,
     sourceLocale,
     locale,
+    environment: (config.environment ?? 'production').trim() || 'production',
+    version: config.version ?? null,
+    context: config.context ?? {},
     initialBundle: config.initialBundle,
+    initialFlags: config.initialFlags,
     refreshIntervalMs: nonNegativeInteger(
       config.refreshIntervalMs,
       30_000,

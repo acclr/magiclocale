@@ -7,12 +7,13 @@ import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useState, type ReactElement, useEffect } from 'react';
-import { Button } from 'react-daisyui';
-import type { ComponentStatus } from 'react-daisyui/dist/types';
+import { Button } from '@/components/shared';
 import { toast } from 'react-hot-toast';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ApiResponse, NextPageWithLayout } from 'types';
 import * as Yup from 'yup';
+
+type ComponentStatus = 'info' | 'success' | 'warning' | 'error';
 
 const VerifyAccount: NextPageWithLayout<
   InferGetServerSidePropsType<typeof getServerSideProps>
@@ -70,7 +71,7 @@ const VerifyAccount: NextPageWithLayout<
       {message.text && message.status && (
         <Alert status={message.status}>{t(message.text)}</Alert>
       )}
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-2">
             <InputWithLabel

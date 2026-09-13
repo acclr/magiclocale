@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
-import { Button } from 'react-daisyui';
-import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/shared';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import useTeam from 'hooks/useTeam';
 import { Price } from '@prisma/client';
@@ -50,12 +50,12 @@ const ProductPricing = ({ plans, subscriptions }: ProductPricingProps) => {
         {plans.map((plan) => {
           return (
             <div
-              className="relative rounded-md bg-white border border-gray-200"
+              className="relative rounded-md bg-card"
               key={plan.id}
             >
               <div className="p-8">
                 <div className="flex items-center space-x-2">
-                  <h3 className="font-display text-2xl font-bold text-black">
+                  <h3 className="font-display text-2xl font-bold text-foreground">
                     {plan.name}
                   </h3>
                 </div>

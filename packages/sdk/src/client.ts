@@ -1,15 +1,21 @@
 import { resolveConfig } from './config';
+import { FlagCache } from './flag-cache';
 import { SourceKeyRegistry } from './source-key-registry';
 import {
   TranslationCache,
   type TranslationChangeListener,
 } from './translation-cache';
 import { HttpSourceKeyTransport, type MagicLocaleTransport } from './transport';
-import type { MagicLocaleConfig } from './types';
+import type {
+  FlagEvaluationContext,
+  FlagValue,
+  MagicLocaleConfig,
+} from './types';
 
 export class MagicLocaleClient {
   private readonly registry: SourceKeyRegistry;
   private readonly cache: TranslationCache;
+  private readonly flags: FlagCache;
   private readonly transport: MagicLocaleTransport;
   private readonly refreshIntervalMs: number;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
@@ -33,6 +39,7 @@ export class MagicLocaleClient {
     this.onError = resolved.onError;
     this.refreshIntervalMs = resolved.refreshIntervalMs;
     this.cache = new TranslationCache(resolved.locale, resolved.initialBundle);
+    this.flags = new FlagCache(resolved.context, resolved.initialFlags);
     this.transport = transport ?? new HttpSourceKeyTransport(resolved);
     this.registry = new SourceKeyRegistry(this.transport, resolved);
 
@@ -43,12 +50,27 @@ export class MagicLocaleClient {
       if (!resolved.initialBundle) {
         void this.refreshTranslations().catch(this.onError);
       }
+      if (!resolved.initialFlags) {
+        void this.refreshFlags().catch(this.onError);
+      }
     }
   }
 
   translate(key: string, defaultText: string): string {
     this.registry.enqueue(key, defaultText);
     return this.cache.get(key.trim(), defaultText);
+  }
+
+  isEnabled(key: string, fallback = false): boolean {
+    return this.flags.isEnabled(key, fallback);
+  }
+
+  getValue(key: string, fallback: FlagValue = null): FlagValue {
+    return this.flags.getValue(key, fallback);
+  }
+
+  identify(context: FlagEvaluationContext): void {
+    this.flags.identify(context);
   }
 
   getLocale(): string {
@@ -68,8 +90,20 @@ export class MagicLocaleClient {
     this.cache.update(await this.transport.pull(locale));
   }
 
+  async refreshFlags(): Promise<void> {
+    if (!this.transport.pullFlags) {
+      return;
+    }
+    this.flags.update(await this.transport.pullFlags());
+  }
+
   subscribe(listener: TranslationChangeListener): () => void {
-    return this.cache.subscribe(listener);
+    const unsubscribeTranslations = this.cache.subscribe(listener);
+    const unsubscribeFlags = this.flags.subscribe(listener);
+    return () => {
+      unsubscribeTranslations();
+      unsubscribeFlags();
+    };
   }
 
   flush(): Promise<void> {
@@ -94,6 +128,7 @@ export class MagicLocaleClient {
     }
     this.refreshTimer = setInterval(() => {
       void this.refreshTranslations().catch(this.onError);
+      void this.refreshFlags().catch(this.onError);
     }, this.refreshIntervalMs);
   }
 

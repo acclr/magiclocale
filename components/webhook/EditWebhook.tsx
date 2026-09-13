@@ -3,7 +3,7 @@ import type { Team } from '@prisma/client';
 import type { FormikHelpers } from 'formik';
 import useWebhook from 'hooks/useWebhook';
 import useWebhooks from 'hooks/useWebhooks';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import React from 'react';
 import toast from 'react-hot-toast';
 import type { EndpointOut } from 'svix';

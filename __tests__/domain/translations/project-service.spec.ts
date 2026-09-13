@@ -31,6 +31,7 @@ function setup() {
         billingId: null,
       },
     ],
+    environments: [],
     keys: [],
     translations: [],
   };

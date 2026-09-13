@@ -11,7 +11,7 @@ export default createTeamProjectApiHandler({
     resource: 'team_translation',
     action: 'update',
     async handle({ req, res, teamMember }) {
-      const { projectId } = validateWithSchema(
+      const { projectId, environment } = validateWithSchema(
         translationProjectParamsSchema,
         req.query
       );
@@ -22,9 +22,11 @@ export default createTeamProjectApiHandler({
       const translation = await getTeamTranslationService().saveManual(
         teamMember.team.id,
         projectId,
+        environment,
         keyId,
         locale,
-        value
+        value,
+        teamMember.user.email
       );
       res.status(200).json({ data: translation });
     },

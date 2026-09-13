@@ -1,8 +1,8 @@
 import { InputWithCopyButton, InputWithLabel } from '@/components/shared';
 import type { Team } from '@prisma/client';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { toast } from 'react-hot-toast';
 import { useSWRConfig } from 'swr';
 import type { ApiResponse } from 'types';
@@ -11,6 +11,8 @@ import { defaultHeaders } from '@/lib/common';
 import { useFormik } from 'formik';
 import { z } from 'zod';
 import { createApiKeySchema } from '@/lib/zod';
+import useTeamProjects from 'hooks/useTeamProjects';
+import { useProjectEnvironments } from 'hooks/useProjectVersions';
 
 const NewAPIKey = ({
   team,
@@ -52,9 +54,14 @@ const CreateAPIKeyForm = ({
 }: CreateAPIKeyFormProps) => {
   const { t } = useTranslation('common');
 
+  const projects = useTeamProjects(team.slug);
+  const [projectId, setProjectId] = useState('');
+  const environments = useProjectEnvironments(team.slug, projectId);
   const formik = useFormik<z.infer<typeof createApiKeySchema>>({
     initialValues: {
       name: '',
+      projectId: undefined,
+      environmentId: undefined,
     },
     validateOnBlur: false,
     validate: (values) => {
@@ -101,6 +108,51 @@ const CreateAPIKeyForm = ({
           className="text-sm"
           error={formik.errors.name}
         />
+        <label className="form-control mt-3">
+          <span className="label-text text-sm">{t('api-key-scope')}</span>
+          <select
+            className="select select-bordered select-sm"
+            onChange={(event) => {
+              const next = event.target.value;
+              setProjectId(next);
+              void formik.setFieldValue('projectId', next || undefined);
+              void formik.setFieldValue('environmentId', undefined);
+            }}
+            value={projectId}
+          >
+            <option value="">{t('api-key-unbound')}</option>
+            {(projects.projects ?? []).map((project) => (
+              <option key={project.id} value={project.id}>
+                {project.name}
+              </option>
+            ))}
+          </select>
+          <span className="label-text-alt mt-1 text-muted-foreground">
+            {t('api-key-scope-help')}
+          </span>
+        </label>
+        {projectId ? (
+          <label className="form-control mt-3">
+            <span className="label-text text-sm">{t('environment')}</span>
+            <select
+              className="select select-bordered select-sm"
+              onChange={(event) =>
+                void formik.setFieldValue(
+                  'environmentId',
+                  event.target.value || undefined
+                )
+              }
+              value={formik.values.environmentId ?? ''}
+            >
+              <option value="">{t('production-default')}</option>
+              {environments.environments.map((environment) => (
+                <option key={environment.id} value={environment.id}>
+                  {environment.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        ) : null}
       </Modal.Body>
       <Modal.Footer>
         <Button type="button" variant="outline" onClick={closeModal} size="md">

@@ -1,8 +1,9 @@
 import { TableHeader } from './TableHeader';
 import { TableBody, TableBodyType } from './TableBody';
 
-const tableWrapperClass = 'relative rounder border overflow-x-auto scrollbar';
-const tableClass = 'w-full text-left text-sm text-gray-500 dark:text-gray-400';
+const tableWrapperClass =
+  'relative overflow-x-auto rounded-md bg-card scrollbar';
+const tableClass = 'w-full text-left text-sm text-muted-foreground';
 
 export const Table = ({
   cols,

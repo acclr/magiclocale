@@ -14,16 +14,16 @@ import {
 } from '@/components/defaultLanding/LandingLocaleProvider';
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
 import { getLandingLocalePageProps } from '@/lib/landing-locale-server';
-import useTheme from 'hooks/useTheme';
 import env from '@/lib/env';
 import Head from 'next/head';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 
 type HomeProps = {
   landing: LandingLocalePageProps;
 };
 
 const HomeContent = () => {
-  const { toggleTheme, selectedTheme } = useTheme();
   const { translate } = useLandingI18n();
 
   return (
@@ -38,52 +38,34 @@ const HomeContent = () => {
       </Head>
 
       <div className="container mx-auto">
-        <div className="navbar bg-base-100 px-0 sm:px-1">
+        <div className="flex items-center bg-background px-0 sm:px-1">
           <div className="flex-1">
-            <Link href="/" className="btn btn-ghost text-xl normal-case">
-              {translate('landing.nav.brand', 'Magilocale')}
-            </Link>
+            <Button asChild variant="ghost" className="text-xl">
+              <Link href="/">
+                {translate('landing.nav.brand', 'Magilocale')}
+              </Link>
+            </Button>
           </div>
-          <div className="flex-none">
-            <ul className="menu menu-horizontal flex items-center gap-2 sm:gap-4">
-              <li>
-                <LandingLocaleSwitcher />
-              </li>
-              {env.darkModeEnabled && (
-                <li>
-                  <button
-                    className="bg-none p-0 rounded-lg flex items-center justify-center"
-                    onClick={toggleTheme}
-                  >
-                    <selectedTheme.icon className="w-5 h-5" />
-                  </button>
-                </li>
-              )}
-              <li>
-                <Link
-                  href="/auth/join"
-                  className="btn btn-primary btn-md py-3 px-2 sm:px-4 text-white"
-                >
-                  {translate('landing.nav.sign-up', 'Sign up')}
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/auth/login"
-                  className="btn btn-primary dark:border-zinc-600 dark:border-2 dark:text-zinc-200 btn-outline py-3 px-2 sm:px-4 btn-md"
-                >
-                  {translate('landing.nav.sign-in', 'Sign in')}
-                </Link>
-              </li>
-            </ul>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <LandingLocaleSwitcher />
+            <Button asChild>
+              <Link href="/auth/join">
+                {translate('landing.nav.sign-up', 'Sign up')}
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link href="/auth/login">
+                {translate('landing.nav.sign-in', 'Sign in')}
+              </Link>
+            </Button>
           </div>
         </div>
         <HeroSection />
-        <div className="divider"></div>
+        <Separator className="my-4" />
         <FeatureSection />
-        <div className="divider"></div>
+        <Separator className="my-4" />
         <PricingSection />
-        <div className="divider"></div>
+        <Separator className="my-4" />
         <FAQSection />
       </div>
     </>

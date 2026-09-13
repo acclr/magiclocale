@@ -22,6 +22,10 @@ export interface ProjectRepository extends ProjectLocaleRepository {
   removeLocale(projectId: string, locale: string): Promise<Project>;
 }
 
+/**
+ * Keys are project-wide; translation values are scoped to an environment.
+ * Every value lookup therefore carries an `environmentId`.
+ */
 export interface TranslationRepository extends ProjectLocaleRepository {
   listKeys(projectId: string): Promise<TranslationKey[]>;
   getKey(id: string): Promise<TranslationKey | null>;
@@ -29,10 +33,17 @@ export interface TranslationRepository extends ProjectLocaleRepository {
   createKey(input: Omit<TranslationKey, 'id'>): Promise<TranslationKey>;
   updateKeySourceText(id: string, sourceText: string): Promise<TranslationKey>;
 
-  listTranslations(projectId: string): Promise<Translation[]>;
-  listTranslationsForKey(translationKeyId: string): Promise<Translation[]>;
+  listTranslations(
+    projectId: string,
+    environmentId: string
+  ): Promise<Translation[]>;
+  listTranslationsForKey(
+    translationKeyId: string,
+    environmentId: string
+  ): Promise<Translation[]>;
   findTranslation(
     translationKeyId: string,
+    environmentId: string,
     locale: string
   ): Promise<Translation | null>;
   getTranslation(id: string): Promise<Translation | null>;

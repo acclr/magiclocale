@@ -10,7 +10,7 @@ import useTeam from 'hooks/useTeam';
 import { getTeamMember } from 'models/team';
 import { throwIfNotAllowed } from 'models/user';
 import { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import dynamic from 'next/dynamic';
 import type { NextPageWithLayout } from 'types';

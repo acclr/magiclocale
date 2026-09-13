@@ -101,6 +101,9 @@ function toBrowserConfig(config: MagiLocaleNextConfig): MagicLocaleConfig {
     batchSize: config.batchSize,
     maxRetries: config.maxRetries,
     retryDelayMs: config.retryDelayMs,
+    environment: config.environment,
+    version: config.version,
+    context: config.context,
   };
 }
 

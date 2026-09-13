@@ -16,4 +16,10 @@ describe('localeColor', () => {
 
     expect(new Set(colors).size).toBe(colors.length);
   });
+
+  it('washes column backgrounds with the same hue at low opacity', () => {
+    const color = localeColor('sv');
+
+    expect(color.background).toBe(`${color.hex}14`);
+  });
 });

@@ -1,4 +1,4 @@
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -44,12 +44,12 @@ const TranslationSaveBar = ({ onRefresh }: TranslationSaveBarProps) => {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4">
-      <div className="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-lg border border-base-300 bg-base-100 px-4 py-3">
+      <div className="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-md bg-card px-4 py-3">
         <div>
           <p className="font-medium">
             {t('unsaved-translations', { count: drafts.dirtyCount })}
           </p>
-          <p className="text-sm text-base-content/60">{t('save-all-help')}</p>
+          <p className="text-sm text-muted-foreground">{t('save-all-help')}</p>
         </div>
         <div className="flex gap-2">
           <button

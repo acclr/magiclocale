@@ -1,4 +1,9 @@
 import {
+  noopTranslationChangeRecorder,
+  toCellSnapshot,
+  type TranslationChangeRecorder,
+} from './change-recorder';
+import {
   asAiTranslation,
   asCodeTranslation,
   asManualTranslation,
@@ -22,43 +27,62 @@ import type {
 /**
  * Single domain entry point for translation mutation.
  * Automatic AI write paths all go through `writeAutomaticAiValue`.
+ *
+ * Every method operates on one environment's working copy. Published content
+ * lives in immutable version snapshots and is never written here.
  */
 export class TranslationService {
   constructor(
     private readonly repository: TranslationRepository,
-    private readonly translator: Translator
+    private readonly translator: Translator,
+    private readonly changeRecorder: TranslationChangeRecorder = noopTranslationChangeRecorder
   ) {}
 
   async saveManualEdit(
     translationId: string,
-    value: string
+    value: string,
+    actor?: string | null
   ): Promise<Translation> {
     const translation = await this.requireTranslation(translationId);
-    return this.repository.updateTranslation(
+    const key = await this.requireKey(translation.translationKeyId);
+    const before = toCellSnapshot(translation);
+    const updated = await this.repository.updateTranslation(
       translation.id,
       asManualTranslation(value)
     );
+    await this.record(key, updated, before, actor);
+    return updated;
   }
 
   async saveManualValue(
     translationKeyId: string,
+    environmentId: string,
     locale: string,
-    value: string
+    value: string,
+    actor?: string | null
   ): Promise<Translation> {
+    const key = await this.requireKey(translationKeyId);
     const existing = await this.repository.findTranslation(
       translationKeyId,
+      environmentId,
       locale
     );
-    if (existing) {
-      return this.saveManualEdit(existing.id, value);
-    }
+    const before = toCellSnapshot(existing);
 
-    await this.requireKey(translationKeyId);
-    return this.repository.createTranslation({
-      translationKeyId,
-      locale,
-      ...asManualTranslation(value),
-    });
+    const saved = existing
+      ? await this.repository.updateTranslation(
+          existing.id,
+          asManualTranslation(value)
+        )
+      : await this.repository.createTranslation({
+          translationKeyId,
+          environmentId,
+          locale,
+          ...asManualTranslation(value),
+        });
+
+    await this.record(key, saved, before, actor);
+    return saved;
   }
 
   /**
@@ -67,12 +91,14 @@ export class TranslationService {
    */
   async generateMissingTranslation(
     translationKeyId: string,
+    environmentId: string,
     locale: string
   ): Promise<AutomaticAiWriteResult> {
     const key = await this.requireKey(translationKeyId);
     const project = await this.requireProject(key.projectId);
     const existing = await this.repository.findTranslation(
       translationKeyId,
+      environmentId,
       locale
     );
 
@@ -87,9 +113,11 @@ export class TranslationService {
     if (locale === project.sourceLocale) {
       const translation = await this.repository.createTranslation({
         translationKeyId,
+        environmentId,
         locale,
         ...asCodeTranslation(key.sourceText),
       });
+      await this.record(key, translation, null);
       return { outcome: 'written', translation };
     }
 
@@ -101,9 +129,11 @@ export class TranslationService {
     });
     const translation = await this.repository.createTranslation({
       translationKeyId,
+      environmentId,
       locale,
       ...asAiTranslation(value),
     });
+    await this.record(key, translation, null);
 
     return { outcome: 'written', translation };
   }
@@ -114,6 +144,7 @@ export class TranslationService {
    */
   async handleSourceChange(
     translationKeyId: string,
+    environmentId: string,
     newSourceText: string
   ): Promise<{
     regenerated: Translation[];
@@ -121,25 +152,35 @@ export class TranslationService {
   }> {
     const key = await this.requireKey(translationKeyId);
     const project = await this.requireProject(key.projectId);
-    await this.repository.updateKeySourceText(key.id, newSourceText);
+    const updatedKey = await this.repository.updateKeySourceText(
+      key.id,
+      newSourceText
+    );
 
-    const translations = await this.repository.listTranslationsForKey(key.id);
+    const translations = await this.repository.listTranslationsForKey(
+      key.id,
+      environmentId
+    );
     const regenerated: Translation[] = [];
     const needsReview: Translation[] = [];
 
     for (const translation of translations) {
+      const before = toCellSnapshot(translation);
+
       if (translation.locale === project.sourceLocale) {
         if (isHumanOwned(translation)) {
           const updated = await this.repository.updateTranslation(
             translation.id,
             asNeedsReview()
           );
+          await this.record(updatedKey, updated, before);
           needsReview.push(updated);
         } else {
-          await this.repository.updateTranslation(
+          const updated = await this.repository.updateTranslation(
             translation.id,
             asCodeTranslation(newSourceText)
           );
+          await this.record(updatedKey, updated, before);
         }
         continue;
       }
@@ -149,6 +190,7 @@ export class TranslationService {
           translation.id,
           asNeedsReview()
         );
+        await this.record(updatedKey, updated, before);
         needsReview.push(updated);
         continue;
       }
@@ -160,6 +202,7 @@ export class TranslationService {
         targetLocale: translation.locale,
       });
       if (written.outcome === 'written') {
+        await this.record(updatedKey, written.translation, before);
         regenerated.push(written.translation);
       }
     }
@@ -169,6 +212,7 @@ export class TranslationService {
 
   async translateNewLocale(
     projectId: string,
+    environmentId: string,
     locale: string
   ): Promise<{ filled: number; skipped: number }> {
     const project = await this.requireProject(projectId);
@@ -176,11 +220,12 @@ export class TranslationService {
       await this.repository.addLocale(projectId, locale);
     }
 
-    return this.fillMissingForLocale(projectId, locale);
+    return this.fillMissingForLocale(projectId, environmentId, locale);
   }
 
   /**
-   * Suggestions are read-only until explicitly accepted.
+   * Suggestions are read-only until explicitly accepted, so they need no
+   * environment scope.
    */
   async suggestTranslation(
     translationKeyId: string,
@@ -199,50 +244,72 @@ export class TranslationService {
 
   async acceptSuggestion(
     translationId: string,
-    suggestedValue: string
+    suggestedValue: string,
+    actor?: string | null
   ): Promise<Translation> {
     const translation = await this.requireTranslation(translationId);
+    const key = await this.requireKey(translation.translationKeyId);
+    const before = toCellSnapshot(translation);
     const patch = isHumanOwned(translation)
       ? asManualTranslation(suggestedValue)
       : asAiTranslation(suggestedValue);
 
-    return this.repository.updateTranslation(translation.id, patch);
+    const updated = await this.repository.updateTranslation(
+      translation.id,
+      patch
+    );
+    await this.record(key, updated, before, actor);
+    return updated;
   }
 
   async acceptSuggestionValue(
     translationKeyId: string,
+    environmentId: string,
     locale: string,
-    suggestedValue: string
+    suggestedValue: string,
+    actor?: string | null
   ): Promise<Translation> {
     const existing = await this.repository.findTranslation(
       translationKeyId,
+      environmentId,
       locale
     );
     if (existing) {
-      return this.acceptSuggestion(existing.id, suggestedValue);
+      return this.acceptSuggestion(existing.id, suggestedValue, actor);
     }
 
-    await this.requireKey(translationKeyId);
-    return this.repository.createTranslation({
+    const key = await this.requireKey(translationKeyId);
+    const created = await this.repository.createTranslation({
       translationKeyId,
+      environmentId,
       locale,
       ...asAiTranslation(suggestedValue),
     });
+    await this.record(key, created, null, actor);
+    return created;
   }
 
-  async markReviewed(translationId: string): Promise<Translation> {
+  async markReviewed(
+    translationId: string,
+    actor?: string | null
+  ): Promise<Translation> {
     const translation = await this.requireTranslation(translationId);
     if (!isHumanOwned(translation)) {
       return translation;
     }
 
-    return this.repository.updateTranslation(translation.id, {
+    const key = await this.requireKey(translation.translationKeyId);
+    const before = toCellSnapshot(translation);
+    const updated = await this.repository.updateTranslation(translation.id, {
       status: 'manual',
     });
+    await this.record(key, updated, before, actor);
+    return updated;
   }
 
   async syncFromSource(
     projectId: string,
+    environmentId: string,
     incoming: IncomingSourceKey[]
   ): Promise<{
     createdKeys: number;
@@ -273,14 +340,17 @@ export class TranslationService {
           sourceText: item.sourceText,
         });
         createdKeys += 1;
-        await this.repository.createTranslation({
+        const sourceRow = await this.repository.createTranslation({
           translationKeyId: created.id,
+          environmentId,
           locale: project.sourceLocale,
           ...asCodeTranslation(item.sourceText),
         });
+        await this.record(created, sourceRow, null);
 
         const fill = await this.fillTargetsBestEffort(
           created.id,
+          environmentId,
           targetLocales
         );
         filled += fill.filled;
@@ -291,6 +361,7 @@ export class TranslationService {
       if (existing.sourceText === item.sourceText) {
         const fill = await this.fillTargetsBestEffort(
           existing.id,
+          environmentId,
           targetLocales
         );
         filled += fill.filled;
@@ -302,6 +373,7 @@ export class TranslationService {
       try {
         const change = await this.handleSourceChange(
           existing.id,
+          environmentId,
           item.sourceText
         );
         regenerated += change.regenerated.length;
@@ -326,6 +398,7 @@ export class TranslationService {
 
   async fillMissingForLocale(
     projectId: string,
+    environmentId: string,
     locale: string
   ): Promise<{ filled: number; skipped: number }> {
     const keys = await this.repository.listKeys(projectId);
@@ -333,7 +406,11 @@ export class TranslationService {
     let skipped = 0;
 
     for (const key of keys) {
-      const result = await this.generateMissingTranslation(key.id, locale);
+      const result = await this.generateMissingTranslation(
+        key.id,
+        environmentId,
+        locale
+      );
       if (result.outcome === 'written') {
         filled += 1;
       } else {
@@ -352,6 +429,7 @@ export class TranslationService {
    */
   async retranslateLocales(
     projectId: string,
+    environmentId: string,
     locales: string[],
     fromLocale?: string
   ): Promise<{ filled: number; skipped: number; failed: number }> {
@@ -382,6 +460,7 @@ export class TranslationService {
           const result = await this.retranslateCell(
             project.sourceLocale,
             key,
+            environmentId,
             locale,
             sourceLocale
           );
@@ -405,10 +484,15 @@ export class TranslationService {
   private async retranslateCell(
     projectSourceLocale: string,
     key: TranslationKey,
+    environmentId: string,
     locale: string,
     fromLocale: string
   ): Promise<AutomaticAiWriteResult> {
-    const existing = await this.repository.findTranslation(key.id, locale);
+    const existing = await this.repository.findTranslation(
+      key.id,
+      environmentId,
+      locale
+    );
     if (!canAutomaticAiWrite(existing)) {
       return {
         outcome: 'skipped',
@@ -416,6 +500,7 @@ export class TranslationService {
         translation: existing ?? undefined,
       };
     }
+    const before = toCellSnapshot(existing);
 
     if (locale === fromLocale) {
       const patch =
@@ -426,9 +511,11 @@ export class TranslationService {
         ? await this.repository.updateTranslation(existing.id, patch)
         : await this.repository.createTranslation({
             translationKeyId: key.id,
+            environmentId,
             locale,
             ...patch,
           });
+      await this.record(key, translation, before);
       return { outcome: 'written', translation };
     }
 
@@ -445,9 +532,11 @@ export class TranslationService {
         )
       : await this.repository.createTranslation({
           translationKeyId: key.id,
+          environmentId,
           locale,
           ...asAiTranslation(value),
         });
+    await this.record(key, translation, before);
     return { outcome: 'written', translation };
   }
 
@@ -484,6 +573,7 @@ export class TranslationService {
 
   private async fillTargetsBestEffort(
     translationKeyId: string,
+    environmentId: string,
     locales: string[]
   ): Promise<{ filled: number; fillFailed: number }> {
     let filled = 0;
@@ -493,6 +583,7 @@ export class TranslationService {
       try {
         const result = await this.generateMissingTranslation(
           translationKeyId,
+          environmentId,
           locale
         );
         if (result.outcome === 'written') {
@@ -520,6 +611,48 @@ export class TranslationService {
         error instanceof Error ? error.message : 'AI translation failed'
       );
     }
+  }
+
+  /**
+   * Report the edit into the environment's open draft version. Recording is
+   * an audit trail only, so a recorder failure must not roll back a write
+   * that already succeeded.
+   */
+  private async record(
+    key: TranslationKey,
+    translation: Translation,
+    before: ReturnType<typeof toCellSnapshot>,
+    actor?: string | null
+  ): Promise<void> {
+    const after = toCellSnapshot(translation);
+    if (before && after && this.isSameCell(before, after)) {
+      return;
+    }
+
+    try {
+      await this.changeRecorder.recordTranslationChange({
+        environmentId: translation.environmentId,
+        key: key.key,
+        locale: translation.locale,
+        before,
+        after,
+        actor: actor ?? null,
+      });
+    } catch (error) {
+      console.error('Unable to record translation change.', error);
+    }
+  }
+
+  private isSameCell(
+    before: NonNullable<ReturnType<typeof toCellSnapshot>>,
+    after: NonNullable<ReturnType<typeof toCellSnapshot>>
+  ): boolean {
+    return (
+      before.value === after.value &&
+      before.source === after.source &&
+      before.status === after.status &&
+      before.aiLocked === after.aiLocked
+    );
   }
 
   private async requireTranslation(id: string): Promise<Translation> {

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import useSWR from 'swr';
 
 import fetcher from '@/lib/fetcher';
@@ -36,7 +36,7 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
                 ? t('plan-language-limit', { count: entitlement.maxLocales })
                 : t('plan-language-unlimited')}
             </p>
-            <p className="text-base-content/60">{t('team-retainer-settings-help')}</p>
+            <p className="text-muted-foreground">{t('team-retainer-settings-help')}</p>
             <Link
               className="btn btn-outline btn-sm mt-2"
               href={`/teams/${slug}/billing`}
@@ -45,7 +45,7 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
             </Link>
           </div>
         ) : (
-          <p className="text-sm text-base-content/60">{t('loading')}</p>
+          <p className="text-sm text-muted-foreground">{t('loading')}</p>
         )}
       </Card.Body>
     </Card>

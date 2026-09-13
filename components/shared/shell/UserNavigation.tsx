@@ -1,18 +1,28 @@
 import {
+  HomeIcon,
   RectangleStackIcon,
   ShieldCheckIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import NavigationItems from './NavigationItems';
 import { MenuItem, NavigationProps } from './NavigationItems';
 
-const UserNavigation = ({ activePathname }: NavigationProps) => {
+const UserNavigation = ({
+  activePathname,
+  collapsed = false,
+}: NavigationProps) => {
   const { t } = useTranslation('common');
 
   const menus: MenuItem[] = [
     {
-      name: t('all-teams'),
+      name: t('home'),
+      href: '/dashboard',
+      icon: HomeIcon,
+      active: activePathname === '/dashboard',
+    },
+    {
+      name: t('teams'),
       href: '/teams',
       icon: RectangleStackIcon,
       active: activePathname === '/teams',
@@ -31,7 +41,7 @@ const UserNavigation = ({ activePathname }: NavigationProps) => {
     },
   ];
 
-  return <NavigationItems menus={menus} />;
+  return <NavigationItems collapsed={collapsed} menus={menus} />;
 };
 
 export default UserNavigation;

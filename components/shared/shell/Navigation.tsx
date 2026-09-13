@@ -3,30 +3,31 @@ import { useRouter } from 'next/router';
 import TeamNavigation from './TeamNavigation';
 import UserNavigation from './UserNavigation';
 
-const Navigation = () => {
+const Navigation = ({ collapsed = false }: { collapsed?: boolean }) => {
   const { asPath, isReady, query } = useRouter();
-  const [activePathname, setActivePathname] = useState<null | string>(null);
-
-  const { slug } = query as { slug: string };
+  const [activePathname, setActivePathname] = useState<string | null>(null);
+  const slug = typeof query.slug === 'string' ? query.slug : null;
 
   useEffect(() => {
     if (isReady && asPath) {
-      const activePathname = new URL(asPath, location.href).pathname;
-      setActivePathname(activePathname);
+      setActivePathname(new URL(asPath, location.href).pathname);
     }
   }, [asPath, isReady]);
 
-  const Navigation = () => {
-    if (slug) {
-      return <TeamNavigation activePathname={activePathname} slug={slug} />;
-    } else {
-      return <UserNavigation activePathname={activePathname} />;
-    }
-  };
-
   return (
     <nav className="flex flex-1 flex-col">
-      <Navigation />
+      {slug ? (
+        <TeamNavigation
+          activePathname={activePathname}
+          collapsed={collapsed}
+          slug={slug}
+        />
+      ) : (
+        <UserNavigation
+          activePathname={activePathname}
+          collapsed={collapsed}
+        />
+      )}
     </nav>
   );
 };

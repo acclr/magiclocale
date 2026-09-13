@@ -1,14 +1,23 @@
-import { Button, Modal as DModal } from 'react-daisyui';
-import { useTranslation } from 'next-i18next';
+import type { ReactNode } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface ModalProps {
   open: boolean;
   close: () => void;
-  children: React.ReactNode;
+  children: ReactNode;
 }
 
 interface BodyProps {
-  children: React.ReactNode;
+  children: ReactNode;
   className?: string;
 }
 
@@ -16,36 +25,42 @@ const Modal = ({ open, close, children }: ModalProps) => {
   const { t } = useTranslation('common');
 
   return (
-    <DModal open={open} className="dark:border dark:border-gray-100">
-      <Button
-        type="button"
-        size="sm"
-        shape="circle"
-        className="btn absolute right-2 top-2 btn-ghost rounded-full"
-        onClick={close}
-        aria-label="close"
-      >
-        {t('x')}
-      </Button>
-      <div>{children}</div>
-    </DModal>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) {
+          close();
+        }
+      }}
+    >
+      <DialogContent>
+        <span className="sr-only">{t('x')}</span>
+        <div>{children}</div>
+      </DialogContent>
+    </Dialog>
   );
 };
 
-const Header = ({ children }: { children: React.ReactNode }) => {
-  return <h3 className="font-bold text-lg">{children}</h3>;
+const Header = ({ children }: { children: ReactNode }) => {
+  return (
+    <DialogHeader>
+      <DialogTitle>{children}</DialogTitle>
+    </DialogHeader>
+  );
 };
 
-const Description = ({ children }: { children: React.ReactNode }) => {
-  return <p className="text-sm text-gray-700 pt-1">{children}</p>;
+const Description = ({ children }: { children: ReactNode }) => {
+  return <DialogDescription>{children}</DialogDescription>;
 };
 
 const Body = ({ children, className }: BodyProps) => {
-  return <div className={`py-3 ${className}`}>{children}</div>;
+  return <div className={`py-3 ${className ?? ''}`}>{children}</div>;
 };
 
-const Footer = ({ children }: { children: React.ReactNode }) => {
-  return <div className="flex justify-end gap-2">{children}</div>;
+const Footer = ({ children }: { children: ReactNode }) => {
+  return (
+    <DialogFooter className="flex justify-end gap-2">{children}</DialogFooter>
+  );
 };
 
 Modal.Header = Header;

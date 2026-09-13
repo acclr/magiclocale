@@ -11,9 +11,9 @@ import {
 } from '@/lib/common';
 import { useFormik } from 'formik';
 import useInvitation from 'hooks/useInvitation';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 import * as Yup from 'yup';

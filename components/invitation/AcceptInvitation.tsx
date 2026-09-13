@@ -1,7 +1,7 @@
 import toast from 'react-hot-toast';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import type { ApiResponse } from 'types';
 import { defaultHeaders } from '@/lib/common';

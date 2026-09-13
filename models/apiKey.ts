@@ -5,6 +5,9 @@ import { randomBytes } from 'crypto';
 interface CreateApiKeyParams {
   name: string;
   teamId: string;
+  /** Optional scoping so a key can only read one project/environment. */
+  projectId?: string | null;
+  environmentId?: string | null;
 }
 
 export const hashApiKey = hashPublicApiKey;
@@ -16,15 +19,21 @@ const generateUniqueApiKey = () => {
 };
 
 export const createApiKey = async (params: CreateApiKeyParams) => {
-  const { name, teamId } = params;
+  const { name, teamId, projectId, environmentId } = params;
 
   const [hashedKey, apiKey] = generateUniqueApiKey();
 
   await prisma.apiKey.create({
     data: {
       name,
-      hashedKey: hashedKey,
+      hashedKey,
       team: { connect: { id: teamId } },
+      ...(projectId
+        ? { projectId }
+        : {}),
+      ...(environmentId
+        ? { environment: { connect: { id: environmentId } } }
+        : {}),
     },
   });
 
@@ -40,7 +49,19 @@ export const fetchApiKeys = async (teamId: string) => {
       id: true,
       name: true,
       createdAt: true,
+      lastUsedAt: true,
+      projectId: true,
+      environmentId: true,
+      environment: {
+        select: {
+          id: true,
+          slug: true,
+          name: true,
+          project: { select: { id: true, name: true } },
+        },
+      },
     },
+    orderBy: { createdAt: 'desc' },
   });
 };
 
@@ -60,6 +81,8 @@ export const getApiKey = async (apiKey: string) => {
     select: {
       id: true,
       teamId: true,
+      projectId: true,
+      environmentId: true,
     },
   });
 };
@@ -72,6 +95,8 @@ export const getApiKeyById = async (id: string) => {
     select: {
       id: true,
       teamId: true,
+      projectId: true,
+      environmentId: true,
     },
   });
 };

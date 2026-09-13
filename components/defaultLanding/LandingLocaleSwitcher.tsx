@@ -1,3 +1,5 @@
+import { Button } from '@/components/ui/button';
+
 import { useLandingI18n } from './LandingLocaleProvider';
 
 const LandingLocaleSwitcher = () => {
@@ -8,20 +10,20 @@ const LandingLocaleSwitcher = () => {
   }
 
   return (
-    <div className="join" role="group" aria-label="Language">
+    <div className="inline-flex overflow-hidden rounded-md border border-border" role="group" aria-label="Language">
       {locales.map((code) => (
-        <button
+        <Button
           key={code}
           type="button"
-          className={`btn btn-sm join-item ${
-            locale === code ? 'btn-primary' : 'btn-ghost'
-          }`}
+          size="sm"
+          variant={locale === code ? 'default' : 'ghost'}
+          className="rounded-none"
           aria-pressed={locale === code}
           disabled={isLoading}
           onClick={() => void setLocale(code)}
         >
           {code.toUpperCase()}
-        </button>
+        </Button>
       ))}
     </div>
   );

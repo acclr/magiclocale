@@ -1,40 +1,38 @@
 import React, { ReactElement } from 'react';
 import { AccountLayout } from '@/components/layouts';
-import { useTranslation } from 'react-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Link from 'next/link';
 import router from 'next/router';
+import { Button } from '@/components/ui/button';
 
 const Custom404 = () => {
   const { t } = useTranslation('common');
   return (
-    <div className="w-full items-center justify-center lg:px-2 xl:px-0 text-center dark:bg-black">
-      <p className="text-7xl md:text-8xl lg:text-9xl font-bold tracking-wider dark:text-gray-300">
+    <div className="w-full items-center justify-center text-center lg:px-2 xl:px-0">
+      <p className="text-7xl font-bold tracking-wider text-foreground md:text-8xl lg:text-9xl">
         {t('error-404')}
       </p>
-      <p className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-wider dark:text-gray-300 mt-2">
+      <p className="mt-2 text-4xl font-bold tracking-wider text-foreground md:text-5xl lg:text-6xl">
         {t('page-not-found')}
       </p>
-      <p className="text-lg md:text-xl lg:text-2xl dark:text-gray-500 my-12">
+      <p className="my-12 text-lg text-muted-foreground md:text-xl lg:text-2xl">
         {t('sorry-not-found')}
       </p>
       <div className="mt-8 space-x-5">
-        <Link
-          href="/"
-          className="btn btn-primary btn-md py-3 px-2 sm:px-4 text-white"
-        >
-          {t('go-home')}
-        </Link>
-        <button
+        <Button asChild>
+          <Link href="/">{t('go-home')}</Link>
+        </Button>
+        <Button
+          variant="outline"
           onClick={(e) => {
             e.preventDefault();
             router.back();
           }}
-          className="btn btn-primary dark:border-zinc-600 dark:border-2 dark:text-zinc-200 btn-outline py-3 px-2 sm:px-4 btn-md"
         >
           {t('go-back')}
-        </button>
+        </Button>
       </div>
     </div>
   );

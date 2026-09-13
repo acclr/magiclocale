@@ -1,19 +1,20 @@
 import app from '@/lib/app';
 import Image from 'next/image';
-import useTheme from 'hooks/useTheme';
+import Link from 'next/link';
 
-const Brand = () => {
-  const { theme } = useTheme();
+const Brand = ({ collapsed = false }: { collapsed?: boolean }) => {
+  const href = '/dashboard';
+
   return (
-    <div className="flex pt-6 shrink-0 items-center text-xl font-bold gap-2 dark:text-gray-100">
-      <Image
-        src={theme !== 'dark' ? app.logoUrl : '/logowhite.png'}
-        alt={app.name}
-        width={30}
-        height={30}
-      />
-      {app.name}
-    </div>
+    <Link
+      href={href}
+      className={`flex shrink-0 items-center text-xl font-bold text-foreground ${
+        collapsed ? 'justify-center' : 'gap-2'
+      }`}
+    >
+      <Image src={app.logoUrl} alt={app.name} width={30} height={30} />
+      {collapsed ? <span className="sr-only">{app.name}</span> : app.name}
+    </Link>
   );
 };
 

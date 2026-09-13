@@ -1,4 +1,5 @@
 export * from './invariants';
+export * from './change-recorder';
 export * from './dashboard-projector';
 export * from './locale-catalog';
 export * from './locale-color';

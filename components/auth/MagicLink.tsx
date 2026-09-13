@@ -4,11 +4,11 @@ import env from '@/lib/env';
 import { useFormik } from 'formik';
 import useInvitation from 'hooks/useInvitation';
 import { signIn, useSession } from 'next-auth/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
 
@@ -70,7 +70,7 @@ const MagicLink = ({ csrfToken }: MagicLinkProps) => {
       <Head>
         <title>{t('magic-link-title')}</title>
       </Head>
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-2">
             <InputWithLabel
@@ -108,7 +108,7 @@ const MagicLink = ({ csrfToken }: MagicLinkProps) => {
           </Link>
         </div>
       </div>
-      <p className="text-center text-sm text-gray-600 mt-3">
+      <p className="mt-3 text-center text-sm text-muted-foreground">
         {t('dont-have-an-account')}
         <Link
           href={`/auth/join${params}`}

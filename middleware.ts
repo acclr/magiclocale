@@ -1,3 +1,4 @@
+import './lib/public-app-url';
 import { getToken } from 'next-auth/jwt';
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
@@ -60,6 +61,7 @@ const generateCSP = (): string => {
 const unAuthenticatedRoutes = [
   '/api/hello',
   '/api/health',
+  '/api/dashboard-locale',
   '/api/auth/**',
   '/api/oauth/**',
   '/api/scim/v2.0/**',

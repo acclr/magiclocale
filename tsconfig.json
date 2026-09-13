@@ -18,6 +18,7 @@
     "baseUrl": ".",
     "noImplicitAny": false,
     "paths": {
+      "@/*": ["./*"],
       "@/lib/*": ["lib/*"],
       "@/components/*": ["components/*"],
       "@/domain/*": ["domain/*"],

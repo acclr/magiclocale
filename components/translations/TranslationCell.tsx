@@ -1,11 +1,58 @@
 import type { DashboardCell } from '../../domain/translations';
 import type { CellSaveOptions } from './CellDrafts';
 import { useCellDrafts } from './CellDrafts';
-import { useTranslation } from 'next-i18next';
-import { useEffect, useRef, useState } from 'react';
+import {
+  CheckIcon,
+  CodeBracketIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  InformationCircleIcon,
+  PencilSquareIcon,
+  SparklesIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline';
+import { Button } from '@/components/ui/button';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import { cn } from 'cn';
+import { useTranslation } from '@/hooks/useTranslation';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ComponentProps,
+} from 'react';
 import toast from 'react-hot-toast';
+import { BotIcon, UserCheck2, UserIcon } from 'lucide-react';
 
-import StatusBadge from './StatusBadge';
+const COLLAPSED_CELL_PX = 80;
+
+const CellIconButton = ({
+  label,
+  children,
+  ...props
+}: ComponentProps<typeof Button> & { label: string }) => {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          aria-label={label}
+          size="icon-sm"
+          type="button"
+          variant="ghost"
+          {...props}
+        >
+          {children}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
+  );
+};
 
 type TranslationCellProps = {
   keyId: string;
@@ -14,6 +61,24 @@ type TranslationCellProps = {
   canEdit: boolean;
   onOpen: () => void;
   onSave: (value: string, options?: CellSaveOptions) => Promise<unknown>;
+};
+
+type StatusKey = 'missing' | 'needs-review' | 'manual' | 'source' | 'ai';
+
+const iconStyles: Record<StatusKey, string> = {
+  missing: 'text-amber-400',
+  'needs-review': 'text-destructive',
+  manual: 'text-emerald-400',
+  source: 'text-muted-foreground',
+  ai: 'text-sky-400',
+};
+
+const icons: Record<StatusKey, typeof PencilSquareIcon> = {
+  missing: ExclamationCircleIcon,
+  'needs-review': ExclamationTriangleIcon,
+  manual: UserIcon,
+  source: CodeBracketIcon,
+  ai: BotIcon,
 };
 
 const TranslationCell = ({
@@ -95,11 +160,63 @@ const TranslationCell = ({
     return () => draftsRef.current.unregister(draftId);
   }, [draftId, isDirty]);
 
+
+  const statusValue = cell.missing
+    ? 'missing'
+    : cell.status === 'needs-review'
+      ? 'needs-review'
+      : cell.status === 'source' || cell.source === 'code'
+        ? 'source'
+        : cell.source;
+  const normalized: StatusKey = statusValue ?? 'missing';
+  const statusLabel: Record<StatusKey, string> = {
+    missing: t('translation-status-missing'),
+    'needs-review': t('translation-status-needs-review'),
+    manual: t('translation-status-manual'),
+    source: t('translation-status-source'),
+    ai: t('translation-status-ai'),
+  }[normalized];
+
+  const StatusIcon = icons[normalized];
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+  const isExpanded = isFocused && isOverflowing;
+
+  useLayoutEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      return;
+    }
+    setIsOverflowing(textarea.scrollHeight > COLLAPSED_CELL_PX);
+  }, [value, isFocused]);
+
   return (
-    <div className="min-w-64 space-y-2 p-3">
+    <div
+      className={cn(
+        'group relative flex h-full min-h-full w-full min-w-96 flex-1 flex-row hover:ring-primary/40 focus-within:ring-2 focus-within:ring-primary/40',
+        isExpanded
+          ? 'hover:bg-[#222] focus-within:bg-[#222]'
+          : 'hover:bg-foreground/5 focus-within:bg-foreground/10',
+        isOverflowing &&
+          !isExpanded &&
+          "overflow-hidden after:pointer-events-none after:absolute after:bottom-0 after:z-10 after:h-5 after:w-full after:bg-linear-to-t after:from-black/70 after:to-transparent after:opacity-50 after:content-['']",
+        isExpanded &&
+          'absolute top-0 left-0 z-30 min-h-48 min-w-[32rem] bg-card shadow-xl ring-1 ring-border'
+      )}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setIsFocused(false);
+        }
+      }}
+      onFocus={() => setIsFocused(true)}
+    >
       <textarea
         aria-label={`${cell.locale} translation`}
-        className="textarea textarea-bordered textarea-sm w-full resize-none bg-base-100"
+        className={cn(
+          'textarea textarea-sm min-h-full! h-16 flex-1 resize-none border-none bg-transparent py-2.5 opacity-60 hover:opacity-100 focus:opacity-100 focus:ring-0 focus:outline-0',
+          isExpanded ? 'min-h-40 overflow-auto' : 'max-h-20 overflow-hidden'
+        )}
         disabled={!canEdit || isSaving || drafts.isSavingAll}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => {
@@ -109,44 +226,49 @@ const TranslationCell = ({
           }
         }}
         placeholder="Add translation…"
+        ref={textareaRef}
         rows={2}
         value={value}
       />
-      <div className="flex items-center justify-between gap-2">
-        <StatusBadge
-          missing={cell.missing}
-          source={cell.source}
-          status={cell.status}
-        />
-        <div className="flex items-center gap-1">
-          {isDirty && (
-            <>
-              <button
-                className="btn btn-ghost btn-xs"
-                disabled={isSaving || drafts.isSavingAll}
-                onClick={discard}
-                type="button"
-              >
-                {t('discard-cell')}
-              </button>
-              <button
-                className="btn btn-primary btn-xs"
-                disabled={isSaving || drafts.isSavingAll}
-                onClick={() => void save()}
-                type="button"
-              >
-                {t('save-cell')}
-              </button>
-            </>
-          )}
-          <button
-            className="btn btn-ghost btn-xs"
-            onClick={onOpen}
-            type="button"
-          >
-            {t('details')}
-          </button>
-        </div>
+      <div className="flex p-0.5 justify-start opacity-30 group-hover:opacity-100 min-w-7 flex-col w-max items-center">
+        {!isDirty && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex items-center rounded-md hover:bg-foreground/5 justify-center p-1 w-full">
+                <StatusIcon
+                  className={cn('w-[16px] h-[16px]', iconStyles[normalized])}
+                />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">{statusLabel}</TooltipContent>
+          </Tooltip>
+        )}
+        {isDirty && (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center rounded-md hover:bg-foreground/5 justify-center p-1 w-full"
+                  onClick={discard}
+                >
+                  <XMarkIcon />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">{t('discard-cell')}</TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div
+                  className="flex items-center rounded-md hover:bg-foreground/5 justify-center p-1 w-full"
+                  onClick={() => void save()}
+                >
+                  <CheckIcon />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent side="right">{t('save-cell')}</TooltipContent>
+            </Tooltip>
+          </>
+        )}
       </div>
     </div>
   );

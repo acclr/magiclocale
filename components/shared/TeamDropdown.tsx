@@ -1,41 +1,72 @@
 import {
   ChevronUpDownIcon,
+  CubeIcon,
   FolderIcon,
   FolderPlusIcon,
+  HomeIcon,
   RectangleStackIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
+import useTeamProjects from 'hooks/useTeamProjects';
 import useTeams from 'hooks/useTeams';
 import { useSession } from 'next-auth/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
-import React from 'react';
-import { maxLengthPolicies } from '@/lib/common';
 
-const TeamDropdown = () => {
+import { maxLengthPolicies } from '@/lib/common';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
   const router = useRouter();
   const { teams } = useTeams();
   const { data } = useSession();
   const { t } = useTranslation('common');
+  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const { projects } = useTeamProjects(slug);
 
-  const currentTeam = (teams || []).find(
-    (team) => team.slug === router.query.slug
-  );
+  const currentTeam = (teams || []).find((team) => team.slug === slug);
+  const label =
+    currentTeam?.name ||
+    data?.user?.name?.substring(0, maxLengthPolicies.nameShortDisplay) ||
+    '';
 
   const menus = [
     {
-      id: 2,
+      id: 'teams',
       name: t('teams'),
       items: (teams || []).map((team) => ({
         id: team.id,
         name: team.name,
-        href: `/teams/${team.slug}/settings`,
+        href: `/teams/${team.slug}/products`,
         icon: FolderIcon,
       })),
     },
+    ...(currentTeam && projects?.length
+      ? [
+          {
+            id: 'projects',
+            name: t('translation-projects'),
+            items: projects.map((project) => ({
+              id: project.id,
+              name: project.name,
+              href: `/teams/${currentTeam.slug}/projects/${project.id}`,
+              icon: CubeIcon,
+            })),
+          },
+        ]
+      : []),
     {
-      id: 1,
+      id: 'profile',
       name: t('profile'),
       items: [
         {
@@ -47,12 +78,18 @@ const TeamDropdown = () => {
       ],
     },
     {
-      id: 3,
+      id: 'actions',
       name: '',
       items: [
         {
+          id: 'home',
+          name: t('home'),
+          href: '/dashboard',
+          icon: HomeIcon,
+        },
+        {
           id: 'all-teams',
-          name: t('all-teams'),
+          name: t('teams'),
           href: '/teams',
           icon: RectangleStackIcon,
         },
@@ -66,56 +103,45 @@ const TeamDropdown = () => {
     },
   ];
 
+  const trigger = collapsed ? (
+    <Button
+      variant="outline"
+      size="icon"
+      className="h-10 w-10 font-bold"
+      aria-label={label}
+    >
+      {label.charAt(0).toUpperCase() || <FolderIcon className="h-5 w-5" />}
+    </Button>
+  ) : (
+    <Button
+      variant="outline"
+      className="h-10 w-full justify-between rounded-md px-4 text-sm font-bold"
+    >
+      <span className="truncate">{label}</span>
+      <ChevronUpDownIcon className="h-5 w-5 shrink-0" />
+    </Button>
+  );
+
   return (
-    <div className="dropdown w-full">
-      <div
-        tabIndex={0}
-        className="border border-gray-300 dark:border-gray-600 flex h-10 items-center px-4 justify-between cursor-pointer rounded text-sm font-bold"
-      >
-        {currentTeam?.name ||
-          data?.user?.name?.substring(
-            0,
-            maxLengthPolicies.nameShortDisplay
-          )}{' '}
-        <ChevronUpDownIcon className="w-5 h-5" />
-      </div>
-      <ul
-        tabIndex={0}
-        className="dropdown-content dark:border-gray-600 p-2 shadow-md bg-base-100 w-full rounded border px-2"
-      >
-        {menus.map(({ id, name, items }) => {
-          return (
-            <React.Fragment key={id}>
-              {name && (
-                <li
-                  className="text-xs text-gray-500 py-1 px-2"
-                  key={`${id}-name`}
-                >
-                  {name}
-                </li>
-              )}
-              {items.map((item) => (
-                <li
-                  key={`${id}-${item.id}`}
-                  onClick={() => {
-                    if (document.activeElement) {
-                      (document.activeElement as HTMLElement).blur();
-                    }
-                  }}
-                >
-                  <Link href={item.href}>
-                    <div className="flex hover:bg-gray-100 hover:dark:text-black focus:bg-gray-100 focus:outline-none py-2 px-2 rounded text-sm font-medium gap-2 items-center">
-                      <item.icon className="w-5 h-5" /> {item.name}
-                    </div>
-                  </Link>
-                </li>
-              ))}
-              {name && <li className="divider m-0" key={`${id}-divider`} />}
-            </React.Fragment>
-          );
-        })}
-      </ul>
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="min-w-56">
+        {menus.map(({ id, name, items }, index) => (
+          <DropdownMenuGroup key={id}>
+            {index > 0 && <DropdownMenuSeparator />}
+            {name ? <DropdownMenuLabel>{name}</DropdownMenuLabel> : null}
+            {items.map((item) => (
+              <DropdownMenuItem asChild key={`${id}-${item.id}`}>
+                <Link href={item.href}>
+                  <item.icon className="h-5 w-5" />
+                  {item.name}
+                </Link>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuGroup>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

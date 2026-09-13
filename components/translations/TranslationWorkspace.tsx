@@ -3,8 +3,10 @@ import type {
   DashboardRow,
 } from '../../domain/translations';
 import { getLocaleDisplay, localeColor } from '../../domain/translations';
+import useCanAccess from '../../hooks/useCanAccess';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
-import { useTranslation } from 'next-i18next';
+import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -15,6 +17,7 @@ import LocaleSelect from './LocaleSelect';
 import TranslationCell from './TranslationCell';
 import TranslationDrawer from './TranslationDrawer';
 import TranslationSaveBar from './TranslationSaveBar';
+import PublishBar from '../versions/PublishBar';
 
 type TranslationWorkspaceProps = {
   slug: string;
@@ -32,6 +35,7 @@ const TranslationWorkspace = ({
   canUpdateProject,
 }: TranslationWorkspaceProps) => {
   const { t } = useTranslation('common');
+  const { canAccess } = useCanAccess();
   const filters: Array<{ id: TranslationFilter; label: string }> = [
     { id: 'all', label: t('translation-filter-all') },
     { id: 'ai', label: t('translation-filter-ai') },
@@ -47,11 +51,13 @@ const TranslationWorkspace = ({
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
+  const { environment } = useProjectEnvironment();
   const workspace = useTranslationWorkspace(slug, projectId, {
     page,
     pageSize,
     filter,
     search: debouncedSearch,
+    environment,
   });
   const [selected, setSelected] = useState<{
     keyId: string;
@@ -135,21 +141,22 @@ const TranslationWorkspace = ({
   return (
     <CellDraftsProvider>
       <div className="space-y-4 pb-28">
+        <PublishBar
+          canPublish={canAccess('team_version', ['publish'])}
+          environmentName={dashboard.environment.name}
+          onPublish={(message) => workspace.publish(message)}
+          publishState={dashboard.publishState}
+        />
+
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-              {t('translation-workspace')}
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold">
-              {dashboard.project.name}
-            </h1>
-            <p className="mt-1 text-sm text-base-content/60">
-              {t('source-locale')}:{' '}
+            <div className="flex flex-row items-center text-2xl font-semibold">
+              <h1 className="mr-2.5">{dashboard.project.name}</h1>
               <LocaleName
                 code={dashboard.project.sourceLocale}
                 variant="full"
               />
-            </p>
+            </div>
           </div>
           <button
             className="btn btn-ghost btn-sm"
@@ -161,18 +168,7 @@ const TranslationWorkspace = ({
           </button>
         </header>
 
-        <div className="flex flex-wrap items-end gap-3 rounded-lg border border-base-300 bg-base-100 p-3">
-          <label className="form-control min-w-64 flex-1">
-            <span className="label-text mb-1">{t('search-translations')}</span>
-            <input
-              className="input input-bordered input-sm"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search…"
-              type="search"
-              value={search}
-            />
-          </label>
-
+        <div className="hidden flex flex-wrap items-end gap-3 rounded-md bg-card p-3">
           {canUpdateProject && (
             <form className="flex items-end gap-2" onSubmit={addLocale}>
               <label className="form-control min-w-64">
@@ -240,8 +236,8 @@ const TranslationWorkspace = ({
         </div>
 
         {canEdit && (
-          <div className="flex flex-wrap items-end gap-3 rounded-lg border border-base-300 bg-base-100 p-3">
-            <p className="w-full text-sm text-base-content/70">
+          <div className="flex hidden flex-wrap items-end gap-3 rounded-md bg-card p-3">
+            <p className="w-full text-sm text-muted-foreground">
               {t('retranslate-help')}
             </p>
             <label className="form-control min-w-64">
@@ -283,150 +279,165 @@ const TranslationWorkspace = ({
           </div>
         )}
 
-        <nav className="tabs tabs-bordered overflow-x-auto">
-          {filters.map((item) => (
-            <button
-              className={`tab whitespace-nowrap ${
-                filter === item.id ? 'tab-active' : ''
-              }`}
-              key={item.id}
-              onClick={() => {
-                setFilter(item.id);
-                setPage(1);
-              }}
-              type="button"
-            >
-              {item.label}
-              <span className="badge badge-ghost badge-sm ml-2">
-                {dashboard.counts[item.id]}
-              </span>
-            </button>
-          ))}
-        </nav>
+        <section className="flex flex-row items-center justify-between gap-4">
+          <nav className="tabs tabs-bordered overflow-x-auto">
+            {filters.map((item) => (
+              <button
+                className={`tab whitespace-nowrap ${
+                  filter === item.id ? 'tab-active' : ''
+                }`}
+                key={item.id}
+                onClick={() => {
+                  setFilter(item.id);
+                  setPage(1);
+                }}
+                type="button"
+              >
+                {item.label}
+                <span className="badge badge-ghost badge-sm ml-2">
+                  {dashboard.counts[item.id]}
+                </span>
+              </button>
+            ))}
+          </nav>
+          <div className="min-w-96">
+            <input
+              className="input input-bordered input-sm"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t('search-translations')}
+              type="search"
+              value={search}
+            />
+          </div>
+        </section>
 
-        <div className="overflow-auto rounded-lg border border-base-300 bg-base-100">
-          <table className="table-pin-rows table-pin-cols table">
-            <thead>
-              <tr>
-                <th className="min-w-64 bg-base-200">{t('translation-key')}</th>
-                {dashboard.locales.map((projectLocale) => {
-                  const color = localeColor(projectLocale);
-                  const display = getLocaleDisplay(projectLocale);
-                  return (
-                    <th
-                      className="min-w-72"
-                      key={projectLocale}
-                      style={{
-                        backgroundColor: color.background,
-                        boxShadow: `inset 0 3px 0 ${color.hex}`,
-                      }}
-                      title={display.label}
-                    >
-                      <label className="flex items-center gap-2">
-                        {canEdit && (
-                          <input
-                            checked={selectedLocales.includes(projectLocale)}
-                            className="checkbox checkbox-sm"
-                            onChange={() =>
-                              setSelectedLocales((current) =>
-                                current.includes(projectLocale)
-                                  ? current.filter(
-                                      (locale) => locale !== projectLocale
-                                    )
-                                  : [...current, projectLocale]
-                              )
-                            }
-                            type="checkbox"
-                          />
-                        )}
-                        <span
-                          className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold"
-                          style={{
-                            backgroundColor: color.hex,
-                            color: color.onHex,
-                          }}
-                        >
-                          <LocaleName code={projectLocale} option={display} />
-                        </span>
-                        {projectLocale === dashboard.project.sourceLocale && (
-                          <span className="badge badge-sm">{t('source')}</span>
-                        )}
-                      </label>
-                    </th>
-                  );
-                })}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map((row: DashboardRow) => (
-                <tr key={row.keyId}>
-                  <th className="max-w-72 align-top">
-                    <p className="break-words font-mono text-xs font-normal">
-                      {row.key}
-                    </p>
-                    <p className="mt-2 line-clamp-3 whitespace-normal text-xs font-normal text-base-content/60">
-                      {row.sourceText}
-                    </p>
+        <div className="rounded-[8px] overflow-hidden relative border border-[#dddddd22] bg-card">
+          <div className="flex w-full max-w-full relative overflow-auto">
+            <table className="table-pin-rows min-w-max table-pin-cols table [&_td]:border-l [&_td]:border-[#ffffff11] [&_th]:border-l [&_th]:border-[#ffffff11] [&_th:first-child]:border-l-0">
+              <thead className="sticky top-0">
+                <tr>
+                  <th className="min-w-64 bg-card px-3 py-2.5">
+                    {t('translation-key')}
                   </th>
                   {dashboard.locales.map((projectLocale) => {
                     const color = localeColor(projectLocale);
+                    const display = getLocaleDisplay(projectLocale);
                     return (
-                      <td
-                        className="p-0 align-top"
+                      <th
+                        className="min-w-72 px-3 py-2.5"
                         key={projectLocale}
                         style={{
                           backgroundColor: color.background,
-                          boxShadow: `inset 3px 0 0 ${color.hex}`,
                         }}
+                        title={display.label}
                       >
-                        <TranslationCell
-                          canEdit={canEdit}
-                          cell={row.cells[projectLocale]}
-                          fallbackValue={
-                            projectLocale === dashboard.project.sourceLocale
-                              ? row.sourceText
-                              : undefined
-                          }
-                          keyId={row.keyId}
-                          onOpen={() =>
-                            setSelected({
-                              keyId: row.keyId,
-                              locale: projectLocale,
-                            })
-                          }
-                          onSave={(value, options) =>
-                            workspace.saveManual(
-                              {
-                                keyId: row.keyId,
-                                locale: projectLocale,
-                                value,
-                              },
-                              options
-                            )
-                          }
-                        />
-                      </td>
+                        <label className="flex items-center gap-2">
+                          {canEdit && (
+                            <input
+                              checked={selectedLocales.includes(projectLocale)}
+                              className="checkbox checkbox-sm"
+                              onChange={() =>
+                                setSelectedLocales((current) =>
+                                  current.includes(projectLocale)
+                                    ? current.filter(
+                                        (locale) => locale !== projectLocale
+                                      )
+                                    : [...current, projectLocale]
+                                )
+                              }
+                              type="checkbox"
+                            />
+                          )}
+                          <span
+                            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold"
+                            style={{
+                              backgroundColor: color.hex,
+                              color: color.onHex,
+                            }}
+                          >
+                            <LocaleName code={projectLocale} option={display} />
+                          </span>
+                          {projectLocale === dashboard.project.sourceLocale && (
+                            <span className="badge badge-sm">
+                              {t('source')}
+                            </span>
+                          )}
+                        </label>
+                      </th>
                     );
                   })}
                 </tr>
-              ))}
-              {!rows.length && (
-                <tr>
-                  <td
-                    className="py-12 text-center text-base-content/60"
-                    colSpan={dashboard.locales.length + 1}
-                  >
-                    {t('no-matching-translations')}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {rows.map((row: DashboardRow) => (
+                  <tr key={row.keyId} className="odd:bg-foreground/5">
+                    <th className="max-w-72 px-3 py-2.5 align-top">
+                      <p className="break-words font-mono text-xs font-normal">
+                        {row.key}
+                      </p>
+                      {/*<p className="mt-2 line-clamp-3 whitespace-normal text-xs font-normal text-muted-foreground">
+                        {row.sourceText}
+                      </p>*/}
+                    </th>
+                    {dashboard.locales.map((projectLocale) => {
+                      const color = localeColor(projectLocale);
+                      return (
+                        <td
+                          className="relative z-0 h-20 overflow-visible p-0 align-top focus-within:z-30"
+                          key={projectLocale}
+                          style={{
+                            backgroundColor: color.background,
+                          }}
+                        >
+                          <TranslationCell
+                            canEdit={canEdit}
+                            cell={row.cells[projectLocale]}
+                            fallbackValue={
+                              projectLocale === dashboard.project.sourceLocale
+                                ? row.sourceText
+                                : undefined
+                            }
+                            keyId={row.keyId}
+                            onOpen={() =>
+                              setSelected({
+                                keyId: row.keyId,
+                                locale: projectLocale,
+                              })
+                            }
+                            onSave={(value, options) =>
+                              workspace.saveManual(
+                                {
+                                  keyId: row.keyId,
+                                  locale: projectLocale,
+                                  value,
+                                },
+                                options
+                              )
+                            }
+                          />
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+                {!rows.length && (
+                  <tr>
+                    <td
+                      className="py-12 text-center text-muted-foreground"
+                      colSpan={dashboard.locales.length + 1}
+                    >
+                      {t('no-matching-translations')}
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
 
         {pagination && pagination.totalKeys > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-base-content/60">
+            <p className="text-sm text-muted-foreground">
               {t('translation-pagination-summary', {
                 from: (pagination.page - 1) * pagination.pageSize + 1,
                 to: Math.min(

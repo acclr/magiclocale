@@ -16,6 +16,8 @@ function dependencies(
       id: 'key_a',
       teamId: 'team_a',
       expiresAt: null,
+      projectId: null,
+      environmentId: null,
     }),
     findProjectById: jest.fn().mockResolvedValue({
       id: 'project_a',
@@ -48,6 +50,7 @@ describe('public SDK API authentication', () => {
         'Bearer test-api-key',
         'project_a',
         deps,
+        null,
         NOW
       )
     ).resolves.toMatchObject({
@@ -67,6 +70,8 @@ describe('public SDK API authentication', () => {
         id: 'key_a',
         teamId: 'team_a',
         expiresAt: new Date('2026-08-31T09:59:59.000Z'),
+        projectId: null,
+        environmentId: null,
       }),
     ]) {
       const deps = dependencies({ findApiKeyByHash });
@@ -75,6 +80,7 @@ describe('public SDK API authentication', () => {
           'Bearer test-api-key',
           'project_a',
           deps,
+          null,
           NOW
         )
       ).rejects.toEqual(
@@ -98,6 +104,7 @@ describe('public SDK API authentication', () => {
         'Bearer test-api-key',
         'project_b',
         deps,
+        null,
         NOW
       )
     ).rejects.toEqual(
@@ -107,5 +114,18 @@ describe('public SDK API authentication', () => {
       })
     );
     expect(deps.updateLastUsedAt).not.toHaveBeenCalled();
+  });
+
+  it('lets a bound key win over a requested environment', async () => {
+    const { resolveEnvironmentRef } = await import(
+      '../../lib/api/public-sdk-auth'
+    );
+    expect(
+      resolveEnvironmentRef({ environmentId: 'env_staging' }, 'production')
+    ).toBe('env_staging');
+    expect(resolveEnvironmentRef({ environmentId: null }, 'staging')).toBe(
+      'staging'
+    );
+    expect(resolveEnvironmentRef({ environmentId: null }, null)).toBeNull();
   });
 });

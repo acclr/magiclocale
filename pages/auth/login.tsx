@@ -1,3 +1,4 @@
+import '@/lib/public-app-url';
 import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
@@ -6,11 +7,10 @@ import type {
 import * as Yup from 'yup';
 import Link from 'next/link';
 import { useFormik } from 'formik';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { useRouter } from 'next/router';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import React, { type ReactElement, useEffect, useState, useRef } from 'react';
-import type { ComponentStatus } from 'react-daisyui/dist/types';
 import { getCsrfToken, signIn, useSession } from 'next-auth/react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -27,6 +27,8 @@ import AgreeMessage from '@/components/auth/AgreeMessage';
 import GoogleReCAPTCHA from '@/components/shared/GoogleReCAPTCHA';
 import ReCAPTCHA from 'react-google-recaptcha';
 import { maxLengthPolicies } from '@/lib/common';
+
+type ComponentStatus = 'info' | 'success' | 'warning' | 'error';
 
 interface Message {
   text: string | null;
@@ -121,7 +123,7 @@ const Login: NextPageWithLayout<
           {t(message.text)}
         </Alert>
       )}
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <div className="flex gap-2 flex-wrap">
           {authProviders.github && <GithubButton />}
           {authProviders.google && <GoogleButton />}
@@ -214,7 +216,7 @@ const Login: NextPageWithLayout<
           )}
         </div>
       </div>
-      <p className="text-center text-sm text-gray-600 mt-3">
+      <p className="mt-3 text-center text-sm text-muted-foreground">
         {t('dont-have-an-account')}
         <Link
           href={`/auth/join${params}`}

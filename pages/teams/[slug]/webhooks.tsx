@@ -3,7 +3,7 @@ import { TeamTab } from '@/components/team';
 import { Webhooks } from '@/components/webhook';
 import useTeam from 'hooks/useTeam';
 import { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import env from '@/lib/env';
 

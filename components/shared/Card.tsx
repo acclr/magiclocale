@@ -1,41 +1,36 @@
 import React from 'react';
 
+import {
+  Card as CardUi,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
 const Card = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="card w-full border border-rounded dark:bg-black dark:border-gray-600">
-      {children}
-    </div>
-  );
+  return <CardUi className="w-full">{children}</CardUi>;
 };
 
 const Title = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <h2 className="card-title text-xl font-medium leading-none tracking-tight">
-      {children}
-    </h2>
-  );
+  return <CardTitle className="text-xl tracking-tight">{children}</CardTitle>;
 };
 
 const Description = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="text-gray-600 dark:text-gray-400 text-sm">{children}</div>
-  );
+  return <CardDescription>{children}</CardDescription>;
 };
 
 const Header = ({ children }: { children: React.ReactNode }) => {
-  return <div className="flex gap-2 flex-col">{children}</div>;
+  return <CardHeader className="px-0">{children}</CardHeader>;
 };
 
 const Body = ({ children }: { children: React.ReactNode }) => {
-  return <div className="card-body dark:bg-black gap-4 p-6">{children}</div>;
+  return <CardContent className="flex flex-col gap-4">{children}</CardContent>;
 };
 
 const Footer = ({ children }: { children: React.ReactNode }) => {
-  return (
-    <div className="card-actions justify-end dark:border-gray-600 p-2 border-t bg-gray-50 dark:bg-black">
-      {children}
-    </div>
-  );
+  return <CardFooter className="justify-end">{children}</CardFooter>;
 };
 
 Card.Body = Body;

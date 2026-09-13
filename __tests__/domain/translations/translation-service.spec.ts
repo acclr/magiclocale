@@ -34,6 +34,7 @@ class RecordingTranslator implements Translator {
 }
 
 const PROJECT_ID = 'proj_acme';
+const ENV_ID = 'env_prod';
 const KEY_SAVE = 'key_save';
 const KEY_CANCEL = 'key_cancel';
 const TR_SV_SAVE = 'tr_sv_save';
@@ -54,6 +55,16 @@ function seedState(): StoreState {
         billingId: null,
       },
     ],
+    environments: [
+      {
+        id: ENV_ID,
+        projectId: PROJECT_ID,
+        slug: 'production',
+        name: 'Production',
+        isProduction: true,
+        liveVersionId: null,
+      },
+    ],
     keys: [
       {
         id: KEY_SAVE,
@@ -72,6 +83,7 @@ function seedState(): StoreState {
       {
         id: 'tr_en_save',
         translationKeyId: KEY_SAVE,
+        environmentId: ENV_ID,
         locale: 'en',
         ...asCodeTranslation('Save changes'),
         updatedAt,
@@ -79,6 +91,7 @@ function seedState(): StoreState {
       {
         id: TR_SV_SAVE,
         translationKeyId: KEY_SAVE,
+        environmentId: ENV_ID,
         locale: 'sv',
         ...asAiTranslation('Spara ändringar'),
         updatedAt,
@@ -86,6 +99,7 @@ function seedState(): StoreState {
       {
         id: TR_DE_SAVE,
         translationKeyId: KEY_SAVE,
+        environmentId: ENV_ID,
         locale: 'de',
         ...asAiTranslation('Änderungen speichern'),
         updatedAt,
@@ -93,6 +107,7 @@ function seedState(): StoreState {
       {
         id: 'tr_en_cancel',
         translationKeyId: KEY_CANCEL,
+        environmentId: ENV_ID,
         locale: 'en',
         ...asCodeTranslation('Cancel'),
         updatedAt,
@@ -100,6 +115,7 @@ function seedState(): StoreState {
       {
         id: 'tr_sv_cancel',
         translationKeyId: KEY_CANCEL,
+        environmentId: ENV_ID,
         locale: 'sv',
         ...asAiTranslation('Avbryt'),
         updatedAt,
@@ -133,6 +149,7 @@ describe('TranslationService', () => {
     const updated = await service.saveManualEdit(TR_SV_SAVE, 'Spara');
     const created = await service.saveManualValue(
       KEY_CANCEL,
+      ENV_ID,
       'de',
       'Abbrechen, bitte'
     );
@@ -149,9 +166,9 @@ describe('TranslationService', () => {
       aiLocked: true,
     });
     await expect(
-      service.generateMissingTranslation(KEY_CANCEL, 'de')
+      service.generateMissingTranslation(KEY_CANCEL, ENV_ID, 'de')
     ).resolves.toMatchObject({ outcome: 'skipped' });
-    expect((await repository.findTranslation(KEY_CANCEL, 'de'))?.value).toBe(
+    expect((await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de'))?.value).toBe(
       'Abbrechen, bitte'
     );
   });
@@ -162,17 +179,17 @@ describe('TranslationService', () => {
     translator.calls.length = 0;
 
     await expect(
-      service.generateMissingTranslation(KEY_SAVE, 'sv')
+      service.generateMissingTranslation(KEY_SAVE, ENV_ID, 'sv')
     ).resolves.toMatchObject({
       outcome: 'skipped',
       reason: 'already-exists',
     });
-    expect(await service.fillMissingForLocale(PROJECT_ID, 'sv')).toEqual({
+    expect(await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'sv')).toEqual({
       filled: 0,
       skipped: 2,
     });
     expect(
-      await service.syncFromSource(PROJECT_ID, [
+      await service.syncFromSource(PROJECT_ID, ENV_ID, [
         { key: 'settings.save', sourceText: 'Save changes' },
         { key: 'settings.cancel', sourceText: 'Cancel' },
       ])
@@ -193,7 +210,11 @@ describe('TranslationService', () => {
 
   it('regenerates AI-owned rows after source changes', async () => {
     const { service, repository } = setup();
-    const result = await service.handleSourceChange(KEY_SAVE, 'Save settings');
+    const result = await service.handleSourceChange(
+      KEY_SAVE,
+      ENV_ID,
+      'Save settings'
+    );
 
     expect(result.needsReview).toHaveLength(0);
     expect(result.regenerated.map(({ locale }) => locale).sort()).toEqual([
@@ -212,7 +233,11 @@ describe('TranslationService', () => {
     await service.saveManualEdit(TR_SV_SAVE, 'Spara');
     translator.calls.length = 0;
 
-    const result = await service.handleSourceChange(KEY_SAVE, 'Save settings');
+    const result = await service.handleSourceChange(
+      KEY_SAVE,
+      ENV_ID,
+      'Save settings'
+    );
 
     expect(result.needsReview.map(({ locale }) => locale)).toEqual(['sv']);
     expect(result.regenerated.map(({ locale }) => locale)).toEqual(['de']);
@@ -231,7 +256,11 @@ describe('TranslationService', () => {
     const { service, repository } = setup();
     await service.saveManualEdit('tr_en_save', 'Save');
 
-    const result = await service.handleSourceChange(KEY_SAVE, 'Save settings');
+    const result = await service.handleSourceChange(
+      KEY_SAVE,
+      ENV_ID,
+      'Save settings'
+    );
 
     expect(result.needsReview.map(({ locale }) => locale)).toEqual(['en']);
     expect(await repository.getTranslation('tr_en_save')).toMatchObject({
@@ -246,7 +275,7 @@ describe('TranslationService', () => {
     const { service, repository } = setup();
     await service.saveManualEdit(TR_SV_SAVE, 'Spara');
 
-    expect(await service.translateNewLocale(PROJECT_ID, 'fr')).toEqual({
+    expect(await service.translateNewLocale(PROJECT_ID, ENV_ID, 'fr')).toEqual({
       filled: 2,
       skipped: 0,
     });
@@ -257,7 +286,7 @@ describe('TranslationService', () => {
     expect(await repository.getTranslation(TR_DE_SAVE)).toMatchObject({
       value: 'Änderungen speichern',
     });
-    expect(await repository.findTranslation(KEY_SAVE, 'fr')).toMatchObject({
+    expect(await repository.findTranslation(KEY_SAVE, ENV_ID, 'fr')).toMatchObject({
       value: 'AI(fr): Save changes',
       source: 'ai',
       aiLocked: false,
@@ -292,14 +321,14 @@ describe('TranslationService', () => {
   it('fills missing rows without replacing existing AI rows', async () => {
     const { service, repository } = setup();
 
-    expect(await service.fillMissingForLocale(PROJECT_ID, 'de')).toEqual({
+    expect(await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'de')).toEqual({
       filled: 1,
       skipped: 1,
     });
     expect(await repository.getTranslation(TR_DE_SAVE)).toMatchObject({
       value: 'Änderungen speichern',
     });
-    expect(await repository.findTranslation(KEY_CANCEL, 'de')).toMatchObject({
+    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
       value: 'AI(de): Cancel',
       source: 'ai',
     });
@@ -307,7 +336,7 @@ describe('TranslationService', () => {
 
   it('creates source and target rows for new synced keys', async () => {
     const { service, repository } = setup();
-    const result = await service.syncFromSource(PROJECT_ID, [
+    const result = await service.syncFromSource(PROJECT_ID, ENV_ID, [
       { key: 'nav.home', sourceText: 'Home' },
     ]);
 
@@ -320,7 +349,7 @@ describe('TranslationService', () => {
       fillFailed: 0,
     });
     const key = await repository.findKeyByName(PROJECT_ID, 'nav.home');
-    expect(await repository.findTranslation(key!.id, 'en')).toMatchObject({
+    expect(await repository.findTranslation(key!.id, ENV_ID, 'en')).toMatchObject({
       value: 'Home',
       source: 'code',
       aiLocked: false,
@@ -337,7 +366,7 @@ describe('TranslationService', () => {
     const service = new TranslationService(repository, translator);
 
     await expect(
-      service.syncFromSource(PROJECT_ID, [
+      service.syncFromSource(PROJECT_ID, ENV_ID, [
         { key: 'nav.home', sourceText: 'Home' },
       ])
     ).resolves.toEqual({
@@ -350,11 +379,11 @@ describe('TranslationService', () => {
     });
 
     const key = await repository.findKeyByName(PROJECT_ID, 'nav.home');
-    expect(await repository.findTranslation(key!.id, 'en')).toMatchObject({
+    expect(await repository.findTranslation(key!.id, ENV_ID, 'en')).toMatchObject({
       value: 'Home',
       source: 'code',
     });
-    expect(await repository.findTranslation(key!.id, 'sv')).toBeNull();
+    expect(await repository.findTranslation(key!.id, ENV_ID, 'sv')).toBeNull();
   });
 
   it('still surfaces translator failures for explicit fill requests', async () => {
@@ -366,7 +395,7 @@ describe('TranslationService', () => {
     });
 
     await expect(
-      service.fillMissingForLocale(PROJECT_ID, 'de')
+      service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'de')
     ).rejects.toBeInstanceOf(TranslatorError);
   });
 
@@ -376,7 +405,7 @@ describe('TranslationService', () => {
     translator.calls.length = 0;
 
     await expect(
-      service.retranslateLocales(PROJECT_ID, ['sv', 'de'], 'en')
+      service.retranslateLocales(PROJECT_ID, ENV_ID, ['sv', 'de'], 'en')
     ).resolves.toEqual({
       filled: 3,
       skipped: 1,
@@ -390,7 +419,7 @@ describe('TranslationService', () => {
       value: 'AI(de): Save changes',
       source: 'ai',
     });
-    expect(await repository.findTranslation(KEY_CANCEL, 'de')).toMatchObject({
+    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
       value: 'AI(de): Cancel',
       source: 'ai',
     });
@@ -406,7 +435,7 @@ describe('TranslationService', () => {
     translator.calls.length = 0;
 
     await expect(
-      service.retranslateLocales(PROJECT_ID, ['en'], 'sv')
+      service.retranslateLocales(PROJECT_ID, ENV_ID, ['en'], 'sv')
     ).resolves.toEqual({
       filled: 2,
       skipped: 0,

@@ -5,10 +5,10 @@ import {
   passwordPolicies,
 } from '@/lib/common';
 import { useFormik } from 'formik';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { toast } from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 import * as Yup from 'yup';
@@ -65,7 +65,7 @@ const ResetPassword = () => {
   });
 
   return (
-    <div className="rounded p-6 border">
+    <div className="rounded-md bg-card p-6">
       <form onSubmit={formik.handleSubmit}>
         <div className="space-y-2">
           <InputWithLabel

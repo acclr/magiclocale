@@ -18,7 +18,13 @@ const locale = z
   .regex(/^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/, 'Invalid locale');
 const translationValue = z.string().max(10_000);
 
-export const translationProjectParamsSchema = z.object({ projectId });
+const environmentRef = z.string().trim().min(1).max(64);
+
+export const translationProjectParamsSchema = z.object({
+  projectId,
+  /** Environment slug or id. Omitted means the project's production. */
+  environment: environmentRef.optional(),
+});
 
 export const localeFormatSchema = z.enum(['language', 'regional']);
 
@@ -92,6 +98,7 @@ export const retranslateLocalesSchema = z.object({
 
 export const translationDashboardQuerySchema = z.object({
   projectId,
+  environment: environmentRef.optional(),
   page: z.coerce.number().int().min(1).optional(),
   pageSize: z.coerce.number().int().min(1).max(100).optional(),
   filter: z.enum(['all', 'ai', 'manual', 'needs-review', 'missing']).optional(),

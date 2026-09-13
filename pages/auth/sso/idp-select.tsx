@@ -19,7 +19,7 @@ export default function IdPSelection({ connections }: IdPSelectionProps) {
 
   return (
     <>
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <div className="flex flex-col gap-4">
           {connections.map((connection) => {
             return (

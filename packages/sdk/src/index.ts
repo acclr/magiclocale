@@ -36,6 +36,23 @@ export function refreshTranslations(): Promise<void> {
   return requireClient().refreshTranslations();
 }
 
+export function isEnabled(key: string, fallback = false): boolean {
+  return requireClient().isEnabled(key, fallback);
+}
+
+export function getValue(
+  key: string,
+  fallback?: import('./types').FlagValue
+) {
+  return requireClient().getValue(key, fallback);
+}
+
+export function identify(
+  context: import('./types').FlagEvaluationContext
+): void {
+  requireClient().identify(context);
+}
+
 export function subscribe(listener: () => void): () => void {
   return requireClient().subscribe(listener);
 }
@@ -50,9 +67,14 @@ function requireClient(): MagicLocaleClient {
 }
 
 export { MagicLocaleClient } from './client';
+export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
 export type {
   FetchLike,
+  FlagEvaluationContext,
+  FlagPayload,
+  FlagSnapshot,
+  FlagValue,
   MagicLocaleConfig,
   SourceKey,
   TranslationBundle,

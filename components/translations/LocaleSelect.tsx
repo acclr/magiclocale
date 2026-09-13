@@ -4,9 +4,10 @@ import {
   matchCatalogLocale,
   searchLocales,
 } from '../../domain/translations';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
+import LocaleFlag from './LocaleFlag';
 import LocaleName from './LocaleName';
 
 type LocaleSelectProps = {
@@ -82,12 +83,12 @@ const LocaleSelect = ({
 
   return (
     <div className="relative w-full min-w-64" ref={rootRef}>
-      {selected?.flag && !open ? (
+      {selected?.countryCode && !open ? (
         <span
           aria-hidden
-          className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center text-base leading-none"
+          className="pointer-events-none absolute inset-y-0 left-3 z-10 flex items-center"
         >
-          {selected.flag}
+          <LocaleFlag countryCode={selected.countryCode} size="sm" />
         </span>
       ) : null}
       <input
@@ -96,7 +97,7 @@ const LocaleSelect = ({
         aria-expanded={open}
         autoComplete="off"
         className={`input input-bordered w-full ${size === 'sm' ? 'input-sm' : ''} ${
-          selected?.flag && !open ? 'pl-10' : ''
+          selected?.countryCode && !open ? 'pl-10' : ''
         }`}
         disabled={disabled}
         id={inputId}
@@ -135,16 +136,18 @@ const LocaleSelect = ({
       />
       {open && (
         <ul
-          className="menu absolute z-30 mt-1 max-h-72 w-full overflow-auto rounded-box border border-base-300 bg-base-100 p-1 shadow-lg"
+          className="absolute z-30 mt-1 flex max-h-72 w-full flex-col overflow-auto rounded-md border border-border bg-popover p-1 shadow-lg"
           id={listId}
           role="listbox"
         >
           {options.length ? (
             options.slice(0, 80).map((option) => (
-              <li key={option.code} role="presentation">
+              <li className="w-full" key={option.code} role="presentation">
                 <button
                   aria-selected={option.code === value}
-                  className={option.code === value ? 'active' : undefined}
+                  className={`flex w-full items-center rounded-md px-2 py-1.5 text-left text-sm hover:bg-muted ${
+                    option.code === value ? 'bg-muted' : ''
+                  }`}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => commit(option.code)}
                   role="option"
@@ -159,7 +162,7 @@ const LocaleSelect = ({
               </li>
             ))
           ) : (
-            <li className="disabled">
+            <li className="px-2 py-1.5 text-sm text-muted-foreground">
               <span>{t('locale-no-matches')}</span>
             </li>
           )}

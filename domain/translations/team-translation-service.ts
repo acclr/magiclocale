@@ -1,3 +1,5 @@
+import type { EnvironmentService } from '../environments/environment-service';
+import type { Environment } from '../environments/types';
 import {
   paginateTranslationDashboard,
   projectTranslationDashboard,
@@ -9,25 +11,36 @@ import type { ProjectService } from './project-service';
 import type { TranslationService } from './translation-service';
 import type { Project, Translation, TranslationKey } from './types';
 
+/**
+ * Team-scoped facade over the translation domain. Every mutating call
+ * resolves the target environment first, so a caller can never write into an
+ * environment belonging to another team's project.
+ */
 export class TeamTranslationService {
   constructor(
     private readonly repository: TranslationRepository,
     private readonly projectService: ProjectService,
-    private readonly translationService: TranslationService
+    private readonly translationService: TranslationService,
+    private readonly environmentService: EnvironmentService
   ) {}
 
   async dashboard(
     teamId: string,
     projectId: string,
+    environmentRef?: string | null,
     query?: Partial<DashboardQuery>
   ): Promise<TranslationDashboard> {
-    const project = await this.projectService.get(teamId, projectId);
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
     const [keys, translations] = await Promise.all([
       this.repository.listKeys(project.id),
-      this.repository.listTranslations(project.id),
+      this.repository.listTranslations(project.id, environment.id),
     ]);
     return paginateTranslationDashboard(
-      projectTranslationDashboard(project, keys, translations),
+      projectTranslationDashboard(project, environment, keys, translations),
       query
     );
   }
@@ -35,52 +48,88 @@ export class TeamTranslationService {
   async saveManual(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     keyId: string,
     locale: string,
-    value: string
+    value: string,
+    actor?: string | null
   ): Promise<Translation> {
-    await this.requireCell(teamId, projectId, keyId, locale);
-    return this.translationService.saveManualValue(keyId, locale, value);
+    const { environment } = await this.requireCell(
+      teamId,
+      projectId,
+      environmentRef,
+      keyId,
+      locale
+    );
+    return this.translationService.saveManualValue(
+      keyId,
+      environment.id,
+      locale,
+      value,
+      actor
+    );
   }
 
   async suggest(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     keyId: string,
     locale: string
   ): Promise<string> {
-    await this.requireCell(teamId, projectId, keyId, locale);
+    await this.requireCell(teamId, projectId, environmentRef, keyId, locale);
     return this.translationService.suggestTranslation(keyId, locale);
   }
 
   async acceptSuggestion(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     keyId: string,
     locale: string,
-    value: string
+    value: string,
+    actor?: string | null
   ): Promise<Translation> {
-    await this.requireCell(teamId, projectId, keyId, locale);
-    return this.translationService.acceptSuggestionValue(keyId, locale, value);
+    const { environment } = await this.requireCell(
+      teamId,
+      projectId,
+      environmentRef,
+      keyId,
+      locale
+    );
+    return this.translationService.acceptSuggestionValue(
+      keyId,
+      environment.id,
+      locale,
+      value,
+      actor
+    );
   }
 
   async markReviewed(
     teamId: string,
     projectId: string,
-    translationId: string
+    translationId: string,
+    actor?: string | null
   ): Promise<Translation> {
     await this.requireTranslation(teamId, projectId, translationId);
-    return this.translationService.markReviewed(translationId);
+    return this.translationService.markReviewed(translationId, actor);
   }
 
   async addLocaleAndFill(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     locale: string
   ): Promise<{ project: Project; filled: number; skipped: number }> {
-    await this.projectService.get(teamId, projectId);
+    const { environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
     const result = await this.translationService.translateNewLocale(
       projectId,
+      environment.id,
       locale
     );
     const project = await this.projectService.get(teamId, projectId);
@@ -90,43 +139,80 @@ export class TeamTranslationService {
   async fillMissing(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     locale: string
   ): Promise<{ filled: number; skipped: number }> {
-    const project = await this.projectService.get(teamId, projectId);
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
     this.requireProjectLocale(project, locale);
-    return this.translationService.fillMissingForLocale(project.id, locale);
+    return this.translationService.fillMissingForLocale(
+      project.id,
+      environment.id,
+      locale
+    );
   }
 
   async retranslate(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     locales: string[],
     sourceLocale?: string
   ): Promise<{ filled: number; skipped: number; failed: number }> {
-    const project = await this.projectService.get(teamId, projectId);
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
     for (const locale of locales) {
       this.requireProjectLocale(project, locale);
     }
     return this.translationService.retranslateLocales(
       project.id,
+      environment.id,
       locales,
       sourceLocale
     );
   }
 
+  private async requireScope(
+    teamId: string,
+    projectId: string,
+    environmentRef?: string | null
+  ): Promise<{ project: Project; environment: Environment }> {
+    const project = await this.projectService.get(teamId, projectId);
+    const environment = await this.environmentService.resolve(
+      project.id,
+      environmentRef
+    );
+    return { project, environment };
+  }
+
   private async requireCell(
     teamId: string,
     projectId: string,
+    environmentRef: string | null | undefined,
     keyId: string,
     locale: string
-  ): Promise<{ project: Project; key: TranslationKey }> {
-    const project = await this.projectService.get(teamId, projectId);
+  ): Promise<{
+    project: Project;
+    environment: Environment;
+    key: TranslationKey;
+  }> {
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
     this.requireProjectLocale(project, locale);
     const key = await this.repository.getKey(keyId);
     if (!key || key.projectId !== project.id) {
       throw new Error(`Translation key not found: ${keyId}`);
     }
-    return { project, key };
+    return { project, environment, key };
   }
 
   private async requireTranslation(
@@ -134,15 +220,20 @@ export class TeamTranslationService {
     projectId: string,
     translationId: string
   ): Promise<Translation> {
-    await this.projectService.get(teamId, projectId);
+    const project = await this.projectService.get(teamId, projectId);
     const translation = await this.repository.getTranslation(translationId);
     if (!translation) {
       throw new Error(`Translation not found: ${translationId}`);
     }
     const key = await this.repository.getKey(translation.translationKeyId);
-    if (!key || key.projectId !== projectId) {
+    if (!key || key.projectId !== project.id) {
       throw new Error(`Translation not found: ${translationId}`);
     }
+    // The row must also belong to an environment inside this project.
+    await this.environmentService.requireProjectEnvironment(
+      project.id,
+      translation.environmentId
+    );
     return translation;
   }
 

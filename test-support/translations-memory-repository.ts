@@ -1,4 +1,10 @@
 import type {
+  CreateEnvironmentInput,
+  Environment,
+  EnvironmentRepository,
+  UpdateEnvironmentInput,
+} from '../domain/environments';
+import type {
   CreateProjectInput,
   Project,
   ProjectRepository,
@@ -10,16 +16,23 @@ import type {
 
 export type StoreState = {
   projects: Project[];
+  environments: Environment[];
   keys: TranslationKey[];
   translations: Translation[];
 };
 
+export function emptyStore(): StoreState {
+  return { projects: [], environments: [], keys: [], translations: [] };
+}
+
 export class MemoryRepository
-  implements ProjectRepository, TranslationRepository
+  implements ProjectRepository, TranslationRepository, EnvironmentRepository
 {
   private sequence = 0;
 
-  constructor(private readonly state: StoreState) {}
+  constructor(private readonly state: StoreState) {
+    this.state.environments ??= [];
+  }
 
   async getProject(id: string): Promise<Project | null> {
     return this.state.projects.find((project) => project.id === id) ?? null;
@@ -69,7 +82,91 @@ export class MemoryRepository
   async removeLocale(projectId: string, locale: string): Promise<Project> {
     const project = this.requireProject(projectId);
     project.locales = project.locales.filter((item) => item !== locale);
+    const keyIds = new Set(
+      this.state.keys
+        .filter((key) => key.projectId === projectId)
+        .map((key) => key.id)
+    );
+    this.state.translations = this.state.translations.filter(
+      (item) => !(keyIds.has(item.translationKeyId) && item.locale === locale)
+    );
     return project;
+  }
+
+  async getEnvironment(id: string): Promise<Environment | null> {
+    return (
+      this.state.environments.find((environment) => environment.id === id) ??
+      null
+    );
+  }
+
+  async listEnvironments(projectId: string): Promise<Environment[]> {
+    return this.state.environments.filter(
+      (environment) => environment.projectId === projectId
+    );
+  }
+
+  async findEnvironmentBySlug(
+    projectId: string,
+    slug: string
+  ): Promise<Environment | null> {
+    return (
+      this.state.environments.find(
+        (environment) =>
+          environment.projectId === projectId && environment.slug === slug
+      ) ?? null
+    );
+  }
+
+  async findProductionEnvironment(
+    projectId: string
+  ): Promise<Environment | null> {
+    return (
+      this.state.environments.find(
+        (environment) =>
+          environment.projectId === projectId && environment.isProduction
+      ) ?? null
+    );
+  }
+
+  async createEnvironment(
+    input: CreateEnvironmentInput
+  ): Promise<Environment> {
+    const environment: Environment = {
+      id: this.id('environment'),
+      projectId: input.projectId,
+      slug: input.slug,
+      name: input.name,
+      isProduction: input.isProduction ?? false,
+      liveVersionId: null,
+    };
+    this.state.environments.push(environment);
+    return environment;
+  }
+
+  async updateEnvironment(
+    id: string,
+    patch: UpdateEnvironmentInput
+  ): Promise<Environment> {
+    const environment = this.state.environments.find(
+      (item) => item.id === id
+    );
+    if (!environment) {
+      throw new Error(`Environment not found: ${id}`);
+    }
+    Object.assign(environment, patch);
+    return environment;
+  }
+
+  async deleteEnvironment(id: string): Promise<void> {
+    const index = this.state.environments.findIndex((item) => item.id === id);
+    if (index < 0) {
+      throw new Error(`Environment not found: ${id}`);
+    }
+    this.state.environments.splice(index, 1);
+    this.state.translations = this.state.translations.filter(
+      (item) => item.environmentId !== id
+    );
   }
 
   async listKeys(projectId: string): Promise<TranslationKey[]> {
@@ -109,33 +206,44 @@ export class MemoryRepository
     return key;
   }
 
-  async listTranslations(projectId: string): Promise<Translation[]> {
+  async listTranslations(
+    projectId: string,
+    environmentId: string
+  ): Promise<Translation[]> {
     const keyIds = new Set(
       this.state.keys
         .filter((key) => key.projectId === projectId)
         .map((key) => key.id)
     );
-    return this.state.translations.filter((item) =>
-      keyIds.has(item.translationKeyId)
+    return this.state.translations.filter(
+      (item) =>
+        keyIds.has(item.translationKeyId) &&
+        item.environmentId === environmentId
     );
   }
 
   async listTranslationsForKey(
-    translationKeyId: string
+    translationKeyId: string,
+    environmentId: string
   ): Promise<Translation[]> {
     return this.state.translations.filter(
-      (item) => item.translationKeyId === translationKeyId
+      (item) =>
+        item.translationKeyId === translationKeyId &&
+        item.environmentId === environmentId
     );
   }
 
   async findTranslation(
     translationKeyId: string,
+    environmentId: string,
     locale: string
   ): Promise<Translation | null> {
     return (
       this.state.translations.find(
         (item) =>
-          item.translationKeyId === translationKeyId && item.locale === locale
+          item.translationKeyId === translationKeyId &&
+          item.environmentId === environmentId &&
+          item.locale === locale
       ) ?? null
     );
   }

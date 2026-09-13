@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
-import { Button } from 'react-daisyui';
-import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/shared';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import useTeam from 'hooks/useTeam';
 import type { MagilocalePlan } from '@/domain/billing';
@@ -46,11 +46,11 @@ const MagilocalePricing = ({ plans, projectId }: MagilocalePricingProps) => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {plans.map((plan) => (
           <div
-            className="relative rounded-md border border-gray-200 bg-white"
+            className="relative rounded-md bg-card"
             key={plan.id}
           >
             <div className="p-8">
-              <h3 className="font-display text-2xl font-bold text-black">
+              <h3 className="font-display text-2xl font-bold text-foreground">
                 {plan.name}
               </h3>
               <p className="mt-2 text-3xl font-semibold">

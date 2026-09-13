@@ -2,7 +2,7 @@ import { Error, Loading } from '@/components/shared';
 import { TeamTab } from '@/components/team';
 import useTeam from 'hooks/useTeam';
 import { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import { toast } from 'react-hot-toast';
 import env from '@/lib/env';

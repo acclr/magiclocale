@@ -1,10 +1,10 @@
 import { Card, InputWithLabel } from '@/components/shared';
 import type { Project } from '../../domain/translations';
 import { useFormik } from 'formik';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 
 import LocaleName from './LocaleName';
@@ -155,7 +155,7 @@ const ProjectSettingsForm = ({
           <ul className="space-y-2">
             {project.locales.map((code) => (
               <li
-                className="flex items-center justify-between rounded-md border border-base-300 px-3 py-2"
+                className="flex items-center justify-between rounded-md border border-border px-3 py-2"
                 key={code}
               >
                 <span className="flex items-center gap-2 text-sm">

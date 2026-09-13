@@ -1,4 +1,4 @@
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
 
 const AgreeMessage = ({ text }) => {

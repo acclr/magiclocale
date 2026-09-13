@@ -1,8 +1,7 @@
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import type { GetServerSidePropsContext } from 'next';
 import { useState, type ReactElement, useEffect } from 'react';
-import type { ComponentStatus } from 'react-daisyui/dist/types';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import {
   deleteVerificationToken,
@@ -21,6 +20,8 @@ interface UnlockAccountProps {
   expiredToken: string;
   enableRequestNewToken: boolean;
 }
+
+type ComponentStatus = 'info' | 'success' | 'warning' | 'error';
 
 interface Message {
   text: string | null;
@@ -78,7 +79,7 @@ const UnlockAccount = ({
   };
 
   return (
-    <div className="rounded p-6 border">
+    <div className="rounded-md bg-card p-6">
       {message.text && message.status && (
         <Alert status={message.status}>{message.text}</Alert>
       )}

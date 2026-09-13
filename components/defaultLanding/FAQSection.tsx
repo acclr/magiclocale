@@ -1,4 +1,4 @@
-import { Card } from 'react-daisyui';
+import { Card, CardContent, CardTitle } from '@/components/ui/card';
 
 import { useLandingI18n } from './LandingLocaleProvider';
 import faqs from './data/faq.json';
@@ -21,16 +21,16 @@ const FAQSection = () => {
         <div className="flex items-center justify-center">
           <div className="grid grid-cols-1 gap-2">
             {faqs.map((faq) => (
-              <Card key={faq.id} className="border-none">
-                <Card.Body className="items-left dark:border-gray-200 border border-gray-300">
-                  <Card.Title tag="h2">
+              <Card key={faq.id}>
+                <CardContent>
+                  <CardTitle>
                     Q.{' '}
                     {translate(`landing.faq.${faq.id}.question`, faq.question)}
-                  </Card.Title>
-                  <p>
+                  </CardTitle>
+                  <p className="mt-2">
                     A. {translate(`landing.faq.${faq.id}.answer`, faq.answer)}
                   </p>
-                </Card.Body>
+                </CardContent>
               </Card>
             ))}
           </div>

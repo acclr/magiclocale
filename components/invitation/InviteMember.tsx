@@ -1,5 +1,5 @@
 import React from 'react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import Modal from '../shared/Modal';
 import type { Team } from '@prisma/client';

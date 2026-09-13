@@ -32,6 +32,8 @@ describe('billing scope and plans', () => {
       subscribed: true,
       billingScope: 'project',
       maxLocales: MAGILOCALE_PLANS.enterprise.maxLocales,
+      maxEnvironments: MAGILOCALE_PLANS.enterprise.maxEnvironments,
+      maxFlags: MAGILOCALE_PLANS.enterprise.maxFlags,
     });
     expect(
       resolveMagilocalePlan(['price_starter'], catalog, 'team')

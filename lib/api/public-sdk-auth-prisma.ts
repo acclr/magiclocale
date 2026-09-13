@@ -10,7 +10,13 @@ const prismaPublicSdkAuthDependencies: PublicSdkAuthDependencies = {
   async findApiKeyByHash(hashedKey) {
     return prisma.apiKey.findUnique({
       where: { hashedKey },
-      select: { id: true, teamId: true, expiresAt: true },
+      select: {
+        id: true,
+        teamId: true,
+        expiresAt: true,
+        projectId: true,
+        environmentId: true,
+      },
     });
   },
   async findProjectById(projectId) {
@@ -29,11 +35,13 @@ const prismaPublicSdkAuthDependencies: PublicSdkAuthDependencies = {
 
 export function authenticatePublicSdkApiRequest(
   authorization: string | string[] | undefined,
-  projectId: string
+  projectId: string,
+  requestedEnvironment?: string | null
 ) {
   return authenticatePublicSdkRequest(
     authorization,
     projectId,
-    prismaPublicSdkAuthDependencies
+    prismaPublicSdkAuthDependencies,
+    requestedEnvironment
   );
 }

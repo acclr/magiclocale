@@ -1,5 +1,7 @@
 import React from 'react';
-import { Checkbox } from 'react-daisyui';
+
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
 const CheckboxComponent = ({
   onChange,
@@ -18,16 +20,19 @@ const CheckboxComponent = ({
 }) => {
   return (
     <div className={`flex items-center ${className || ''}`} key={value}>
-      <label className="flex items-center gap-2 text-sm">
+      <Label className="flex items-center gap-2 text-sm">
         <Checkbox
           name={name}
           value={value}
-          onChange={onChange}
           defaultChecked={Boolean(defaultChecked)}
-          className="h-4 w-4 rounded [--chkfg:oklch(var(--p))] [--chkbg:white]"
+          onCheckedChange={(checked) => {
+            onChange({
+              target: { name, value, checked: Boolean(checked) },
+            } as React.ChangeEvent<HTMLInputElement>);
+          }}
         />
-        <span className="text-gray-700">{label}</span>
-      </label>
+        <span className="text-foreground">{label}</span>
+      </Label>
     </div>
   );
 };

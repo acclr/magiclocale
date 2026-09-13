@@ -1,4 +1,5 @@
 import type {
+  FlagPayload,
   ResolvedMagicLocaleConfig,
   SourceKey,
   TranslationBundle,
@@ -10,6 +11,7 @@ export interface SourceKeyTransport {
 
 export interface MagicLocaleTransport extends SourceKeyTransport {
   pull(locale: string): Promise<TranslationBundle>;
+  pullFlags?(): Promise<FlagPayload>;
 }
 
 export class HttpSourceKeyTransport implements MagicLocaleTransport {
@@ -18,7 +20,8 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
   async push(keys: SourceKey[], keepalive = false): Promise<void> {
     const endpoint =
       `${this.config.baseUrl}/api/v1/projects/` +
-      `${encodeURIComponent(this.config.projectId)}/keys/sync`;
+      `${encodeURIComponent(this.config.projectId)}/keys/sync` +
+      this.environmentQuery(true);
     const response = await this.config.fetch(endpoint, {
       method: 'POST',
       headers: {
@@ -42,7 +45,8 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
     const endpoint =
       `${this.config.baseUrl}/api/v1/projects/` +
       `${encodeURIComponent(this.config.projectId)}/translations?locale=` +
-      encodeURIComponent(locale);
+      encodeURIComponent(locale) +
+      this.environmentQuery(false);
     const response = await this.config.fetch(endpoint, {
       method: 'GET',
       headers: { Authorization: `Bearer ${this.config.ingestToken}` },
@@ -58,6 +62,42 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
     }
 
     return (await response.json()) as TranslationBundle;
+  }
+
+  async pullFlags(): Promise<FlagPayload> {
+    const endpoint =
+      `${this.config.baseUrl}/api/v1/projects/` +
+      `${encodeURIComponent(this.config.projectId)}/flags` +
+      this.environmentQuery(true);
+    const response = await this.config.fetch(endpoint, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${this.config.ingestToken}` },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `MagicLocale flag refresh failed (${
+          response.status
+        }): ${await readError(response)}`
+      );
+    }
+
+    return (await response.json()) as FlagPayload;
+  }
+
+  private environmentQuery(leadingQuestion: boolean): string {
+    const parts: string[] = [];
+    if (this.config.environment && this.config.environment !== 'production') {
+      parts.push(`environment=${encodeURIComponent(this.config.environment)}`);
+    }
+    if (this.config.version !== null) {
+      parts.push(`version=${encodeURIComponent(String(this.config.version))}`);
+    }
+    if (!parts.length) {
+      return '';
+    }
+    return `${leadingQuestion ? '?' : '&'}${parts.join('&')}`;
   }
 }
 

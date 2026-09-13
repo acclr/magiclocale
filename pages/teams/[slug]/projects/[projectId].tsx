@@ -1,5 +1,4 @@
 import TranslationWorkspace from '@/components/translations/TranslationWorkspace';
-import ProjectNav from '@/components/translations/ProjectNav';
 import useCanAccess from 'hooks/useCanAccess';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -15,15 +14,12 @@ const TranslationProject: NextPageWithLayout = () => {
   };
 
   return slug && projectId ? (
-    <div className="space-y-4">
-      <ProjectNav active="workspace" projectId={projectId} slug={slug} />
-      <TranslationWorkspace
-        canEdit={canAccess('team_translation', ['update'])}
-        canUpdateProject={canAccess('team_translation_project', ['update'])}
-        projectId={projectId}
-        slug={slug}
-      />
-    </div>
+    <TranslationWorkspace
+      canEdit={canAccess('team_translation', ['update'])}
+      canUpdateProject={canAccess('team_translation_project', ['update'])}
+      projectId={projectId}
+      slug={slug}
+    />
   ) : null;
 };
 

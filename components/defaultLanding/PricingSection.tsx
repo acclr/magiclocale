@@ -1,5 +1,12 @@
 import { CheckIcon } from '@heroicons/react/20/solid';
-import { Button, Card } from 'react-daisyui';
+
+import { Button } from '@/components/shared';
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardTitle,
+} from '@/components/ui/card';
 
 import { useLandingI18n } from './LandingLocaleProvider';
 import plans from './data/pricing.json';
@@ -22,19 +29,16 @@ const PricingSection = () => {
         <div className="flex items-center justify-center">
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {plans.map((plan) => (
-              <Card
-                key={plan.id}
-                className="rounded-md dark:border-gray-200 border border-gray-300"
-              >
-                <Card.Body>
-                  <Card.Title tag="h2">
+              <Card key={plan.id}>
+                <CardContent>
+                  <CardTitle>
                     {plan.currency} {plan.amount} /{' '}
                     {translate(
                       `landing.pricing.${plan.id}.duration`,
                       plan.duration
                     )}
-                  </Card.Title>
-                  <p>
+                  </CardTitle>
+                  <p className="mt-2">
                     {translate(
                       `landing.pricing.${plan.id}.description`,
                       plan.description
@@ -55,16 +59,12 @@ const PricingSection = () => {
                       ))}
                     </ul>
                   </div>
-                </Card.Body>
-                <Card.Actions className="justify-center m-2">
-                  <Button
-                    color="primary"
-                    className="md:w-full w-3/4 rounded-md"
-                    size="md"
-                  >
+                </CardContent>
+                <CardFooter className="justify-center">
+                  <Button color="primary" className="w-3/4 md:w-full" size="md">
                     {translate('landing.pricing.buy-now', 'Buy now')}
                   </Button>
-                </Card.Actions>
+                </CardFooter>
               </Card>
             ))}
           </div>

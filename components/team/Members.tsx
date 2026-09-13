@@ -3,8 +3,8 @@ import { Team, TeamMember } from '@prisma/client';
 import useCanAccess from 'hooks/useCanAccess';
 import useTeamMembers, { TeamMemberWithUser } from 'hooks/useTeamMembers';
 import { useSession } from 'next-auth/react';
-import { useTranslation } from 'next-i18next';
-import { Button } from 'react-daisyui';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 
 import { InviteMember } from '@/components/invitation';

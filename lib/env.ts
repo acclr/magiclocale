@@ -1,8 +1,11 @@
+import { ensureAuthUrlEnv } from './public-app-url';
 import type { SessionStrategy } from 'next-auth';
+
+const appUrl = ensureAuthUrlEnv();
 
 const env = {
   databaseUrl: `${process.env.DATABASE_URL}`,
-  appUrl: `${process.env.APP_URL}`,
+  appUrl,
   redirectIfAuthenticated: '/dashboard',
   securityHeadersEnabled: process.env.SECURITY_HEADERS_ENABLED ?? false,
 

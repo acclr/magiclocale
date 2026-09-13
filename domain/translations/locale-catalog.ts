@@ -12,6 +12,7 @@ export type LocaleOption = {
   format: LocaleFormat;
   language: string;
   region?: string;
+  countryCode: string;
   flag: string;
   englishName: string;
   nativeName: string;
@@ -371,6 +372,7 @@ export function getLocaleDisplay(code: string): LocaleOption {
       code,
       format: inferLocaleFormat(code),
       language: normalizeLocaleTag(code).split('-')[0] || code,
+      countryCode: '',
       flag: '',
       englishName: code,
       nativeName: code,
@@ -469,12 +471,14 @@ function localeOption(code: string, format: LocaleFormat): LocaleOption {
       ? englishName
       : `${englishName} / ${nativeName}`;
   const flagRegion = region ?? DEFAULT_REGION[language];
+  const countryCode = isoCountryCode(flagRegion);
   const option: LocaleOption = {
     code,
     format,
     language,
     region,
-    flag: flagRegion ? flagEmoji(flagRegion) : '',
+    countryCode,
+    flag: countryCode ? flagEmoji(countryCode) : '',
     englishName,
     nativeName,
     label,
@@ -538,6 +542,11 @@ function displayName(
 
 function prettyName(value: string): string {
   return value.replace(/(^|[\s(/-])([a-z])/g, (chunk) => chunk.toUpperCase());
+}
+
+function isoCountryCode(region?: string): string {
+  const country = region?.toUpperCase() ?? '';
+  return /^[A-Z]{2}$/.test(country) ? country : '';
 }
 
 function flagEmoji(region: string): string {

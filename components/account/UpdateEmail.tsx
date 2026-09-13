@@ -1,7 +1,8 @@
 import { useFormik } from 'formik';
 import toast from 'react-hot-toast';
-import { useTranslation } from 'next-i18next';
-import { Button, Input } from 'react-daisyui';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/shared';
+import { Input } from '@/components/ui/input';
 
 import type { ApiResponse } from 'types';
 import { Card } from '@/components/shared';

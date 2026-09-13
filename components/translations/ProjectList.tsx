@@ -2,13 +2,14 @@ import type { LocaleFormat, Project } from '../../domain/translations';
 import { defaultLocaleForFormat } from '../../domain/translations';
 import useTeamProjects from '../../hooks/useTeamProjects';
 import Link from 'next/link';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
 import LocaleName from './LocaleName';
 import LocaleSelect from './LocaleSelect';
+import { Separator } from '../ui/separator';
 
 type ProjectListProps = {
   slug: string;
@@ -59,7 +60,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           <h1 className="text-2xl font-semibold">
             {t('translation-projects')}
           </h1>
-          <p className="mt-1 text-sm text-base-content/60">
+          <p className="mt-1 text-sm text-muted-foreground">
             {t('translation-projects-description')}
           </p>
         </div>
@@ -75,10 +76,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
       </div>
 
       {showCreate && (
-        <form
-          className="card border border-base-300 bg-base-100"
-          onSubmit={submit}
-        >
+        <form className="card bg-card" onSubmit={submit}>
           <div className="card-body grid gap-4 md:grid-cols-2 md:items-end">
             <label className="form-control md:col-span-2">
               <span className="label-text mb-2">
@@ -101,7 +99,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
                     className={`flex cursor-pointer gap-3 rounded-lg border px-3 py-2 ${
                       localeFormat === format
                         ? 'border-primary bg-primary/5'
-                        : 'border-base-300'
+                        : 'border-border'
                     }`}
                     key={format}
                   >
@@ -120,7 +118,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
                       <span className="block text-sm font-medium">
                         {t(`locale-format-${format}`)}
                       </span>
-                      <span className="block text-xs text-base-content/60">
+                      <span className="block text-xs text-muted-foreground">
                         {t(`locale-format-${format}-help`)}
                       </span>
                     </span>
@@ -166,28 +164,25 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((project: Project) => (
             <Link
-              className="card border border-base-300 bg-base-100 transition hover:border-primary hover:shadow"
+              className="card bg-card transition hover:bg-muted"
               href={`/teams/${slug}/projects/${project.id}`}
               key={project.id}
             >
               <div className="card-body">
                 <h2 className="card-title text-lg">{project.name}</h2>
-                <p className="text-sm text-base-content/60">
-                  {t('source-locale')}:{' '}
-                  <LocaleName code={project.sourceLocale} variant="full" />
-                </p>
-                <p className="mt-1 text-xs text-base-content/50">
-                  {t(`locale-format-${project.localeFormat}`)}
-                  {' · '}
+
+                <p className="mt-1 text-base text-foreground/50">
                   {project.billingScope === 'project'
                     ? t('billing-scope-project')
                     : t('billing-scope-team')}
                 </p>
-                <div className="mt-2 flex flex-wrap gap-2">
+                <Separator
+                  orientation="horizontal"
+                  className="my-2.5 bg-foreground/5"
+                />
+                <div className="mt-3 flex flex-wrap gap-2">
                   {project.locales.map((locale) => (
-                    <span className="badge badge-ghost gap-1" key={locale}>
-                      <LocaleName code={locale} />
-                    </span>
+                    <LocaleName code={locale} key={locale} />
                   ))}
                 </div>
               </div>
@@ -195,9 +190,9 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-base-300 p-12 text-center">
+        <div className="rounded-lg border border-dashed border-border p-12 text-center">
           <h2 className="font-semibold">{t('no-translation-projects')}</h2>
-          <p className="mt-2 text-sm text-base-content/60">
+          <p className="mt-2 text-sm text-muted-foreground">
             {canCreate
               ? t('create-first-translation-project')
               : t('ask-admin-create-translation-project')}

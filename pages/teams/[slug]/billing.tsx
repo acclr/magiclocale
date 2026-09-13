@@ -1,5 +1,5 @@
 import useSWR from 'swr';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -50,7 +50,7 @@ const Payments = ({ teamFeatures }) => {
             teamFeatures={teamFeatures}
           />
 
-          <p className="mb-4 max-w-3xl text-sm text-base-content/70">
+          <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
             {t('team-billing-intro')}
           </p>
 
@@ -66,7 +66,7 @@ const Payments = ({ teamFeatures }) => {
           <h2 className="card-title mb-2 text-xl font-medium leading-none tracking-tight">
             {t('team-retainer-plans')}
           </h2>
-          <p className="mb-4 text-sm text-base-content/60">
+          <p className="mb-4 text-sm text-muted-foreground">
             {t('team-retainer-plans-help')}
           </p>
           <MagilocalePricing plans={plans} />

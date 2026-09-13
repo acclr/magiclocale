@@ -1,6 +1,6 @@
 import { useFormik } from 'formik';
-import { useTranslation } from 'next-i18next';
-import { Button } from 'react-daisyui';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import * as Yup from 'yup';
 

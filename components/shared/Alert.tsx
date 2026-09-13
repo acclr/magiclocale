@@ -1,13 +1,25 @@
-import React from 'react';
-import { Alert as AlertCore, AlertProps } from 'react-daisyui';
+import * as React from 'react';
 
-const Alert = (props: AlertProps) => {
-  const { children, className, ...rest } = props;
+import {
+  Alert as AlertUi,
+  AlertDescription,
+} from '@/components/ui/alert';
 
+type AlertStatus = 'info' | 'success' | 'warning' | 'error';
+
+type AlertProps = React.ComponentProps<typeof AlertUi> & {
+  status?: AlertStatus | null;
+};
+
+const Alert = ({ children, className, status, ...rest }: AlertProps) => {
   return (
-    <AlertCore {...rest} className={`${className} rounded px-4 py-3`}>
-      {children}
-    </AlertCore>
+    <AlertUi
+      {...rest}
+      variant={status === 'error' ? 'destructive' : 'default'}
+      className={className}
+    >
+      <AlertDescription>{children}</AlertDescription>
+    </AlertUi>
   );
 };
 

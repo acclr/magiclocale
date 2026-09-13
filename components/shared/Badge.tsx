@@ -1,18 +1,31 @@
-import classNames from 'classnames';
-import { BadgeProps, Badge as BaseBadge } from 'react-daisyui';
+import type { ComponentProps } from 'react';
+import { cn } from 'cn';
 
-const Badge = (props: BadgeProps) => {
-  const { children, className } = props;
+import { Badge as BadgeUi } from '@/components/ui/badge';
+
+type BadgeProps = ComponentProps<typeof BadgeUi> & {
+  color?: string;
+};
+
+const Badge = ({ children, className, color, variant, ...props }: BadgeProps) => {
+  const mappedVariant =
+    variant ??
+    (color === 'error' || color === 'warning'
+      ? 'destructive'
+      : color === 'secondary'
+        ? 'secondary'
+        : color === 'outline'
+          ? 'outline'
+          : 'default');
 
   return (
-    <>
-      <BaseBadge
-        {...props}
-        className={classNames('rounded text-xs py-2 text-white', className)}
-      >
-        {children}
-      </BaseBadge>
-    </>
+    <BadgeUi
+      {...props}
+      variant={mappedVariant}
+      className={cn('rounded-md', className)}
+    >
+      {children}
+    </BadgeUi>
   );
 };
 

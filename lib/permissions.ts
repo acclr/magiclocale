@@ -1,7 +1,14 @@
 import { Role } from '@prisma/client';
 
 type RoleType = (typeof Role)[keyof typeof Role];
-export type Action = 'create' | 'update' | 'read' | 'delete' | 'leave';
+export type Action =
+  | 'create'
+  | 'update'
+  | 'read'
+  | 'delete'
+  | 'leave'
+  /** Sealing a draft version and pointing an environment at it. */
+  | 'publish';
 export type Resource =
   | 'team'
   | 'team_member'
@@ -13,7 +20,10 @@ export type Resource =
   | 'team_payments'
   | 'team_api_key'
   | 'team_translation_project'
-  | 'team_translation';
+  | 'team_translation'
+  | 'team_environment'
+  | 'team_feature_flag'
+  | 'team_version';
 
 type RolePermissions = {
   [role in RoleType]: Permission[];
@@ -85,6 +95,18 @@ export const permissions: RolePermissions = {
       resource: 'team_translation',
       actions: '*',
     },
+    {
+      resource: 'team_environment',
+      actions: '*',
+    },
+    {
+      resource: 'team_feature_flag',
+      actions: '*',
+    },
+    {
+      resource: 'team_version',
+      actions: '*',
+    },
   ],
   ADMIN: [
     {
@@ -127,6 +149,18 @@ export const permissions: RolePermissions = {
       resource: 'team_translation',
       actions: '*',
     },
+    {
+      resource: 'team_environment',
+      actions: '*',
+    },
+    {
+      resource: 'team_feature_flag',
+      actions: '*',
+    },
+    {
+      resource: 'team_version',
+      actions: '*',
+    },
   ],
   MEMBER: [
     {
@@ -139,6 +173,18 @@ export const permissions: RolePermissions = {
     },
     {
       resource: 'team_translation',
+      actions: ['read'],
+    },
+    {
+      resource: 'team_environment',
+      actions: ['read'],
+    },
+    {
+      resource: 'team_feature_flag',
+      actions: ['read'],
+    },
+    {
+      resource: 'team_version',
       actions: ['read'],
     },
   ],

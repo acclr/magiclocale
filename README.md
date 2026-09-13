@@ -131,21 +131,27 @@ consumers can import `MagiLocaleProvider` and `useMagiLocale` from
 `@magilocale/sdk/react`. Next.js App Router consumers can use
 `createMagiLocaleNext` from `@magilocale/sdk/next`.
 
-## Localize the Magilocale landing page
+## Localize the Magilocale landing page and dashboard
 
-The public homepage (`pages/index.tsx`) is a customer of this same app. The
-dashboard UI keeps using `next-i18next`; only the marketing page talks to a
-dedicated Magilocale project through `@magilocale/sdk`.
+This app is a customer of itself. The public homepage uses
+`translate(key, defaultText)` from `@magilocale/sdk`. The signed-in dashboard
+keeps `next-i18next` `t('key')` calls and bridges them to a second dedicated
+project so those keys show up in the translation workspace.
 
-1. In **Translation Projects**, create a project such as `Landing page`.
-2. Add each marketing locale (for example `sv` and `fr`).
-3. Create a team API key intended for this public site.
-4. Set `MAGILOCALE_LANDING_PROJECT_ID` and `MAGILOCALE_LANDING_API_KEY` in
-   `.env`, then restart the app.
+1. In **Translation Projects**, create a project such as `Landing page` and
+   another such as `Dashboard`.
+2. Add each locale you want to manage (for example `sv` and `fr`).
+3. Create a team API key for each project.
+4. Set the matching values in `.env`, then restart the app:
 
-Visiting `/` discovers `landing.*` keys automatically. Edit them in that
-project; the homepage refreshes the bundle about every two seconds. Without
-those env values the page still renders English source text.
+   - `MAGILOCALE_LANDING_PROJECT_ID` and `MAGILOCALE_LANDING_API_KEY`
+   - `MAGILOCALE_DASHBOARD_PROJECT_ID` and `MAGILOCALE_DASHBOARD_API_KEY`
+
+Visiting `/` discovers `landing.*` keys automatically. Visiting a dashboard
+screen discovers that screen's `t()` keys (for example `back-to-projects`)
+from `locales/en/common.json`. Edit them in the matching project; bundles
+refresh about every 30 seconds. Without those env values the UI still
+renders English source text.
 
 ## Public SDK endpoints
 

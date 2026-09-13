@@ -114,6 +114,7 @@ function toTranslation(translation: PrismaTranslation): Translation {
   return {
     id: translation.id,
     translationKeyId: translation.translationKeyId,
+    environmentId: translation.environmentId,
     locale: translation.locale,
     value: translation.value,
     source: sourceFromPrisma(translation.source),
@@ -327,19 +328,23 @@ export class PrismaTranslationRepository
     return toKey(key);
   }
 
-  async listTranslations(projectId: string): Promise<Translation[]> {
+  async listTranslations(
+    projectId: string,
+    environmentId: string
+  ): Promise<Translation[]> {
     const translations = await this.client.translation.findMany({
-      where: { translationKey: { projectId } },
+      where: { environmentId, translationKey: { projectId } },
       orderBy: { createdAt: 'asc' },
     });
     return translations.map(toTranslation);
   }
 
   async listTranslationsForKey(
-    translationKeyId: string
+    translationKeyId: string,
+    environmentId: string
   ): Promise<Translation[]> {
     const translations = await this.client.translation.findMany({
-      where: { translationKeyId },
+      where: { translationKeyId, environmentId },
       orderBy: { createdAt: 'asc' },
     });
     return translations.map(toTranslation);
@@ -347,11 +352,16 @@ export class PrismaTranslationRepository
 
   async findTranslation(
     translationKeyId: string,
+    environmentId: string,
     locale: string
   ): Promise<Translation | null> {
     const translation = await this.client.translation.findUnique({
       where: {
-        translationKeyId_locale: { translationKeyId, locale },
+        translationKeyId_environmentId_locale: {
+          translationKeyId,
+          environmentId,
+          locale,
+        },
       },
     });
     return translation ? toTranslation(translation) : null;
@@ -369,6 +379,7 @@ export class PrismaTranslationRepository
   ): Promise<Translation> {
     const data = {
       translationKeyId: input.translationKeyId,
+      environmentId: input.environmentId,
       locale: input.locale,
       value: input.value,
       source: sourceToPrisma[input.source],
@@ -386,8 +397,9 @@ export class PrismaTranslationRepository
 
       const existing = await this.client.translation.findUnique({
         where: {
-          translationKeyId_locale: {
+          translationKeyId_environmentId_locale: {
             translationKeyId: input.translationKeyId,
+            environmentId: input.environmentId,
             locale: input.locale,
           },
         },

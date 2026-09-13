@@ -22,7 +22,8 @@ export default createTeamProjectApiHandler({
       const translation = await getTeamTranslationService().markReviewed(
         teamMember.team.id,
         projectId,
-        translationId
+        translationId,
+        teamMember.user.email
       );
       res.status(200).json({ data: translation });
     },

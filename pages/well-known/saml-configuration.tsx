@@ -1,7 +1,8 @@
 import type { InferGetStaticPropsType } from 'next';
 import Link from 'next/link';
 import React, { ReactElement, useEffect } from 'react';
-import { useTranslation, Trans } from 'next-i18next';
+import { Trans } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import jackson from '@/lib/jackson';
 import InputWithCopyButton from '@/components/shared/InputWithCopyButton';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -26,15 +27,15 @@ const SPConfig: NextPageWithLayout<
   return (
     <>
       <div className="mt-10 flex w-full justify-center px-5">
-        <div className="w-full rounded border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800 md:w-1/2">
+        <div className="w-full rounded-md bg-card p-6 md:w-1/2">
           <div className="flex flex-col space-y-3">
-            <h2 className="font-bold text-gray-700 md:text-xl">
+            <h2 className="font-bold text-foreground md:text-xl">
               {t('sp-saml-config-title')}
             </h2>
-            <p className="text-sm leading-6 text-gray-800">
+            <p className="text-sm leading-6 text-foreground">
               {t('sp-saml-config-description')}
             </p>
-            <p className="text-sm leading-6 text-gray-600">
+            <p className="text-sm leading-6 text-muted-foreground">
               <Trans
                 i18nKey="refer-to-provider-instructions"
                 t={t}
@@ -68,7 +69,7 @@ const SPConfig: NextPageWithLayout<
             </div>
             <div className="form-control w-full">
               <div className="flex flex-col">
-                <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   {t('response')}
                 </label>
                 <p className="text-sm">{config.response}</p>
@@ -76,7 +77,7 @@ const SPConfig: NextPageWithLayout<
             </div>
             <div className="form-control w-full">
               <div className="flex flex-col">
-                <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   {t('assertion-signature')}
                 </label>
                 <p className="text-sm">{config.assertionSignature}</p>
@@ -84,7 +85,7 @@ const SPConfig: NextPageWithLayout<
             </div>
             <div className="form-control w-full">
               <div className="flex flex-col">
-                <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   {t('signature-algorithm')}
                 </label>
                 <p className="text-sm">{config.signatureAlgorithm}</p>
@@ -92,7 +93,7 @@ const SPConfig: NextPageWithLayout<
             </div>
             <div className="form-control w-full">
               <div className="flex flex-col">
-                <label className="mb-2 block text-sm font-medium text-gray-900 dark:text-gray-300">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   {t('assertion-encryption')}
                 </label>
                 <p className="text-sm">

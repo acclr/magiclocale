@@ -2,10 +2,10 @@ import { Card, InputWithLabel } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import { Team } from '@prisma/client';
 import { useFormik } from 'formik';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 

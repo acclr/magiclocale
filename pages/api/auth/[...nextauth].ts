@@ -1,3 +1,4 @@
+import '@/lib/public-app-url';
 import NextAuth from 'next-auth';
 import type { NextApiRequest, NextApiResponse } from 'next';
 

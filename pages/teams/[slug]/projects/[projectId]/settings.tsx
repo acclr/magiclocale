@@ -1,13 +1,14 @@
-import ProjectNav from '@/components/translations/ProjectNav';
+import EnvironmentSettings from '@/components/environments/EnvironmentSettings';
 import ProjectSettingsForm from '@/components/translations/ProjectSettingsForm';
 import ProjectBillingSettings from '@/components/translations/ProjectBillingSettings';
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
 import env from '@/lib/env';
 import useCanAccess from 'hooks/useCanAccess';
+import { useProjectEnvironment } from 'hooks/useProjectEnvironment';
 import useTranslationWorkspace from 'hooks/useTranslationWorkspace';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import type { NextPageWithLayout, TeamFeature } from 'types';
 
@@ -18,7 +19,8 @@ const ProjectSettingsPage: NextPageWithLayout<{
   const { query } = useRouter();
   const { canAccess } = useCanAccess();
   const { slug, projectId } = query as { slug: string; projectId: string };
-  const workspace = useTranslationWorkspace(slug, projectId);
+  const { environment } = useProjectEnvironment();
+  const workspace = useTranslationWorkspace(slug, projectId, { environment });
 
   if (workspace.isLoading) {
     return <Loading />;
@@ -40,7 +42,11 @@ const ProjectSettingsPage: NextPageWithLayout<{
         </p>
         <h1 className="mt-1 text-2xl font-semibold">{t('project-settings')}</h1>
       </div>
-      <ProjectNav active="settings" projectId={projectId} slug={slug} />
+      <EnvironmentSettings
+        canEdit={canAccess('team_environment', ['update'])}
+        projectId={projectId}
+        slug={slug}
+      />
       <ProjectSettingsForm
         canDelete={canAccess('team_translation_project', ['delete'])}
         canUpdate={canAccess('team_translation_project', ['update'])}

@@ -1,3 +1,4 @@
+import '@/lib/public-app-url';
 import MagicLink from '@/components/auth/MagicLink';
 import { AuthLayout } from '@/components/layouts';
 import type {

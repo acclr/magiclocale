@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { ArrowTopRightOnSquareIcon } from '@heroicons/react/24/outline';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import { Card } from '@/components/shared';
 

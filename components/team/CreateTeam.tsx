@@ -2,10 +2,10 @@ import { defaultHeaders, maxLengthPolicies } from '@/lib/common';
 import type { Team } from '@prisma/client';
 import { useFormik } from 'formik';
 import useTeams from 'hooks/useTeams';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import React from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 import * as Yup from 'yup';
@@ -53,7 +53,9 @@ const CreateTeam = ({ visible, setVisible }: CreateTeamProps) => {
 
   const onClose = () => {
     setVisible(false);
-    router.push(`/teams`);
+    if (router.query.newTeam) {
+      router.replace('/teams');
+    }
   };
 
   return (

@@ -1,10 +1,10 @@
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import Badge from '@/components/shared/Badge';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 const trClass =
-  'border-b bg-white last:border-b-0 hover:bg-gray-50 dark:border-gray-700 dark:bg-gray-800';
-const tdClassBase = 'px-6 py-3 text-sm text-gray-500 dark:text-gray-400';
+  'border-b border-border bg-background last:border-b-0 hover:bg-card';
+const tdClassBase = 'px-6 py-3 text-sm text-muted-foreground';
 const tdClass = `whitespace-nowrap ${tdClassBase}`;
 const tdClassWrap = `break-all ${tdClassBase}`;
 
@@ -52,7 +52,7 @@ export const TableBody = ({
         <tr>
           <td
             colSpan={cols.length}
-            className="px-6 py-3 text-center text-sm text-gray-500"
+            className="px-6 py-3 text-center text-sm text-muted-foreground"
           >
             {t('no-more-results')}
           </td>

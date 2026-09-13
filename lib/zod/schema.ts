@@ -29,6 +29,8 @@ import {
 
 export const createApiKeySchema = z.object({
   name: name(50),
+  projectId: z.string().uuid().optional(),
+  environmentId: z.string().uuid().optional(),
 });
 
 export const deleteApiKeySchema = z.object({

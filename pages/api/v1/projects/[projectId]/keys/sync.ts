@@ -7,7 +7,10 @@ import {
   getPublicSdkCorsPolicy,
   isAllowedOrigin,
 } from '@/lib/api/public-sdk-cors';
-import { getTranslationService } from '@/lib/translations';
+import {
+  getEnvironmentService,
+  getTranslationService,
+} from '@/lib/translations';
 import { parseSourceKeyPayload } from '@/lib/translations/source-key-payload';
 
 export default async function handler(
@@ -40,18 +43,29 @@ export default async function handler(
   }
 
   try {
-    await authenticatePublicSdkApiRequest(req.headers.authorization, projectId);
+    const { environmentRef } = await authenticatePublicSdkApiRequest(
+      req.headers.authorization,
+      projectId,
+      getSingleQueryValue(req.query.environment)
+    );
 
     const parsed = parseSourceKeyPayload(req.body);
     if (!parsed.success) {
       return res.status(422).json({ error: parsed.error });
     }
 
+    // Discovered keys land in the working copy of the environment the calling
+    // app belongs to, so a staging build cannot alter what production serves.
+    const environment = await getEnvironmentService().resolve(
+      projectId,
+      environmentRef
+    );
     const result = await getTranslationService().syncFromSource(
       projectId,
+      environment.id,
       parsed.keys
     );
-    return res.status(200).json(result);
+    return res.status(200).json({ ...result, environment: environment.slug });
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
       return res.status(error.status).json({ error: error.message });
@@ -63,9 +77,13 @@ export default async function handler(
 }
 
 function getProjectId(req: NextApiRequest): string | null {
-  return typeof req.query.projectId === 'string' && req.query.projectId
-    ? req.query.projectId
-    : null;
+  return getSingleQueryValue(req.query.projectId);
+}
+
+function getSingleQueryValue(
+  value: string | string[] | undefined
+): string | null {
+  return typeof value === 'string' && value ? value : null;
 }
 
 function setHeaders(

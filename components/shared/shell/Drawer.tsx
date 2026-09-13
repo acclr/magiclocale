@@ -1,30 +1,40 @@
-import React from 'react';
-import TeamDropdown from '../TeamDropdown';
 import { XMarkIcon } from '@heroicons/react/24/outline';
-import Brand from './Brand';
-import Navigation from './Navigation';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
-interface DrawerProps {
-  sidebarOpen: boolean;
-  setSidebarOpen: (open: boolean) => void;
-}
+import PrimarySidebar from './PrimarySidebar';
+import ProjectSidebar from './ProjectSidebar';
+import { useSidebarLayout } from './SidebarContext';
+import {
+  getPrimarySidebarWidth,
+  PROJECT_SIDEBAR_WIDTH,
+} from './sidebar';
 
-const Drawer = ({ sidebarOpen, setSidebarOpen }: DrawerProps) => {
+const Drawer = () => {
   const { t } = useTranslation('common');
+  const {
+    collapsed,
+    isProjectRoute,
+    mobileOpen,
+    mobileView,
+    setMobileOpen,
+  } = useSidebarLayout();
+  const primaryWidth = getPrimarySidebarWidth(collapsed);
 
   return (
     <>
-      {sidebarOpen && (
+      {mobileOpen && (
         <div className="relative z-50 lg:hidden">
-          <div className="fixed inset-0 bg-gray-600/80" />
+          <div
+            className="fixed inset-0 bg-gray-600/80"
+            onClick={() => setMobileOpen(false)}
+          />
           <div className="fixed inset-0 flex">
             <div className="relative mr-16 flex w-full max-w-xs flex-1">
               <div className="absolute left-full top-0 flex w-16 justify-center pt-5">
                 <button
                   type="button"
                   className="-m-2.5 p-2.5"
-                  onClick={() => setSidebarOpen(false)}
+                  onClick={() => setMobileOpen(false)}
                 >
                   <span className="sr-only">{t('close-sidebar')}</span>
                   <XMarkIcon
@@ -33,23 +43,33 @@ const Drawer = ({ sidebarOpen, setSidebarOpen }: DrawerProps) => {
                   />
                 </button>
               </div>
-              <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white dark:bg-black px-6 pb-4">
-                <Brand />
-                <TeamDropdown />
-                <Navigation />
+              <div className="flex w-full grow flex-col overflow-hidden border-r border-sidebar-border bg-sidebar pb-4">
+                {mobileView === 'project' && isProjectRoute ? (
+                  <ProjectSidebar variant="mobile" />
+                ) : (
+                  <PrimarySidebar variant="mobile" />
+                )}
               </div>
             </div>
           </div>
         </div>
       )}
 
-      <div className="hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:w-64 lg:flex-col">
-        <div className="flex grow flex-col gap-y-5 overflow-y-auto border-r border-gray-200 px-6">
-          <Brand />
-          <TeamDropdown />
-          <Navigation />
-        </div>
+      <div
+        className="hidden shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+        style={{ width: primaryWidth }}
+      >
+        <PrimarySidebar />
       </div>
+
+      {isProjectRoute && (
+        <div
+          className="hidden shrink-0 border-r border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground transition-[left] duration-200 lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:flex-col"
+          style={{ left: primaryWidth, width: PROJECT_SIDEBAR_WIDTH }}
+        >
+          <ProjectSidebar />
+        </div>
+      )}
     </>
   );
 };

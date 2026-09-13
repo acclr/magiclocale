@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
-import { Button } from 'react-daisyui';
-import { useTranslation } from 'next-i18next';
+import { Button } from '@/components/shared';
+import { useTranslation } from '@/hooks/useTranslation';
 import React, { useState, useEffect, useCallback } from 'react';
 import { ArrowUpCircleIcon } from '@heroicons/react/24/outline';
 

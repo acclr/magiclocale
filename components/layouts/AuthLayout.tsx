@@ -1,5 +1,5 @@
 import app from '@/lib/app';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import Image from 'next/image';
 
 interface AuthLayoutProps {
@@ -27,12 +27,12 @@ export default function AuthLayout({
             height={48}
           />
           {heading && (
-            <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-gray-900">
+            <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
               {t(heading)}
             </h2>
           )}
           {description && (
-            <p className="text-center text-gray-600 dark:text-white">
+            <p className="text-center text-muted-foreground">
               {t(description)}
             </p>
           )}

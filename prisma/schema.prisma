@@ -36,6 +36,44 @@ enum LocaleFormat {
   REGIONAL
 }
 
+enum VersionStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum VersionChangeEntityType {
+  TRANSLATION
+  FLAG
+}
+
+enum FlagType {
+  BOOLEAN
+  STRING
+  NUMBER
+  JSON
+}
+
+/// PUBLIC flags ship their rules to the browser for local evaluation.
+/// SERVER_ONLY flags are stripped from the client payload and must be
+/// evaluated through the server endpoint so rule contents stay private.
+enum FlagVisibility {
+  PUBLIC
+  SERVER_ONLY
+}
+
+enum FlagRuleOperator {
+  EQUALS
+  NOT_EQUALS
+  IN
+  NOT_IN
+  CONTAINS
+  NOT_CONTAINS
+  STARTS_WITH
+  ENDS_WITH
+  GREATER_THAN
+  LESS_THAN
+}
+
 model Account {
   id                String  @id @default(uuid())
   userId            String
@@ -123,8 +161,10 @@ model TranslationProject {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  team Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  keys TranslationKey[]
+  team         Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  keys         TranslationKey[]
+  environments Environment[]
+  featureFlags FeatureFlag[]
 
   @@unique([teamId, name])
   @@index([teamId])
@@ -146,9 +186,12 @@ model TranslationKey {
   @@index([projectId])
 }
 
+/// The editable working copy for one key/locale cell in one environment.
+/// Published content is snapshotted into VersionLocaleBundle instead.
 model Translation {
   id               String            @id @default(uuid())
   translationKeyId String
+  environmentId    String
   locale           String
   value            String
   source           TranslationSource
@@ -158,11 +201,166 @@ model Translation {
   updatedAt        DateTime          @updatedAt
 
   translationKey TranslationKey @relation(fields: [translationKeyId], references: [id], onDelete: Cascade)
+  environment    Environment    @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
-  @@unique([translationKeyId, locale])
+  @@unique([translationKeyId, environmentId, locale])
   @@index([translationKeyId])
+  @@index([environmentId])
+  @@index([environmentId, locale])
   @@index([locale])
   @@index([status])
+}
+
+/// One deployable target inside a project. Capped at 3 by the domain layer.
+/// Shared by translations and feature flags, and independently live: each
+/// environment serves its own published version to the apps pointed at it.
+model Environment {
+  id            String   @id @default(uuid())
+  projectId     String
+  slug          String
+  name          String
+  isProduction  Boolean  @default(false)
+  liveVersionId String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  project      TranslationProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  liveVersion  Version?                @relation("EnvironmentLiveVersion", fields: [liveVersionId], references: [id], onDelete: SetNull)
+  versions     Version[]               @relation("EnvironmentVersions")
+  translations Translation[]
+  flagConfigs  FlagEnvironmentConfig[]
+  apiKeys      ApiKey[]
+
+  @@unique([projectId, slug])
+  @@index([projectId])
+}
+
+/// A numbered change set for one environment. Exactly one DRAFT version may
+/// be open per environment; publishing seals it and writes immutable snapshots.
+model Version {
+  id             String        @id @default(uuid())
+  environmentId  String
+  number         Int
+  status         VersionStatus @default(DRAFT)
+  message        String?
+  createdBy      String?
+  publishedAt    DateTime?
+  publishedBy    String?
+  flagsSnapshot  Json?
+  promotedFromId String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  environment        Environment           @relation("EnvironmentVersions", fields: [environmentId], references: [id], onDelete: Cascade)
+  liveForEnvironment Environment?          @relation("EnvironmentLiveVersion")
+  promotedFrom       Version?              @relation("VersionPromotion", fields: [promotedFromId], references: [id], onDelete: SetNull)
+  promotedTo         Version[]             @relation("VersionPromotion")
+  localeBundles      VersionLocaleBundle[]
+  changes            VersionChange[]
+
+  @@unique([environmentId, number])
+  @@index([environmentId])
+  @@index([environmentId, status])
+}
+
+/// Immutable published translation snapshot for a single locale.
+/// Serving a bundle is one indexed row read.
+model VersionLocaleBundle {
+  id String @id @default(uuid())
+
+  versionId    String
+  locale       String
+  /// Flat `key -> value` map, served to the SDK with no transformation.
+  translations Json
+  /// Per-key authoring metadata (source, status, aiLocked). Kept beside the
+  /// serving map so promotion can tell an AI-written cell from a human one
+  /// without inflating the hot read path.
+  metadata     Json?
+  keyCount     Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  version Version @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@unique([versionId, locale])
+  @@index([versionId])
+}
+
+model VersionChange {
+  id         String                  @id @default(uuid())
+  versionId  String
+  entityType VersionChangeEntityType
+  entityKey  String
+  locale     String?
+  before     Json?
+  after      Json?
+  actor      String?
+  createdAt  DateTime                @default(now())
+
+  version Version @relation(fields: [versionId], references: [id], onDelete: Cascade)
+
+  @@index([versionId])
+  @@index([versionId, entityType])
+}
+
+/// Flag definition, shared across every environment in the project.
+/// Per-environment behaviour lives in FlagEnvironmentConfig.
+model FeatureFlag {
+  id          String         @id @default(uuid())
+  projectId   String
+  key         String
+  name        String
+  description String?
+  type        FlagType       @default(BOOLEAN)
+  visibility  FlagVisibility @default(PUBLIC)
+  archived    Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  project TranslationProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  configs FlagEnvironmentConfig[]
+
+  @@unique([projectId, key])
+  @@index([projectId])
+}
+
+model FlagEnvironmentConfig {
+  id                String   @id @default(uuid())
+  flagId            String
+  environmentId     String
+  enabled           Boolean  @default(false)
+  defaultValue      Json
+  offValue          Json
+  rolloutPercentage Int?
+  rolloutSalt       String
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  flag        FeatureFlag @relation(fields: [flagId], references: [id], onDelete: Cascade)
+  environment Environment @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  rules       FlagRule[]
+
+  @@unique([flagId, environmentId])
+  @@index([environmentId])
+}
+
+/// Targeting rules evaluated in ascending `order`; the first match wins.
+model FlagRule {
+  id                String           @id @default(uuid())
+  configId          String
+  order             Int
+  description       String?
+  attribute         String
+  operator          FlagRuleOperator
+  values            String[]         @default([])
+  value             Json
+  rolloutPercentage Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+
+  config FlagEnvironmentConfig @relation(fields: [configId], references: [id], onDelete: Cascade)
+
+  @@index([configId])
+  @@index([configId, order])
 }
 
 model TeamMember {
@@ -210,18 +408,25 @@ model PasswordReset {
 }
 
 model ApiKey {
-  id         String    @id @default(uuid())
-  name       String
-  teamId     String
-  hashedKey  String    @unique
-  createdAt  DateTime  @default(now())
-  updatedAt  DateTime  @default(now())
-  expiresAt  DateTime?
-  lastUsedAt DateTime?
+  id            String    @id @default(uuid())
+  name          String
+  teamId        String
+  hashedKey     String    @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @default(now())
+  expiresAt     DateTime?
+  lastUsedAt    DateTime?
+  /// Optional scoping. A key bound to an environment can only ever read that
+  /// environment, so a staging app cannot reach production by passing a
+  /// different query parameter. Unbound legacy keys resolve to production.
+  projectId     String?
+  environmentId String?
 
-  team Team @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  team        Team         @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  environment Environment? @relation(fields: [environmentId], references: [id], onDelete: Cascade)
 
   @@index([teamId])
+  @@index([environmentId])
 }
 
 model Subscription {

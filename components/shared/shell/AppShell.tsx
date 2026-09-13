@@ -1,30 +1,27 @@
-import { useState } from 'react';
 import { Loading } from '@/components/shared';
 import { useSession } from 'next-auth/react';
 import React from 'react';
-import Header from './Header';
+import { useRouter } from 'next/router';
+
 import Drawer from './Drawer';
-import { useRouter } from 'next/navigation';
+import Header from './Header';
+import { SidebarLayoutProvider, useSidebarLayout } from './SidebarContext';
 
-export default function AppShell({ children }) {
-  const router = useRouter();
-  const { status } = useSession();
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  if (status === 'loading') {
-    return <Loading />;
-  }
-
-  if (status === 'unauthenticated') {
-    router.push('/auth/login');
-    return;
-  }
+function AppShellFrame({ children }: { children: React.ReactNode }) {
+  const { contentOffset } = useSidebarLayout();
 
   return (
     <div>
-      <Drawer sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
-      <div className="lg:pl-64">
-        <Header setSidebarOpen={setSidebarOpen} />
+      <Header />
+      <Drawer />
+      <div
+        className="transition-[padding] duration-200 lg:pl-(--sidebar-offset)"
+        style={
+          {
+            '--sidebar-offset': `${contentOffset}px`,
+          } as React.CSSProperties
+        }
+      >
         <main className="py-5">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}
@@ -32,5 +29,25 @@ export default function AppShell({ children }) {
         </main>
       </div>
     </div>
+  );
+}
+
+export default function AppShell({ children }) {
+  const router = useRouter();
+  const { status } = useSession();
+
+  if (status === 'loading') {
+    return <Loading />;
+  }
+
+  if (status === 'unauthenticated') {
+    router.push('/auth/login');
+    return null;
+  }
+
+  return (
+    <SidebarLayoutProvider>
+      <AppShellFrame>{children}</AppShellFrame>
+    </SidebarLayoutProvider>
   );
 }

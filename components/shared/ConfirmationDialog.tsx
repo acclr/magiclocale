@@ -1,5 +1,5 @@
-import { useTranslation } from 'next-i18next';
-import { Button } from 'react-daisyui';
+import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/shared';
 import Modal from './Modal';
 
 interface ConfirmationDialogProps {

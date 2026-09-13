@@ -4,12 +4,12 @@ import env from '@/lib/env';
 import { useFormik } from 'formik';
 import { GetServerSidePropsContext, InferGetServerSidePropsType } from 'next';
 import { signIn, useSession } from 'next-auth/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { type ReactElement, useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { toast } from 'react-hot-toast';
 import type { NextPageWithLayout } from 'types';
 import * as Yup from 'yup';
@@ -81,7 +81,7 @@ const SSO: NextPageWithLayout<
       <Head>
         <title>{t('signin-with-saml-sso')}</title>
       </Head>
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-2">
             {useEmail ? (

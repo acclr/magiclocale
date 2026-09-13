@@ -1,3 +1,4 @@
+import type { Environment } from '../../../domain/environments';
 import {
   asAiTranslation,
   asManualTranslation,
@@ -7,6 +8,15 @@ import {
   type Translation,
   type TranslationKey,
 } from '../../../domain/translations';
+
+const environment: Environment = {
+  id: 'env_prod',
+  projectId: 'project',
+  slug: 'production',
+  name: 'Production',
+  isProduction: true,
+  liveVersionId: null,
+};
 
 describe('projectTranslationDashboard', () => {
   it('projects a complete key by locale grid with filter fields', () => {
@@ -33,6 +43,7 @@ describe('projectTranslationDashboard', () => {
       {
         id: 'en',
         translationKeyId: 'key',
+        environmentId: environment.id,
         locale: 'en',
         ...asManualTranslation('Save'),
         updatedAt,
@@ -40,13 +51,19 @@ describe('projectTranslationDashboard', () => {
       {
         id: 'sv',
         translationKeyId: 'key',
+        environmentId: environment.id,
         locale: 'sv',
         ...asAiTranslation('Spara'),
         updatedAt,
       },
     ];
 
-    const dashboard = projectTranslationDashboard(project, keys, translations);
+    const dashboard = projectTranslationDashboard(
+      project,
+      environment,
+      keys,
+      translations
+    );
 
     expect(dashboard.rows[0]).toMatchObject({
       keyId: 'key',
@@ -109,7 +126,7 @@ describe('projectTranslationDashboard', () => {
       },
     ];
     const dashboard = paginateTranslationDashboard(
-      projectTranslationDashboard(project, keys, []),
+      projectTranslationDashboard(project, environment, keys, []),
       { page: 2, pageSize: 1, filter: 'all', search: 'nav.c' }
     );
 

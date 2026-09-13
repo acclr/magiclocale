@@ -1,3 +1,4 @@
+import './public-app-url';
 import type {
   NextApiRequest,
   NextApiResponse,

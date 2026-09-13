@@ -58,11 +58,28 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
 
   throwIfNotAllowed(user, 'team_api_key', 'create');
 
-  const { name } = validateWithSchema(createApiKeySchema, req.body);
+  const { name, projectId, environmentId } = validateWithSchema(
+    createApiKeySchema,
+    req.body
+  );
+
+  if (environmentId || projectId) {
+    const { getEnvironmentService } = await import('@/lib/translations');
+    if (environmentId && projectId) {
+      await getEnvironmentService().get(user.team.id, projectId, environmentId);
+    } else if (environmentId) {
+      throw new ApiError(
+        422,
+        'A project is required when scoping an API key to an environment.'
+      );
+    }
+  }
 
   const apiKey = await createApiKey({
     name,
     teamId: user.team.id,
+    projectId: projectId ?? null,
+    environmentId: environmentId ?? null,
   });
 
   recordMetric('apikey.created');

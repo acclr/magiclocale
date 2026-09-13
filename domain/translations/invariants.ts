@@ -6,11 +6,14 @@ import type { Translation } from './types';
  */
 export const AI_MUST_NEVER_OVERWRITE_HUMAN_CONTENT = true as const;
 
-export function isHumanOwned(translation: Translation): boolean {
+/** Ownership only depends on these two fields, so snapshots qualify too. */
+export type OwnershipFields = Pick<Translation, 'aiLocked' | 'source'>;
+
+export function isHumanOwned(translation: OwnershipFields): boolean {
   return translation.aiLocked || translation.source === 'manual';
 }
 
-export function isAiOwned(translation: Translation): boolean {
+export function isAiOwned(translation: OwnershipFields): boolean {
   return !isHumanOwned(translation);
 }
 
@@ -19,7 +22,7 @@ export function isAiOwned(translation: Translation): boolean {
  * Missing translations may be created. Human-owned rows must be skipped.
  */
 export function canAutomaticAiWrite(
-  translation: Translation | null | undefined
+  translation: OwnershipFields | null | undefined
 ): boolean {
   if (!translation) {
     return true;

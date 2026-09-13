@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 
 import type { BillingScope, MagilocaleEntitlement } from '@/domain/billing';
 
@@ -35,7 +35,7 @@ const BillingProjectList = ({
         <h2 className="card-title text-xl font-medium leading-none tracking-tight">
           {t('team-retainer-projects')}
         </h2>
-        <p className="text-sm text-base-content/60">
+        <p className="text-sm text-muted-foreground">
           {t('team-retainer-projects-help')}
         </p>
         <ProjectTable
@@ -48,7 +48,7 @@ const BillingProjectList = ({
         <h2 className="card-title text-xl font-medium leading-none tracking-tight">
           {t('project-billed-projects')}
         </h2>
-        <p className="text-sm text-base-content/60">
+        <p className="text-sm text-muted-foreground">
           {t('project-billed-projects-help')}
         </p>
         <ProjectTable
@@ -73,7 +73,7 @@ function ProjectTable({
   const { t } = useTranslation('common');
 
   if (!projects.length) {
-    return <p className="text-sm text-base-content/60">{empty}</p>;
+    return <p className="text-sm text-muted-foreground">{empty}</p>;
   }
 
   return (

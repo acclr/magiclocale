@@ -1,13 +1,16 @@
 import { defaultHeaders } from '@/lib/common';
 import fetcher from '@/lib/fetcher';
+import type { Environment } from '../domain/environments';
 import type {
   Project,
   Translation,
   TranslationDashboard,
   TranslationFilter,
 } from '../domain/translations';
+import type { Version } from '../domain/versions';
 import type { ApiResponse } from 'types';
 import useSWR from 'swr';
+import { withEnvironment } from './useProjectEnvironment';
 
 type CellInput = {
   keyId: string;
@@ -19,6 +22,20 @@ export type WorkspaceQuery = {
   pageSize?: number;
   filter?: TranslationFilter;
   search?: string;
+  environment?: string;
+};
+
+export type PublishState = {
+  liveVersion: Version | null;
+  draft: Version | null;
+  pendingCount: number;
+  translationCount: number;
+  flagCount: number;
+};
+
+export type WorkspaceDashboard = TranslationDashboard & {
+  environments: Environment[];
+  publishState: PublishState;
 };
 
 async function send<T>(url: string, method: string, body?: object): Promise<T> {
@@ -58,15 +75,21 @@ const useTranslationWorkspace = (
   if (query.search) {
     params.set('search', query.search);
   }
+  if (query.environment) {
+    params.set('environment', query.environment);
+  }
   const queryString = params.toString();
   const dashboardUrl = `${baseUrl}/dashboard${
     queryString ? `?${queryString}` : ''
   }`;
   const { data, error, isLoading, isValidating, mutate } = useSWR<
-    ApiResponse<TranslationDashboard>
+    ApiResponse<WorkspaceDashboard>
   >(slug && projectId ? dashboardUrl : null, fetcher, {
     keepPreviousData: true,
   });
+
+  const envUrl = (path: string) =>
+    withEnvironment(`${baseUrl}${path}`, query.environment);
 
   const refresh = async () => {
     await mutate();
@@ -93,7 +116,7 @@ const useTranslationWorkspace = (
       options?: { refresh?: boolean }
     ) => {
       const result = await send<Translation>(
-        `${baseUrl}/translations/manual`,
+        envUrl('/translations/manual'),
         'POST',
         input
       );
@@ -104,17 +127,17 @@ const useTranslationWorkspace = (
     },
     suggest: (input: CellInput) =>
       send<{ value: string }>(
-        `${baseUrl}/translations/suggestion`,
+        envUrl('/translations/suggestion'),
         'POST',
         input
       ).then(({ value }) => value),
     acceptSuggestion: (input: CellInput & { value: string }) =>
       mutateAndRefresh<Translation>(
-        `${baseUrl}/translations/accept-suggestion`,
+        envUrl('/translations/accept-suggestion'),
         input
       ),
     markReviewed: (translationId: string) =>
-      mutateAndRefresh<Translation>(`${baseUrl}/translations/mark-reviewed`, {
+      mutateAndRefresh<Translation>(envUrl('/translations/mark-reviewed'), {
         translationId,
       }),
     addLocale: (locale: string) =>
@@ -122,9 +145,9 @@ const useTranslationWorkspace = (
         project: TranslationDashboard['project'];
         filled: number;
         skipped: number;
-      }>(`${baseUrl}/locales`, { locale }),
+      }>(envUrl('/locales'), { locale }),
     removeLocale: (locale: string) =>
-      mutateAndRefresh<Project>(`${baseUrl}/locales`, { locale }, 'DELETE'),
+      mutateAndRefresh<Project>(envUrl('/locales'), { locale }, 'DELETE'),
     renameProject: (name: string) =>
       mutateAndRefresh<Project>(baseUrl, { name }, 'PATCH'),
     deleteProject: async () => {
@@ -132,13 +155,18 @@ const useTranslationWorkspace = (
     },
     fillMissing: (locale: string) =>
       mutateAndRefresh<{ filled: number; skipped: number }>(
-        `${baseUrl}/translations/fill-missing`,
+        envUrl('/translations/fill-missing'),
         { locale }
       ),
     retranslate: (locales: string[], sourceLocale?: string) =>
       mutateAndRefresh<{ filled: number; skipped: number; failed: number }>(
-        `${baseUrl}/translations/retranslate`,
+        envUrl('/translations/retranslate'),
         { locales, sourceLocale }
+      ),
+    publish: (message?: string) =>
+      mutateAndRefresh<{ pendingCount?: number }>(
+        `${baseUrl}/versions/publish`,
+        { environment: query.environment, message }
       ),
   };
 };

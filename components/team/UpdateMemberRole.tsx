@@ -1,7 +1,7 @@
 import { defaultHeaders } from '@/lib/common';
 import { availableRoles } from '@/lib/permissions';
 import { Team, TeamMember } from '@prisma/client';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 

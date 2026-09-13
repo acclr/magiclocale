@@ -6,12 +6,12 @@ import type {
   GetServerSidePropsContext,
   InferGetServerSidePropsType,
 } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRef, type ReactElement, useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import type { ApiResponse, NextPageWithLayout } from 'types';
 import * as Yup from 'yup';
@@ -62,7 +62,7 @@ const ForgotPassword: NextPageWithLayout<
       <Head>
         <title>{t('forgot-password-title')}</title>
       </Head>
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-2">
             <InputWithLabel
@@ -94,7 +94,7 @@ const ForgotPassword: NextPageWithLayout<
           </div>
         </form>
       </div>
-      <p className="text-center text-sm text-gray-600 mt-3">
+      <p className="mt-3 text-center text-sm text-muted-foreground">
         {t('already-have-an-account')}
         <Link
           href="/auth/login"

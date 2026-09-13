@@ -4,7 +4,7 @@ import { Members, TeamTab } from '@/components/team';
 import env from '@/lib/env';
 import useTeam from 'hooks/useTeam';
 import { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 const TeamMembers = ({ teamFeatures }) => {

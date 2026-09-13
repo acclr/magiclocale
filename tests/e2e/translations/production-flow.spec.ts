@@ -49,12 +49,15 @@ test('preserves a manual value after source sync and serves it in the bundle', a
   const project = await prisma.translationProject.findFirstOrThrow({
     where: { team: { slug: team.slug }, name: projectName },
   });
+  const production = await prisma.environment.findFirstOrThrow({
+    where: { projectId: project.id, isProduction: true },
+  });
   const translationService = new TranslationService(
     new PrismaTranslationRepository(prisma),
     new FakeTranslator()
   );
 
-  await translationService.syncFromSource(project.id, [
+  await translationService.syncFromSource(project.id, production.id, [
     { key: 'settings.save', sourceText: 'Save changes' },
   ]);
   await page.getByRole('button', { name: 'Refresh' }).click();
@@ -85,7 +88,7 @@ test('preserves a manual value after source sync and serves it in the bundle', a
       aiLocked: true,
     });
 
-  await translationService.syncFromSource(project.id, [
+  await translationService.syncFromSource(project.id, production.id, [
     { key: 'settings.save', sourceText: 'Save settings' },
   ]);
   await page.getByRole('button', { name: 'Refresh' }).click();
@@ -108,5 +111,143 @@ test('preserves a manual value after source sync and serves it in the bundle', a
     locale: 'sv',
     sourceLocale: 'en',
     translations: { 'settings.save': 'Spara manuellt' },
+  });
+});
+
+test('keeps staging edits off production until promote and publish', async ({
+  page,
+  request,
+}) => {
+  await page.goto(`/teams/${team.slug}/products`);
+  await page.getByRole('button', { name: 'New Project' }).click();
+  await page.getByLabel('Project Name').fill(projectName);
+  await page.getByRole('button', { name: 'Create', exact: true }).click();
+  await page.getByRole('link', { name: new RegExp(projectName) }).click();
+
+  await page.getByLabel('Add Locale').fill('sv');
+  await page.getByRole('option', { name: /Swedish \/ Svenska/ }).click();
+  await page.getByRole('button', { name: 'Add', exact: true }).click();
+
+  const project = await prisma.translationProject.findFirstOrThrow({
+    where: { team: { slug: team.slug }, name: projectName },
+  });
+  const production = await prisma.environment.findFirstOrThrow({
+    where: { projectId: project.id, isProduction: true },
+  });
+
+  const { PrismaEnvironmentRepository } = await import(
+    '../../../data/environments/prisma-environment-repository'
+  );
+  const { PrismaFlagRepository } = await import(
+    '../../../data/flags/prisma-flag-repository'
+  );
+  const { PrismaVersionRepository } = await import(
+    '../../../data/versions/prisma-version-repository'
+  );
+  const { EnvironmentService } = await import(
+    '../../../domain/environments'
+  );
+  const { FlagService } = await import('../../../domain/flags');
+  const { ProjectService } = await import('../../../domain/translations');
+  const { VersionService } = await import('../../../domain/versions');
+
+  const translationRepository = new PrismaTranslationRepository(prisma);
+  const projectService = new ProjectService(translationRepository);
+  const environmentRepository = new PrismaEnvironmentRepository(prisma);
+  const environmentService = new EnvironmentService(
+    environmentRepository,
+    projectService
+  );
+  const flagService = new FlagService(
+    new PrismaFlagRepository(prisma),
+    projectService,
+    environmentService
+  );
+  const versionService = new VersionService(
+    new PrismaVersionRepository(prisma),
+    translationRepository,
+    environmentRepository,
+    { buildSnapshot: (environmentId) => flagService.buildSnapshot(environmentId) }
+  );
+  const translationService = new TranslationService(
+    translationRepository,
+    new FakeTranslator()
+  );
+
+  await translationService.syncFromSource(project.id, production.id, [
+    { key: 'settings.save', sourceText: 'Save changes' },
+  ]);
+  await translationService.saveManualValue(
+    (
+      await prisma.translationKey.findFirstOrThrow({
+        where: { projectId: project.id, key: 'settings.save' },
+      })
+    ).id,
+    production.id,
+    'sv',
+    'Spara prod'
+  );
+  await versionService.publish(production.id, { message: 'Prod seed' });
+
+  const staging = await environmentService.create(project.teamId, project.id, {
+    slug: 'staging',
+  });
+  await translationService.syncFromSource(project.id, staging.id, [
+    { key: 'settings.save', sourceText: 'Save changes' },
+  ]);
+  await translationService.saveManualValue(
+    (
+      await prisma.translationKey.findFirstOrThrow({
+        where: { projectId: project.id, key: 'settings.save' },
+      })
+    ).id,
+    staging.id,
+    'sv',
+    'Spara staging'
+  );
+  await versionService.publish(staging.id, { message: 'Staging ready' });
+
+  const publicApiKey = await createApiKey({
+    name: apiKeyName,
+    teamId: project.teamId,
+  });
+  const stagingKey = await createApiKey({
+    name: `${apiKeyName} staging`,
+    teamId: project.teamId,
+    projectId: project.id,
+    environmentId: staging.id,
+  });
+
+  const productionBundle = await request.get(
+    `/api/v1/projects/${project.id}/translations?locale=sv`,
+    { headers: { Authorization: `Bearer ${publicApiKey}` } }
+  );
+  await expect(productionBundle.json()).resolves.toMatchObject({
+    translations: { 'settings.save': 'Spara prod' },
+    environment: 'production',
+  });
+
+  const stagingOverride = await request.get(
+    `/api/v1/projects/${project.id}/translations?locale=sv&environment=production`,
+    { headers: { Authorization: `Bearer ${stagingKey}` } }
+  );
+  await expect(stagingOverride.json()).resolves.toMatchObject({
+    translations: { 'settings.save': 'Spara staging' },
+    environment: 'staging',
+  });
+
+  await versionService.applyPromotion(staging.id, production.id);
+  await versionService.publish(production.id, { message: 'Promoted' });
+
+  const promoted = await request.get(
+    `/api/v1/projects/${project.id}/translations?locale=sv`,
+    { headers: { Authorization: `Bearer ${publicApiKey}` } }
+  );
+  await expect(promoted.json()).resolves.toMatchObject({
+    translations: { 'settings.save': 'Spara staging' },
+  });
+
+  await prisma.apiKey.deleteMany({
+    where: { teamId: project.teamId, name: `${apiKeyName} staging` },
   });
 });

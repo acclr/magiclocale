@@ -1,7 +1,7 @@
 import type { DashboardRow } from '../../domain/translations';
 import { localeColor } from '../../domain/translations';
 import type { TranslationWorkspaceActions } from '../../hooks/useTranslationWorkspace';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -97,8 +97,8 @@ const TranslationDrawer = ({
           onClick={onClose}
           type="button"
         />
-        <aside className="flex min-h-full w-full max-w-md flex-col bg-base-100 shadow-xl">
-          <header className="flex items-start justify-between border-b border-base-300 p-5">
+        <aside className="flex min-h-full w-full max-w-md flex-col bg-background shadow-xl">
+          <header className="flex items-start justify-between border-b border-border p-5">
             <div>
               <h2 className="text-xl font-semibold">
                 <span
@@ -111,7 +111,7 @@ const TranslationDrawer = ({
                   <LocaleName code={locale} variant="full" />
                 </span>
               </h2>
-              <p className="mt-1 font-mono text-xs text-base-content/60">
+              <p className="mt-1 font-mono text-xs text-muted-foreground">
                 {row.key}
               </p>
             </div>
@@ -122,11 +122,11 @@ const TranslationDrawer = ({
 
           <div className="flex-1 space-y-6 overflow-y-auto p-5">
             <div>
-              <p className="text-xs font-semibold uppercase text-base-content/60">
+              <p className="text-xs font-semibold uppercase text-muted-foreground">
                 {t('source-text')} (
                 <LocaleName code={sourceLocale} />)
               </p>
-              <p className="mt-2 rounded-lg bg-base-200 p-3 text-sm">
+              <p className="mt-2 rounded-lg bg-card p-3 text-sm">
                 {row.sourceText}
               </p>
             </div>
@@ -195,7 +195,7 @@ const TranslationDrawer = ({
           </div>
 
           {canEdit && (
-            <footer className="space-y-2 border-t border-base-300 p-5">
+            <footer className="space-y-2 border-t border-border p-5">
               {!isSourceLocale && (
                 <button
                   className="btn btn-outline btn-primary w-full"

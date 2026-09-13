@@ -38,11 +38,13 @@ describe('locale catalog', () => {
     expect(getLocaleOption('sv')).toMatchObject({
       code: 'sv',
       label: 'Swedish / Svenska',
+      countryCode: 'SE',
       flag: '🇸🇪',
     });
     expect(getLocaleOption('nb')).toMatchObject({
       code: 'nb',
       label: 'Norwegian / Norska (Norskt bokmål)',
+      countryCode: 'NO',
       flag: '🇳🇴',
     });
     expect(getLocaleOption('nb-NO')?.label).toBe(

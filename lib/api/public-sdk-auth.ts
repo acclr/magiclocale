@@ -4,6 +4,10 @@ export type PublicSdkApiKey = {
   id: string;
   teamId: string;
   expiresAt: Date | null;
+  /** Set when the key may only ever be used against one project. */
+  projectId: string | null;
+  /** Set when the key may only ever read one environment. */
+  environmentId: string | null;
 };
 
 export type PublicSdkProject = {
@@ -19,7 +23,7 @@ export type PublicSdkAuthDependencies = {
 
 export class PublicSdkAuthError extends Error {
   constructor(
-    readonly status: 401 | 404,
+    readonly status: 401 | 403 | 404,
     message: string
   ) {
     super(message);
@@ -42,12 +46,24 @@ export function extractBearerToken(
   return match?.[1] ?? null;
 }
 
+export type PublicSdkAuthResult = {
+  apiKey: PublicSdkApiKey;
+  project: PublicSdkProject;
+  /**
+   * Environment the request must operate on, or null to let the caller fall
+   * back to production. A bound key always wins over the requested value, so
+   * a staging key can never read production by changing a query parameter.
+   */
+  environmentRef: string | null;
+};
+
 export async function authenticatePublicSdkRequest(
   authorization: string | string[] | undefined,
   projectId: string,
   dependencies: PublicSdkAuthDependencies,
+  requestedEnvironment?: string | null,
   now = new Date()
-): Promise<{ apiKey: PublicSdkApiKey; project: PublicSdkProject }> {
+): Promise<PublicSdkAuthResult> {
   const token = extractBearerToken(authorization);
   if (!token) {
     throw new PublicSdkAuthError(401, 'Invalid API key.');
@@ -62,7 +78,31 @@ export async function authenticatePublicSdkRequest(
   if (!project || project.teamId !== apiKey.teamId) {
     throw new PublicSdkAuthError(404, 'Project not found.');
   }
+  if (apiKey.projectId && apiKey.projectId !== project.id) {
+    throw new PublicSdkAuthError(404, 'Project not found.');
+  }
 
   await dependencies.updateLastUsedAt(apiKey.id, now);
-  return { apiKey, project };
+
+  return {
+    apiKey,
+    project,
+    environmentRef: resolveEnvironmentRef(apiKey, requestedEnvironment),
+  };
+}
+
+/**
+ * A key bound to an environment ignores whatever the client asked for. An
+ * unbound key may target any environment in its own project, which keeps
+ * existing single-key setups working.
+ */
+export function resolveEnvironmentRef(
+  apiKey: Pick<PublicSdkApiKey, 'environmentId'>,
+  requestedEnvironment?: string | null
+): string | null {
+  if (apiKey.environmentId) {
+    return apiKey.environmentId;
+  }
+  const requested = requestedEnvironment?.trim();
+  return requested ? requested : null;
 }

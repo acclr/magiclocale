@@ -1,3 +1,4 @@
+import type { Environment } from '../environments/types';
 import type {
   Project,
   Translation,
@@ -30,6 +31,8 @@ export type DashboardRow = {
 
 export type TranslationDashboard = {
   project: Project;
+  /** The environment whose working copy these rows come from. */
+  environment: Environment;
   locales: string[];
   rows: DashboardRow[];
   counts: Record<TranslationFilter, number>;
@@ -74,6 +77,7 @@ export function normalizeDashboardQuery(
 
 export function projectTranslationDashboard(
   project: Project,
+  environment: Environment,
   keys: TranslationKey[],
   translations: Translation[]
 ): TranslationDashboard {
@@ -141,6 +145,7 @@ export function projectTranslationDashboard(
 
   return {
     project,
+    environment,
     locales: project.locales,
     rows,
     counts,

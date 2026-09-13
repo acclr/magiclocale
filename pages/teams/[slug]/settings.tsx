@@ -5,7 +5,7 @@ import TeamPlanSettings from '@/components/team/TeamPlanSettings';
 import env from '@/lib/env';
 import useTeam from 'hooks/useTeam';
 import type { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import type { TeamFeature } from 'types';
 

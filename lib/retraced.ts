@@ -20,7 +20,10 @@ type EventType =
   | 'webhook.update'
   | 'team.create'
   | 'team.update'
-  | 'team.delete';
+  | 'team.delete'
+  | 'version.publish'
+  | 'version.rollback'
+  | 'version.promote';
 
 type Request = {
   action: EventType;

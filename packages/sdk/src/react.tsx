@@ -19,6 +19,12 @@ export type MagiLocaleContextValue = {
   translate: (key: string, defaultText: string) => string;
   setLocale: (locale: string) => Promise<void>;
   refresh: () => Promise<void>;
+  isEnabled: (key: string, fallback?: boolean) => boolean;
+  getValue: (
+    key: string,
+    fallback?: import('./types').FlagValue
+  ) => import('./types').FlagValue;
+  identify: (context: import('./types').FlagEvaluationContext) => void;
 };
 
 export const MagiLocaleContext = createContext<MagiLocaleContextValue | null>(
@@ -95,14 +101,49 @@ export function MagiLocaleProvider({
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      await client.refreshTranslations();
+      await Promise.all([
+        client.refreshTranslations(),
+        client.refreshFlags(),
+      ]);
     } finally {
       setIsLoading(false);
     }
   }, [client]);
+  const isEnabled = useCallback(
+    (key: string, fallback = false) => client.isEnabled(key, fallback),
+    [client]
+  );
+  const getValue = useCallback(
+    (key: string, fallback?: import('./types').FlagValue) =>
+      client.getValue(key, fallback),
+    [client]
+  );
+  const identify = useCallback(
+    (context: import('./types').FlagEvaluationContext) =>
+      client.identify(context),
+    [client]
+  );
   const value = useMemo<MagiLocaleContextValue>(
-    () => ({ locale, isLoading, translate, setLocale, refresh }),
-    [isLoading, locale, refresh, setLocale, translate]
+    () => ({
+      locale,
+      isLoading,
+      translate,
+      setLocale,
+      refresh,
+      isEnabled,
+      getValue,
+      identify,
+    }),
+    [
+      getValue,
+      identify,
+      isEnabled,
+      isLoading,
+      locale,
+      refresh,
+      setLocale,
+      translate,
+    ]
   );
 
   return (
@@ -119,6 +160,19 @@ export function useMagiLocale(): MagiLocaleContextValue {
   }
   return context;
 }
+
+export function useFlag(
+  key: string,
+  fallback: boolean | import('./types').FlagValue = false
+) {
+  const { isEnabled, getValue } = useMagiLocale();
+  if (typeof fallback === 'boolean') {
+    return isEnabled(key, fallback);
+  }
+  return getValue(key, fallback);
+}
+
+export { MagiLocaleProvider as FlagProvider };
 
 function persistLocale(cookieName: string, locale: string): void {
   document.cookie =

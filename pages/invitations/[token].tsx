@@ -2,7 +2,7 @@ import Head from 'next/head';
 import { ReactElement } from 'react';
 import { NextPageWithLayout } from 'types';
 import { useSession } from 'next-auth/react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
@@ -49,7 +49,7 @@ const AcceptTeamInvitation: NextPageWithLayout = () => {
       <Head>
         <title>{`${t('invitation-title')} ${invitation.team.name}`}</title>
       </Head>
-      <div className="rounded p-6 border">
+      <div className="rounded-md bg-card p-6">
         <div className="flex flex-col items-center space-y-6">
           <h2 className="font-bold">
             {`${invitation.team.name} ${t('team-invite')}`}

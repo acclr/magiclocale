@@ -42,12 +42,14 @@ function hexLuminance(hex: string): number {
   return (red * 299 + green * 587 + blue * 114) / 1000;
 }
 
+const COLUMN_WASH_ALPHA = '14'; // ~8% of the locale hex over the dark surface
+
 export function localeColor(locale: string): LocaleColor {
   const hue = hueForLocale(locale || 'und');
   const hex = hslToHex(hue, 62, 42);
   return {
     hex,
-    background: hslToHex(hue, 48, 95),
+    background: `${hex}${COLUMN_WASH_ALPHA}`,
     border: hslToHex(hue, 58, 38),
     onHex: hexLuminance(hex) > 155 ? '#111827' : '#ffffff',
   };

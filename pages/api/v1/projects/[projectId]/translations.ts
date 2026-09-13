@@ -7,8 +7,29 @@ import {
   getPublicSdkCorsPolicy,
   isAllowedOrigin,
 } from '@/lib/api/public-sdk-cors';
-import { getTranslationRepository } from '@/lib/translations';
-import { buildTranslationBundle } from '@/lib/translations/translation-bundle';
+import {
+  getEnvironmentService,
+  getTranslationRepository,
+  getVersionService,
+} from '@/lib/translations';
+import {
+  buildTranslationBundle,
+  type TranslationBundleFailure,
+} from '@/lib/translations/translation-bundle';
+
+const FAILURE_STATUS: Record<TranslationBundleFailure, number> = {
+  'project-not-found': 404,
+  'environment-not-found': 404,
+  'locale-not-configured': 422,
+  'version-not-found': 404,
+};
+
+const FAILURE_MESSAGE: Record<TranslationBundleFailure, string> = {
+  'project-not-found': 'Project not found.',
+  'environment-not-found': 'Environment not found.',
+  'locale-not-configured': 'Locale is not configured for this project.',
+  'version-not-found': 'Version not found.',
+};
 
 export default async function handler(
   req: NextApiRequest,
@@ -46,25 +67,48 @@ export default async function handler(
       .json({ error: 'A locale query parameter is required.' });
   }
 
+  const requestedVersion = parseVersion(req.query.version);
+  if (requestedVersion === 'invalid') {
+    return res
+      .status(422)
+      .json({ error: 'The version query parameter must be a number.' });
+  }
+
   try {
-    await authenticatePublicSdkApiRequest(req.headers.authorization, projectId);
+    const { environmentRef } = await authenticatePublicSdkApiRequest(
+      req.headers.authorization,
+      projectId,
+      getSingleQueryValue(req.query.environment)
+    );
 
     const result = await buildTranslationBundle(
-      getTranslationRepository(),
-      projectId,
-      locale
+      {
+        repository: getTranslationRepository(),
+        environmentService: getEnvironmentService(),
+        versionService: getVersionService(),
+      },
+      { projectId, locale, environment: environmentRef, version: requestedVersion }
     );
     if (!result.success) {
-      const projectMissing = result.reason === 'project-not-found';
-      return res.status(projectMissing ? 404 : 422).json({
-        error: projectMissing
-          ? 'Project not found.'
-          : 'Locale is not configured for this project.',
-      });
+      return res
+        .status(FAILURE_STATUS[result.reason])
+        .json({ error: FAILURE_MESSAGE[result.reason] });
     }
 
-    res.setHeader('Cache-Control', 'no-store');
-    res.setHeader('ETag', `"${result.bundle.version}"`);
+    // A pinned version is immutable, so it can be cached hard. The live
+    // pointer can move at any publish, so it must always be revalidated.
+    if (requestedVersion !== null && result.bundle.versionNumber !== null) {
+      res.setHeader(
+        'Cache-Control',
+        'public, max-age=31536000, immutable'
+      );
+    } else {
+      res.setHeader('Cache-Control', 'no-cache');
+    }
+    res.setHeader(
+      'ETag',
+      `"${result.bundle.environment}:${result.bundle.version}:${locale}"`
+    );
     return res.status(200).json(result.bundle);
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
@@ -78,6 +122,20 @@ export default async function handler(
 
 function getSingleQueryValue(value: string | string[] | undefined) {
   return typeof value === 'string' && value ? value : null;
+}
+
+function parseVersion(
+  value: string | string[] | undefined
+): number | null | 'invalid' {
+  const raw = getSingleQueryValue(value);
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    return 'invalid';
+  }
+  return parsed;
 }
 
 function setHeaders(

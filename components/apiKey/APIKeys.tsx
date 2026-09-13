@@ -1,9 +1,9 @@
 import { EmptyState, WithLoadingAndError } from '@/components/shared';
 import ConfirmationDialog from '@/components/shared/ConfirmationDialog';
 import type { ApiKey, Team } from '@prisma/client';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import { toast } from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 import NewAPIKey from './NewAPIKey';
@@ -78,12 +78,30 @@ const APIKeys = ({ team }: APIKeysProps) => {
         ) : (
           <>
             <Table
-              cols={[t('name'), t('status'), t('created'), t('actions')]}
+              cols={[
+                t('name'),
+                t('environment'),
+                t('status'),
+                t('created'),
+                t('actions'),
+              ]}
               body={apiKeys.map((apiKey) => {
+                const scoped = apiKey as typeof apiKey & {
+                  environment?: {
+                    name: string;
+                    project?: { name: string };
+                  } | null;
+                };
+                const scopeLabel = scoped.environment
+                  ? `${scoped.environment.project?.name ?? ''} · ${
+                      scoped.environment.name
+                    }`
+                  : t('api-key-unbound');
                 return {
                   id: apiKey.id,
                   cells: [
                     { wrap: true, text: apiKey.name },
+                    { wrap: true, text: scopeLabel },
                     {
                       badge: {
                         color: 'success',

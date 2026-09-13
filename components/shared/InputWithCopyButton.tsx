@@ -1,35 +1,27 @@
-import { Input, InputProps } from 'react-daisyui';
+import type { ComponentProps } from 'react';
 
 import { CopyToClipboardButton } from '@/components/shared';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 
-interface InputWithCopyButtonProps extends InputProps {
+interface InputWithCopyButtonProps extends ComponentProps<typeof Input> {
   label: string;
   description?: string;
 }
 
 const InputWithCopyButton = (props: InputWithCopyButtonProps) => {
   const { label, value, description, ...rest } = props;
-
   const id = label.replace(/ /g, '');
 
   return (
-    <div className="form-control w-full">
-      <div className="flex justify-between items-center">
-        <label className="label pl-0" htmlFor={id}>
-          <span className="label-text">{label}</span>
-        </label>
+    <div className="grid w-full gap-1.5">
+      <div className="flex items-center justify-between">
+        <Label htmlFor={id}>{label}</Label>
         <CopyToClipboardButton value={value?.toString() || ''} />
       </div>
-      <Input
-        id={id}
-        className="input input-bordered w-full text-sm"
-        {...rest}
-        value={value}
-      />
+      <Input id={id} {...rest} value={value} />
       {description && (
-        <label className="label">
-          <span className="label-text-alt">{description}</span>
-        </label>
+        <p className="text-xs text-muted-foreground">{description}</p>
       )}
     </div>
   );

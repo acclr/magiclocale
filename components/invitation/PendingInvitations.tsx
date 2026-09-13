@@ -2,7 +2,7 @@ import { Error, LetterAvatar, Loading } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import { Team } from '@prisma/client';
 import useInvitations from 'hooks/useInvitations';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import React, { useState } from 'react';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';

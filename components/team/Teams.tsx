@@ -2,10 +2,10 @@ import { LetterAvatar } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import { Team } from '@prisma/client';
 import useTeams from 'hooks/useTeams';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 import type { ApiResponse } from 'types';
 import { useRouter } from 'next/router';
@@ -79,7 +79,7 @@ const Teams = () => {
                       {
                         wrap: true,
                         element: (
-                          <Link href={`/teams/${team.slug}/members`}>
+                          <Link href={`/teams/${team.slug}/products`}>
                             <div className="flex items-center justify-start space-x-2">
                               <LetterAvatar name={team.name} />
                               <span className="underline">{team.name}</span>

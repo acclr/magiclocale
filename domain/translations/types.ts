@@ -44,6 +44,11 @@ export type TranslationKey = {
 export type Translation = {
   id: string;
   translationKeyId: string;
+  /**
+   * Translation values are the per-environment working copy. The key catalog
+   * they hang off stays project-wide.
+   */
+  environmentId: string;
   locale: LocaleCode;
   value: string;
   source: TranslationSource;

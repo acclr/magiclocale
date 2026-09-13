@@ -1,6 +1,6 @@
 import useSWR from 'swr';
 import { useState } from 'react';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { ComputerDesktopIcon } from '@heroicons/react/24/outline';
 import toast from 'react-hot-toast';
 

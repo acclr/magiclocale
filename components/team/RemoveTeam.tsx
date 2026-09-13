@@ -1,9 +1,9 @@
 import { Card } from '@/components/shared';
 import { Team } from '@prisma/client';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useRouter } from 'next/router';
 import React, { useState } from 'react';
-import { Button } from 'react-daisyui';
+import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 
 import ConfirmationDialog from '../shared/ConfirmationDialog';

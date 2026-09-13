@@ -2,16 +2,19 @@
 const { i18n } = require('./next-i18next.config');
 const { withSentryConfig } = require('@sentry/nextjs');
 
-const appUrl =
-  process.env.APP_URL ||
-  process.env.NEXTAUTH_URL ||
-  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+const appUrl = [
+  process.env.APP_URL,
+  process.env.NEXTAUTH_URL,
+  process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '',
+]
+  .map((value) => (value || '').trim().replace(/\/+$/, ''))
+  .find(Boolean);
 
 if (appUrl) {
-  if (!process.env.APP_URL) {
+  if (!process.env.APP_URL?.trim()) {
     process.env.APP_URL = appUrl;
   }
-  if (!process.env.NEXTAUTH_URL) {
+  if (!process.env.NEXTAUTH_URL?.trim()) {
     process.env.NEXTAUTH_URL = appUrl;
   }
 }

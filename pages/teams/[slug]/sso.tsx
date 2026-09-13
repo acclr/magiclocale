@@ -3,7 +3,7 @@ import { TeamTab } from '@/components/team';
 import { ConnectionsWrapper } from '@boxyhq/react-ui/sso';
 import useTeam from 'hooks/useTeam';
 import { GetServerSidePropsContext } from 'next';
-import { useTranslation } from 'next-i18next';
+import { useTranslation } from '@/hooks/useTranslation';
 import toast from 'react-hot-toast';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import env from '@/lib/env';

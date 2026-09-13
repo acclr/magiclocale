@@ -9,6 +9,66 @@ export type TranslationBundle = {
   sourceLocale: string;
   translations: Record<string, string>;
   version: string;
+  environment?: string;
+  versionNumber?: number | null;
+  publishedAt?: string | null;
+};
+
+export type FlagType = 'boolean' | 'string' | 'number' | 'json';
+
+export type FlagVisibility = 'public' | 'server-only';
+
+export type FlagRuleOperator =
+  | 'equals'
+  | 'not-equals'
+  | 'in'
+  | 'not-in'
+  | 'contains'
+  | 'not-contains'
+  | 'starts-with'
+  | 'ends-with'
+  | 'greater-than'
+  | 'less-than';
+
+export type FlagValue =
+  | boolean
+  | string
+  | number
+  | null
+  | FlagValue[]
+  | { [key: string]: FlagValue };
+
+export type FlagRuleSnapshot = {
+  attribute: string;
+  operator: FlagRuleOperator;
+  values: string[];
+  value: FlagValue;
+  rolloutPercentage: number | null;
+};
+
+export type FlagSnapshot = {
+  key: string;
+  type: FlagType;
+  visibility: FlagVisibility;
+  enabled: boolean;
+  defaultValue: FlagValue;
+  offValue: FlagValue;
+  rolloutPercentage: number | null;
+  rolloutSalt: string;
+  rules: FlagRuleSnapshot[];
+};
+
+export type FlagPayload = {
+  projectId: string;
+  environment: string;
+  version: string;
+  versionNumber: number | null;
+  flags: FlagSnapshot[];
+};
+
+export type FlagEvaluationContext = {
+  key?: string | null;
+  attributes?: Record<string, string | number | boolean | null | undefined>;
 };
 
 export type FetchLike = (
@@ -22,7 +82,11 @@ export type MagicLocaleConfig = {
   ingestToken: string;
   sourceLocale?: string;
   locale?: string;
+  environment?: string;
+  version?: number;
+  context?: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
+  initialFlags?: FlagPayload;
   refreshIntervalMs?: number;
   debounceMs?: number;
   batchSize?: number;
@@ -33,9 +97,22 @@ export type MagicLocaleConfig = {
 };
 
 export type ResolvedMagicLocaleConfig = Required<
-  Omit<MagicLocaleConfig, 'fetch' | 'onError' | 'initialBundle'>
+  Omit<
+    MagicLocaleConfig,
+    | 'fetch'
+    | 'onError'
+    | 'initialBundle'
+    | 'initialFlags'
+    | 'environment'
+    | 'version'
+    | 'context'
+  >
 > & {
   fetch: FetchLike;
   onError: (error: Error) => void;
+  environment: string;
+  version: number | null;
+  context: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
+  initialFlags?: FlagPayload;
 };
