@@ -1,47 +1,82 @@
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import type { LucideIcon } from 'lucide-react';
+import {
+  BotIcon,
+  CreditCardIcon,
+  GlobeIcon,
+  LayersIcon,
+  LayoutDashboardIcon,
+  SparklesIcon,
+} from 'lucide-react';
 
-import { useLandingI18n } from './LandingLocaleProvider';
+import {
+  Card,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { cn } from 'cn';
+
 import features from './data/features.json';
+import LandingSection from './LandingSection';
+import { useLandingI18n } from './LandingLocaleProvider';
+
+const featureIcons: Record<string, LucideIcon> = {
+  discovery: SparklesIcon,
+  dashboard: LayoutDashboardIcon,
+  sdk: GlobeIcon,
+  environments: LayersIcon,
+  'ai-assist': BotIcon,
+  billing: CreditCardIcon,
+};
 
 const FeatureSection = () => {
   const { translate } = useLandingI18n();
 
   return (
-    <section className="px-2 py-6">
-      <div className="flex flex-col justify-center space-y-6">
-        <h2 className="text-center text-4xl font-bold normal-case">
-          {translate('landing.features.title', 'Features')}
-        </h2>
-        <p className="text-center text-xl">
-          {translate(
-            'landing.features.subtitle',
-            'Everything you need to localize a product — including this website.'
-          )}
-        </p>
-        <div className="flex items-center justify-center">
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3">
-            {features.map((feature) => (
-              <Card key={feature.id}>
-                <CardContent>
-                  <CardTitle>
-                    {translate(
-                      `landing.features.${feature.id}.name`,
-                      feature.name
-                    )}
-                  </CardTitle>
-                  <p className="mt-2">
-                    {translate(
-                      `landing.features.${feature.id}.description`,
-                      feature.description
-                    )}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
+    <LandingSection
+      id="features"
+      eyebrow={translate('landing.features.eyebrow', 'Platform')}
+      title={translate('landing.features.title', 'Built for product teams')}
+      description={translate(
+        'landing.features.subtitle',
+        'Everything you need to localize application copy — including this marketing site.'
+      )}
+      className="border-t border-border/40 bg-muted/15"
+    >
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map((feature) => {
+          const Icon = featureIcons[feature.id] ?? SparklesIcon;
+          return (
+            <Card
+              key={feature.id}
+              className="border-border/70 bg-card/80 transition-colors hover:border-primary/35 hover:bg-card"
+            >
+              <CardHeader className="gap-3">
+                <div
+                  className={cn(
+                    'flex size-10 items-center justify-center rounded-lg border border-border/60 bg-muted/50 text-primary'
+                  )}
+                >
+                  <Icon className="size-5" aria-hidden />
+                </div>
+                <CardTitle className="text-base">
+                  {translate(
+                    `landing.features.${feature.id}.name`,
+                    feature.name
+                  )}
+                </CardTitle>
+                <CardDescription className="text-sm leading-relaxed">
+                  {translate(
+                    `landing.features.${feature.id}.description`,
+                    feature.description
+                  )}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          );
+        })}
       </div>
-    </section>
+    </LandingSection>
   );
 };
 

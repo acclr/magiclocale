@@ -1,39 +1,28 @@
 [
   {
     "id": "starter",
-    "amount": "30k",
+    "amount": "5",
     "currency": "USD",
     "duration": "month",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    "highlight": true,
+    "description": "Standard usage for agencies and product teams localizing a handful of languages.",
     "benefits": [
-      { "id": "users", "text": "Up to 20 users." },
-      { "id": "storage", "text": "Free storage upto 1GB" },
-      { "id": "validity", "text": "Lifetime validity" }
-    ]
-  },
-  {
-    "id": "growth",
-    "amount": "120k",
-    "currency": "USD",
-    "duration": "month",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
-    "benefits": [
-      { "id": "users", "text": "Up to 500 users." },
-      { "id": "storage", "text": "Storage upto 50GB" },
-      { "id": "support", "text": "24*7 support" }
+      { "id": "locales", "text": "Up to 4 languages per billed project" },
+      { "id": "envs", "text": "2 environments & 25 feature flags" },
+      { "id": "workflow", "text": "Key discovery, AI fill, and review" }
     ]
   },
   {
     "id": "enterprise",
-    "amount": "350k",
+    "amount": "50",
     "currency": "USD",
     "duration": "month",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    "highlight": false,
+    "description": "When a project needs five or more languages or higher usage limits.",
     "benefits": [
-      { "id": "users", "text": "Up to 1000 users." },
-      { "id": "storage", "text": "Storage upto 100GB" },
-      { "id": "support", "text": "24*7 support" },
-      { "id": "backups", "text": "Data backups" }
+      { "id": "locales", "text": "Unlimited languages per billed project" },
+      { "id": "envs", "text": "3 environments & unlimited flags" },
+      { "id": "support", "text": "Same workflow, built for scale" }
     ]
   }
 ]

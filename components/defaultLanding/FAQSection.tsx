@@ -1,42 +1,45 @@
-import { Card, CardContent, CardTitle } from '@/components/ui/card';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
-import { useLandingI18n } from './LandingLocaleProvider';
 import faqs from './data/faq.json';
+import LandingSection from './LandingSection';
+import { useLandingI18n } from './LandingLocaleProvider';
 
 const FAQSection = () => {
   const { translate } = useLandingI18n();
 
   return (
-    <section className="py-6">
-      <div className="flex flex-col justify-center space-y-6">
-        <h2 className="text-center text-4xl font-bold normal-case">
-          {translate('landing.faq.title', 'Frequently asked questions')}
-        </h2>
-        <p className="text-center text-xl">
-          {translate(
-            'landing.faq.subtitle',
-            'This page is itself a LocaleKit project. Open it in the dashboard to change any of these answers.'
-          )}
-        </p>
-        <div className="flex items-center justify-center">
-          <div className="grid grid-cols-1 gap-2">
-            {faqs.map((faq) => (
-              <Card key={faq.id}>
-                <CardContent>
-                  <CardTitle>
-                    Q.{' '}
-                    {translate(`landing.faq.${faq.id}.question`, faq.question)}
-                  </CardTitle>
-                  <p className="mt-2">
-                    A. {translate(`landing.faq.${faq.id}.answer`, faq.answer)}
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </div>
-      </div>
-    </section>
+    <LandingSection
+      id="faq"
+      eyebrow={translate('landing.faq.eyebrow', 'FAQ')}
+      title={translate('landing.faq.title', 'Frequently asked questions')}
+      description={translate(
+        'landing.faq.subtitle',
+        'This page is a LocaleKit project — edit these answers from Translation Projects.'
+      )}
+      className="border-t border-border/40 bg-muted/15"
+    >
+      <Accordion
+        type="single"
+        collapsible
+        className="mx-auto max-w-2xl rounded-xl border border-border/70 bg-card/80 px-2 shadow-sm"
+      >
+        {faqs.map((faq) => (
+          <AccordionItem key={faq.id} value={faq.id} className="px-4">
+            <AccordionTrigger className="text-left text-base hover:no-underline">
+              {translate(`landing.faq.${faq.id}.question`, faq.question)}
+            </AccordionTrigger>
+            <AccordionContent className="text-muted-foreground leading-relaxed">
+              {translate(`landing.faq.${faq.id}.answer`, faq.answer)}
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
+    </LandingSection>
   );
 };
 

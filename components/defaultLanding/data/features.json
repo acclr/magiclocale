@@ -1,57 +1,32 @@
 [
   {
-    "id": "create-account",
-    "name": "Create account",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "discovery",
+    "name": "Automatic key discovery",
+    "description": "Call translate(key, defaultText) in your app. LocaleKit ingests new keys as your team ships features — no spreadsheet handoffs."
   },
   {
-    "id": "email-password",
-    "name": "Sign in with Email and Password",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "dashboard",
+    "name": "Team review dashboard",
+    "description": "Filter by locale, status, and environment. Edit inline, track review state, and publish when translations are ready."
   },
   {
-    "id": "magic-link",
-    "name": "Sign in with Magic link",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "sdk",
+    "name": "@localekit/sdk",
+    "description": "Lightweight client for web and Next.js. Load bundles at runtime, switch locales, and keep flags in sync with the same project."
   },
   {
-    "id": "saml-sso",
-    "name": "Sign in with SAML SSO",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "environments",
+    "name": "Environments & versions",
+    "description": "Stage copy in development, publish to production, and snapshot releases so rollbacks stay predictable."
   },
   {
-    "id": "directory-sync",
-    "name": "Directory Sync (SCIM)",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "ai-assist",
+    "name": "AI fill & human review",
+    "description": "Draft missing translations with AI, then approve or edit in the dashboard before anything goes live."
   },
   {
-    "id": "update-account",
-    "name": "Update account",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
-  },
-  {
-    "id": "invite-users",
-    "name": "Invite users to the team",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
-  },
-  {
-    "id": "manage-members",
-    "name": "Manage team members",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
-  },
-  {
-    "id": "team-settings",
-    "name": "Update team settings",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
-  },
-  {
-    "id": "webhooks",
-    "name": "Webhooks & Events",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
-  },
-  {
-    "id": "create-team",
-    "name": "Create team",
-    "description": "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s"
+    "id": "billing",
+    "name": "Flexible billing",
+    "description": "Bill on a team retainer or per project — Starter for most teams, Enterprise when you need more languages and scale."
   }
 ]
