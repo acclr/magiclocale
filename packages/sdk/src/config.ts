@@ -1,8 +1,8 @@
-import type { MagicLocaleConfig, ResolvedMagicLocaleConfig } from './types';
+import type { LocaleKitConfig, ResolvedLocaleKitConfig } from './types';
 
 export function resolveConfig(
-  config: MagicLocaleConfig
-): ResolvedMagicLocaleConfig {
+  config: LocaleKitConfig
+): ResolvedLocaleKitConfig {
   assertNonEmpty(config.baseUrl, 'baseUrl');
   assertNonEmpty(config.projectId, 'projectId');
   assertNonEmpty(config.ingestToken, 'ingestToken');
@@ -15,7 +15,7 @@ export function resolveConfig(
     config.fetch ?? globalThis.fetch?.bind(globalThis);
   if (!fetchImplementation) {
     throw new Error(
-      'MagicLocale requires a fetch implementation in this runtime.'
+      'LocaleKit requires a fetch implementation in this runtime.'
     );
   }
 
@@ -43,14 +43,14 @@ export function resolveConfig(
     onError:
       config.onError ??
       ((error) => {
-        console.warn('[MagicLocale]', error.message);
+        console.warn('[LocaleKit]', error.message);
       }),
   };
 }
 
 function assertNonEmpty(value: string, name: string): void {
   if (value.trim().length === 0) {
-    throw new Error(`MagicLocale ${name} must not be empty.`);
+    throw new Error(`LocaleKit ${name} must not be empty.`);
   }
 }
 
@@ -61,7 +61,7 @@ function positiveInteger(
 ): number {
   const resolved = value ?? fallback;
   if (!Number.isInteger(resolved) || resolved <= 0) {
-    throw new Error(`MagicLocale ${name} must be a positive integer.`);
+    throw new Error(`LocaleKit ${name} must be a positive integer.`);
   }
   return resolved;
 }
@@ -73,7 +73,7 @@ function nonNegativeInteger(
 ): number {
   const resolved = value ?? fallback;
   if (!Number.isInteger(resolved) || resolved < 0) {
-    throw new Error(`MagicLocale ${name} must be a non-negative integer.`);
+    throw new Error(`LocaleKit ${name} must be a non-negative integer.`);
   }
   return resolved;
 }

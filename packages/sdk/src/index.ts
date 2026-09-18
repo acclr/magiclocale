@@ -1,20 +1,20 @@
-import { MagicLocaleClient } from './client';
-import type { MagicLocaleConfig } from './types';
+import { LocaleKitClient } from './client';
+import type { LocaleKitConfig } from './types';
 
-let defaultClient: MagicLocaleClient | null = null;
+let defaultClient: LocaleKitClient | null = null;
 
-export function configureMagicLocale(
-  config: MagicLocaleConfig
-): MagicLocaleClient {
+export function configureLocaleKit(
+  config: LocaleKitConfig
+): LocaleKitClient {
   defaultClient?.dispose();
-  defaultClient = new MagicLocaleClient(config);
+  defaultClient = new LocaleKitClient(config);
   return defaultClient;
 }
 
 export default function translate(key: string, defaultText: string): string {
   if (!defaultClient) {
     throw new Error(
-      'MagicLocale is not configured. Call configureMagicLocale() before translate().'
+      'LocaleKit is not configured. Call configureLocaleKit() before translate().'
     );
   }
   return defaultClient.translate(key, defaultText);
@@ -57,16 +57,16 @@ export function subscribe(listener: () => void): () => void {
   return requireClient().subscribe(listener);
 }
 
-function requireClient(): MagicLocaleClient {
+function requireClient(): LocaleKitClient {
   if (!defaultClient) {
     throw new Error(
-      'MagicLocale is not configured. Call configureMagicLocale() first.'
+      'LocaleKit is not configured. Call configureLocaleKit() first.'
     );
   }
   return defaultClient;
 }
 
-export { MagicLocaleClient } from './client';
+export { LocaleKitClient } from './client';
 export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
 export type {
@@ -75,7 +75,7 @@ export type {
   FlagPayload,
   FlagSnapshot,
   FlagValue,
-  MagicLocaleConfig,
+  LocaleKitConfig,
   SourceKey,
   TranslationBundle,
 } from './types';

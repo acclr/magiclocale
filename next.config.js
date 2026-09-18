@@ -22,7 +22,7 @@ if (appUrl) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@magilocale/sdk'],
+  transpilePackages: ['@localekit/sdk'],
   images: {
     remotePatterns: [
       {

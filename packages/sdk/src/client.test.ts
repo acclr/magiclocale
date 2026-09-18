@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { MagicLocaleClient } from './client';
+import { LocaleKitClient } from './client';
 import type { FetchLike } from './types';
 
 function createClient(fetch: FetchLike, overrides = {}) {
-  return new MagicLocaleClient({
+  return new LocaleKitClient({
     baseUrl: 'http://localhost:3000/',
     projectId: 'proj_acme',
     ingestToken: 'test-token',
@@ -24,7 +24,7 @@ function ok(): Response {
   });
 }
 
-describe('MagicLocaleClient', () => {
+describe('LocaleKitClient', () => {
   it('returns default text synchronously and pushes only on flush', async () => {
     const fetch = vi.fn<FetchLike>().mockResolvedValue(ok());
     const client = createClient(fetch);

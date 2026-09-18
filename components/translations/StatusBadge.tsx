@@ -9,13 +9,11 @@ import {
   PencilSquareIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline';
-import { buttonVariants } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { cn } from 'cn';
 import { useTranslation } from '@/hooks/useTranslation';
 
 type StatusKey = 'missing' | 'needs-review' | 'manual' | 'source' | 'ai';
@@ -33,14 +31,6 @@ const styles: Record<StatusKey, string> = {
   manual: 'badge-success',
   source: 'badge-neutral',
   ai: 'badge-info',
-};
-
-const iconStyles: Record<StatusKey, string> = {
-  missing: 'text-amber-400',
-  'needs-review': 'text-destructive',
-  manual: 'text-emerald-400',
-  source: 'text-muted-foreground',
-  ai: 'text-sky-400',
 };
 
 const icons: Record<StatusKey, typeof PencilSquareIcon> = {

@@ -11,8 +11,8 @@ import { TeamTab } from '@/components/team';
 import Help from '@/components/billing/Help';
 import { Error, Loading } from '@/components/shared';
 import LinkToPortal from '@/components/billing/LinkToPortal';
-import MagilocalePricing from '@/components/billing/MagilocalePricing';
-import MagilocaleSubscriptions from '@/components/billing/MagilocaleSubscriptions';
+import LocaleKitPricing from '@/components/billing/LocaleKitPricing';
+import LocaleKitSubscriptions from '@/components/billing/LocaleKitSubscriptions';
 import BillingProjectList from '@/components/billing/BillingProjectList';
 
 const Payments = ({ teamFeatures }) => {
@@ -60,7 +60,7 @@ const Payments = ({ teamFeatures }) => {
           </div>
 
           <div className="py-6">
-            <MagilocaleSubscriptions subscriptions={subscriptions} />
+            <LocaleKitSubscriptions subscriptions={subscriptions} />
           </div>
 
           <h2 className="card-title mb-2 text-xl font-medium leading-none tracking-tight">
@@ -69,7 +69,7 @@ const Payments = ({ teamFeatures }) => {
           <p className="mb-4 text-sm text-muted-foreground">
             {t('team-retainer-plans-help')}
           </p>
-          <MagilocalePricing plans={plans} />
+          <LocaleKitPricing plans={plans} />
 
           <div className="py-6">
             <BillingProjectList projects={projects} slug={team.slug} />

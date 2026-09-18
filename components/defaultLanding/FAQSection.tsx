@@ -15,7 +15,7 @@ const FAQSection = () => {
         <p className="text-center text-xl">
           {translate(
             'landing.faq.subtitle',
-            'This page is itself a Magilocale project. Open it in the dashboard to change any of these answers.'
+            'This page is itself a LocaleKit project. Open it in the dashboard to change any of these answers.'
           )}
         </p>
         <div className="flex items-center justify-center">

@@ -3,13 +3,13 @@ import { useTranslation } from '@/hooks/useTranslation';
 import useSWR from 'swr';
 
 import fetcher from '@/lib/fetcher';
-import type { MagilocaleEntitlement } from '@/domain/billing';
+import type { LocaleKitEntitlement } from '@/domain/billing';
 import type { ApiResponse } from 'types';
 import { Card } from '@/components/shared';
 
 const TeamPlanSettings = ({ slug }: { slug: string }) => {
   const { t } = useTranslation('common');
-  const { data } = useSWR<ApiResponse<MagilocaleEntitlement>>(
+  const { data } = useSWR<ApiResponse<LocaleKitEntitlement>>(
     slug ? `/api/teams/${slug}/billing/entitlement` : null,
     fetcher
   );
@@ -19,9 +19,9 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
     <Card>
       <Card.Body>
         <Card.Header>
-          <Card.Title>{t('magilocale-plan')}</Card.Title>
+          <Card.Title>{t('localekit-plan')}</Card.Title>
           <Card.Description>
-            {t('magilocale-plan-description')}
+            {t('localekit-plan-description')}
           </Card.Description>
         </Card.Header>
         {entitlement ? (

@@ -1,17 +1,17 @@
 [
   {
     "id": "what-is",
-    "question": "What is Magilocale?",
-    "answer": "A translation platform for application copy. Your product discovers source keys, Magilocale stores translations, and the dashboard lets a team review and ship every locale."
+    "question": "What is LocaleKit?",
+    "answer": "A translation platform for application copy. Your product discovers source keys, LocaleKit stores translations, and the dashboard lets a team review and ship every locale."
   },
   {
     "id": "how-editing-works",
     "question": "Can I edit this landing page from the dashboard?",
-    "answer": "Yes. This page is a Magilocale project. Change a string in Translation Projects, and the live site picks it up on the next refresh."
+    "answer": "Yes. This page is a LocaleKit project. Change a string in Translation Projects, and the live site picks it up on the next refresh."
   },
   {
     "id": "sdk",
     "question": "How do customer apps get translations?",
-    "answer": "They install @magilocale/sdk, point it at a project API key, and call translate(key, defaultText). New keys are ingested automatically."
+    "answer": "They install @localekit/sdk, point it at a project API key, and call translate(key, defaultText). New keys are ingested automatically."
   }
 ]

@@ -1,6 +1,6 @@
 import type {
   FlagPayload,
-  ResolvedMagicLocaleConfig,
+  ResolvedLocaleKitConfig,
   SourceKey,
   TranslationBundle,
 } from './types';
@@ -9,13 +9,13 @@ export interface SourceKeyTransport {
   push(keys: SourceKey[], keepalive?: boolean): Promise<void>;
 }
 
-export interface MagicLocaleTransport extends SourceKeyTransport {
+export interface LocaleKitTransport extends SourceKeyTransport {
   pull(locale: string): Promise<TranslationBundle>;
   pullFlags?(): Promise<FlagPayload>;
 }
 
-export class HttpSourceKeyTransport implements MagicLocaleTransport {
-  constructor(private readonly config: ResolvedMagicLocaleConfig) {}
+export class HttpSourceKeyTransport implements LocaleKitTransport {
+  constructor(private readonly config: ResolvedLocaleKitConfig) {}
 
   async push(keys: SourceKey[], keepalive = false): Promise<void> {
     const endpoint =
@@ -34,7 +34,7 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
 
     if (!response.ok) {
       throw new Error(
-        `MagicLocale ingest failed (${response.status}): ${await readError(
+        `LocaleKit ingest failed (${response.status}): ${await readError(
           response
         )}`
       );
@@ -55,7 +55,7 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
 
     if (!response.ok) {
       throw new Error(
-        `MagicLocale translation refresh failed (${
+        `LocaleKit translation refresh failed (${
           response.status
         }): ${await readError(response)}`
       );
@@ -77,7 +77,7 @@ export class HttpSourceKeyTransport implements MagicLocaleTransport {
 
     if (!response.ok) {
       throw new Error(
-        `MagicLocale flag refresh failed (${
+        `LocaleKit flag refresh failed (${
           response.status
         }): ${await readError(response)}`
       );

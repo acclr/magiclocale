@@ -3,20 +3,20 @@ import { Button } from '@/components/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import useTeam from 'hooks/useTeam';
-import type { MagilocalePlan } from '@/domain/billing';
+import type { LocaleKitPlan } from '@/domain/billing';
 import { CheckIcon } from '@heroicons/react/24/outline';
 
-type CatalogPlan = MagilocalePlan & {
+type CatalogPlan = LocaleKitPlan & {
   priceId: string | null;
   current: boolean;
 };
 
-type MagilocalePricingProps = {
+type LocaleKitPricingProps = {
   plans: CatalogPlan[];
   projectId?: string;
 };
 
-const MagilocalePricing = ({ plans, projectId }: MagilocalePricingProps) => {
+const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
   const { team } = useTeam();
   const { t } = useTranslation('common');
 
@@ -110,4 +110,4 @@ const MagilocalePricing = ({ plans, projectId }: MagilocalePricingProps) => {
   );
 };
 
-export default MagilocalePricing;
+export default LocaleKitPricing;

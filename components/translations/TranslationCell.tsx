@@ -6,12 +6,9 @@ import {
   CodeBracketIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
-  InformationCircleIcon,
   PencilSquareIcon,
-  SparklesIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline';
-import { Button } from '@/components/ui/button';
 import {
   Tooltip,
   TooltipContent,
@@ -24,35 +21,11 @@ import {
   useLayoutEffect,
   useRef,
   useState,
-  type ComponentProps,
 } from 'react';
 import toast from 'react-hot-toast';
-import { BotIcon, UserCheck2, UserIcon } from 'lucide-react';
+import { BotIcon, UserIcon } from 'lucide-react';
 
 const COLLAPSED_CELL_PX = 80;
-
-const CellIconButton = ({
-  label,
-  children,
-  ...props
-}: ComponentProps<typeof Button> & { label: string }) => {
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          aria-label={label}
-          size="icon-sm"
-          type="button"
-          variant="ghost"
-          {...props}
-        >
-          {children}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
-    </Tooltip>
-  );
-};
 
 type TranslationCellProps = {
   keyId: string;
@@ -86,7 +59,6 @@ const TranslationCell = ({
   cell,
   fallbackValue = '',
   canEdit,
-  onOpen,
   onSave,
 }: TranslationCellProps) => {
   const { t } = useTranslation('common');
@@ -169,13 +141,14 @@ const TranslationCell = ({
         ? 'source'
         : cell.source;
   const normalized: StatusKey = statusValue ?? 'missing';
-  const statusLabel: Record<StatusKey, string> = {
+  const statusLabels: Record<StatusKey, string> = {
     missing: t('translation-status-missing'),
     'needs-review': t('translation-status-needs-review'),
     manual: t('translation-status-manual'),
     source: t('translation-status-source'),
     ai: t('translation-status-ai'),
-  }[normalized];
+  };
+  const statusLabel = statusLabels[normalized];
 
   const StatusIcon = icons[normalized];
   const textareaRef = useRef<HTMLTextAreaElement>(null);

@@ -76,7 +76,7 @@ export type FetchLike = (
   init?: RequestInit
 ) => Promise<Response>;
 
-export type MagicLocaleConfig = {
+export type LocaleKitConfig = {
   baseUrl: string;
   projectId: string;
   ingestToken: string;
@@ -96,9 +96,9 @@ export type MagicLocaleConfig = {
   onError?: (error: Error) => void;
 };
 
-export type ResolvedMagicLocaleConfig = Required<
+export type ResolvedLocaleKitConfig = Required<
   Omit<
-    MagicLocaleConfig,
+    LocaleKitConfig,
     | 'fetch'
     | 'onError'
     | 'initialBundle'

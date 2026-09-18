@@ -1,4 +1,4 @@
-import { MagiLocaleProvider, useMagiLocale } from '@magilocale/sdk/react';
+import { LocaleKitProvider, useLocaleKit } from '@localekit/sdk/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
@@ -25,13 +25,13 @@ function loadDashboardLocale(): Promise<DashboardLocalePageProps> {
 }
 
 function ConnectedDashboardI18n({ children }: { children: ReactNode }) {
-  const magi = useMagiLocale();
+  const localeKit = useLocaleKit();
   const value = useMemo<DashboardI18n>(
     () => ({
-      locale: magi.locale,
-      translate: magi.translate,
+      locale: localeKit.locale,
+      translate: localeKit.translate,
     }),
-    [magi]
+    [localeKit]
   );
 
   return (
@@ -63,12 +63,12 @@ export function DashboardLocaleProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <MagiLocaleProvider
+    <LocaleKitProvider
       config={dashboard.config}
       initialLocale={dashboard.locale}
       initialBundle={dashboard.initialBundle ?? undefined}
     >
       <ConnectedDashboardI18n>{children}</ConnectedDashboardI18n>
-    </MagiLocaleProvider>
+    </LocaleKitProvider>
   );
 }

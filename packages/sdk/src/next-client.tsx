@@ -1,18 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { MagiLocaleProvider, type MagiLocaleProviderProps } from './react';
+import { LocaleKitProvider, type LocaleKitProviderProps } from './react';
 
-export type MagiLocaleNextClientProviderProps = Omit<
-  MagiLocaleProviderProps,
+export type LocaleKitNextClientProviderProps = Omit<
+  LocaleKitProviderProps,
   'onServerRefresh'
 >;
 
-export function MagiLocaleNextClientProvider(
-  props: MagiLocaleNextClientProviderProps
+export function LocaleKitNextClientProvider(
+  props: LocaleKitNextClientProviderProps
 ) {
   const router = useRouter();
   return (
-    <MagiLocaleProvider {...props} onServerRefresh={() => router.refresh()} />
+    <LocaleKitProvider {...props} onServerRefresh={() => router.refresh()} />
   );
 }

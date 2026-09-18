@@ -24,7 +24,7 @@ describe('dashboard translation helpers', () => {
     ).toBe('{{count}} unpublished changes');
   });
 
-  it('interpolates values and registers the source key with MagicLocale', () => {
+  it('interpolates values and registers the source key with LocaleKit', () => {
     const seen: Array<[string, string]> = [];
     expect(
       translateDashboardKey(

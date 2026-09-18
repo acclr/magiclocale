@@ -3,8 +3,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 import type { PublishState } from '../../hooks/useTranslationWorkspace';
-import { Alert } from '../ui/alert';
-import { CloudSyncIcon, RefreshCcwIcon } from 'lucide-react';
+import { RefreshCcwIcon } from 'lucide-react';
 
 type PublishBarProps = {
   publishState?: PublishState;

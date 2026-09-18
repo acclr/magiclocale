@@ -5,18 +5,18 @@ import {
   TranslationCache,
   type TranslationChangeListener,
 } from './translation-cache';
-import { HttpSourceKeyTransport, type MagicLocaleTransport } from './transport';
+import { HttpSourceKeyTransport, type LocaleKitTransport } from './transport';
 import type {
   FlagEvaluationContext,
   FlagValue,
-  MagicLocaleConfig,
+  LocaleKitConfig,
 } from './types';
 
-export class MagicLocaleClient {
+export class LocaleKitClient {
   private readonly registry: SourceKeyRegistry;
   private readonly cache: TranslationCache;
   private readonly flags: FlagCache;
-  private readonly transport: MagicLocaleTransport;
+  private readonly transport: LocaleKitTransport;
   private readonly refreshIntervalMs: number;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private readonly onPageHide = () => {
@@ -34,7 +34,7 @@ export class MagicLocaleClient {
   };
   private readonly onError: (error: Error) => void;
 
-  constructor(config: MagicLocaleConfig, transport?: MagicLocaleTransport) {
+  constructor(config: LocaleKitConfig, transport?: LocaleKitTransport) {
     const resolved = resolveConfig(config);
     this.onError = resolved.onError;
     this.refreshIntervalMs = resolved.refreshIntervalMs;
@@ -80,7 +80,7 @@ export class MagicLocaleClient {
   async setLocale(locale: string): Promise<void> {
     const normalized = locale.trim();
     if (!normalized) {
-      throw new Error('MagicLocale locale must not be empty.');
+      throw new Error('LocaleKit locale must not be empty.');
     }
     await this.refreshTranslations(normalized);
     this.cache.setLocale(normalized);

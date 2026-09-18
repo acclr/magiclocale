@@ -1,8 +1,8 @@
-# Magilocale
+# LocaleKit
 
-Magilocale is a team-based translation platform for application copy. The
+LocaleKit is a team-based translation platform for application copy. The
 dashboard manages projects, locales, translation status, and human review,
-while `@magilocale/sdk` discovers source keys and loads translated bundles at
+while `@localekit/sdk` discovers source keys and loads translated bundles at
 runtime.
 
 ## Architecture
@@ -94,7 +94,7 @@ ownership until accepted.
 The API key is shown only when created. It authenticates SDK requests for
 projects owned by the same team. Keep server-side keys in environment
 variables. Browser use exposes the key to that application’s users, so set
-`MAGILOCALE_ALLOWED_ORIGIN` to the exact browser origin and issue a dedicated
+`LOCALEKIT_ALLOWED_ORIGIN` to the exact browser origin and issue a dedicated
 team key appropriate for that exposure.
 
 ## SDK workspace
@@ -108,15 +108,15 @@ npm run sdk:build
 ```
 
 The workspace package can be referenced by another npm workspace as
-`"@magilocale/sdk": "workspace:*"`. A basic client configuration is:
+`"@localekit/sdk": "workspace:*"`. A basic client configuration is:
 
 ```ts
-import translate, { configureMagicLocale, flush } from '@magilocale/sdk';
+import translate, { configureLocaleKit, flush } from '@localekit/sdk';
 
-configureMagicLocale({
+configureLocaleKit({
   baseUrl: 'http://localhost:4002',
-  projectId: process.env.MAGILOCALE_PROJECT_ID!,
-  ingestToken: process.env.MAGILOCALE_API_KEY!,
+  projectId: process.env.LOCALEKIT_PROJECT_ID!,
+  ingestToken: process.env.LOCALEKIT_API_KEY!,
   sourceLocale: 'en',
   locale: 'sv',
 });
@@ -127,14 +127,14 @@ await flush();
 
 `translate(key, defaultText)` returns the current bundle value or the source
 text fallback, queues source-key ingestion, and batches sync requests. React
-consumers can import `MagiLocaleProvider` and `useMagiLocale` from
-`@magilocale/sdk/react`. Next.js App Router consumers can use
-`createMagiLocaleNext` from `@magilocale/sdk/next`.
+consumers can import `LocaleKitProvider` and `useLocaleKit` from
+`@localekit/sdk/react`. Next.js App Router consumers can use
+`createLocaleKitNext` from `@localekit/sdk/next`.
 
-## Localize the Magilocale landing page and dashboard
+## Localize the LocaleKit landing page and dashboard
 
 This app is a customer of itself. The public homepage uses
-`translate(key, defaultText)` from `@magilocale/sdk`. The signed-in dashboard
+`translate(key, defaultText)` from `@localekit/sdk`. The signed-in dashboard
 keeps `next-i18next` `t('key')` calls and bridges them to a second dedicated
 project so those keys show up in the translation workspace.
 
@@ -144,8 +144,8 @@ project so those keys show up in the translation workspace.
 3. Create a team API key for each project.
 4. Set the matching values in `.env`, then restart the app:
 
-   - `MAGILOCALE_LANDING_PROJECT_ID` and `MAGILOCALE_LANDING_API_KEY`
-   - `MAGILOCALE_DASHBOARD_PROJECT_ID` and `MAGILOCALE_DASHBOARD_API_KEY`
+   - `LOCALEKIT_LANDING_PROJECT_ID` and `LOCALEKIT_LANDING_API_KEY`
+   - `LOCALEKIT_DASHBOARD_PROJECT_ID` and `LOCALEKIT_DASHBOARD_API_KEY`
 
 Visiting `/` discovers `landing.*` keys automatically. Visiting a dashboard
 screen discovers that screen's `t()` keys (for example `back-to-projects`)
@@ -170,7 +170,7 @@ Both endpoints require `Authorization: Bearer <API_KEY>`.
   Returns the project ID, requested locale, source locale, translation map,
   and bundle version. Responses use `Cache-Control: no-store`.
 
-Browser requests are allowed only from `MAGILOCALE_ALLOWED_ORIGIN`. Server-side
+Browser requests are allowed only from `LOCALEKIT_ALLOWED_ORIGIN`. Server-side
 requests without an `Origin` header are supported.
 
 ## Commands
@@ -187,7 +187,7 @@ npm run check-lint          # Run ESLint
 npm run check-types         # Run root TypeScript checks
 npm test                    # Run root Jest tests
 npm run test:e2e            # Run Playwright
-npm run sdk:check-types     # Type-check @magilocale/sdk
+npm run sdk:check-types     # Type-check @localekit/sdk
 npm run sdk:test            # Run SDK Vitest tests
 npm run sdk:build           # Build SDK ESM/CJS/types
 npm run stripe:ensure-plans # Create $5 Starter and $50 Enterprise Stripe prices
@@ -195,7 +195,7 @@ npm run stripe:ensure-plans # Create $5 Starter and $50 Enterprise Stripe prices
 
 ## Billing
 
-Magilocale has two monthly plans:
+LocaleKit has two monthly plans:
 
 - **Starter** — $5/mo, standard usage, up to 4 languages per project
 - **Enterprise** — $50/mo, required once a project needs 5 or more languages
@@ -234,7 +234,7 @@ npx playwright test tests/e2e/translations/production-flow.spec.ts
 2. Configure authentication URLs/secrets and any enabled auth providers.
 3. Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally
    `OPENAI_BASE_URL`.
-4. Set `MAGILOCALE_ALLOWED_ORIGIN` to the deployed client origin.
+4. Set `LOCALEKIT_ALLOWED_ORIGIN` to the deployed client origin.
 5. Run `npx prisma migrate deploy`.
 6. Build with `npm run build-ci` and start with `npm run start`.
 

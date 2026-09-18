@@ -1,7 +1,7 @@
 import {
   customerIdForScope,
-  resolveMagilocalePlan,
-  MAGILOCALE_PLANS,
+  resolveLocaleKitPlan,
+  LOCALEKIT_PLANS,
 } from '../../../domain/billing';
 
 const catalog = {
@@ -22,7 +22,7 @@ describe('billing scope and plans', () => {
 
   it('resolves enterprise over starter for the billed customer', () => {
     expect(
-      resolveMagilocalePlan(
+      resolveLocaleKitPlan(
         ['price_starter', 'price_enterprise'],
         catalog,
         'project'
@@ -31,18 +31,18 @@ describe('billing scope and plans', () => {
       planId: 'enterprise',
       subscribed: true,
       billingScope: 'project',
-      maxLocales: MAGILOCALE_PLANS.enterprise.maxLocales,
-      maxEnvironments: MAGILOCALE_PLANS.enterprise.maxEnvironments,
-      maxFlags: MAGILOCALE_PLANS.enterprise.maxFlags,
+      maxLocales: LOCALEKIT_PLANS.enterprise.maxLocales,
+      maxEnvironments: LOCALEKIT_PLANS.enterprise.maxEnvironments,
+      maxFlags: LOCALEKIT_PLANS.enterprise.maxFlags,
     });
     expect(
-      resolveMagilocalePlan(['price_starter'], catalog, 'team')
+      resolveLocaleKitPlan(['price_starter'], catalog, 'team')
     ).toMatchObject({
       planId: 'starter',
       subscribed: true,
       billingScope: 'team',
     });
-    expect(resolveMagilocalePlan([], catalog, 'team')).toMatchObject({
+    expect(resolveLocaleKitPlan([], catalog, 'team')).toMatchObject({
       planId: 'starter',
       subscribed: false,
       billingScope: 'team',

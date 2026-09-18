@@ -14,16 +14,16 @@ describe('resolvePublicAppUrl', () => {
   });
 
   it('prefers NEXTAUTH_URL and strips a trailing slash', () => {
-    process.env.NEXTAUTH_URL = 'https://app.magilocale.com/';
+    process.env.NEXTAUTH_URL = 'https://app.localekit.com/';
     process.env.APP_URL = 'https://ignored.example';
     process.env.VERCEL_URL = 'ignored.vercel.app';
-    expect(resolvePublicAppUrl()).toBe('https://app.magilocale.com');
+    expect(resolvePublicAppUrl()).toBe('https://app.localekit.com');
   });
 
   it('uses VERCEL_URL when auth urls are empty', () => {
     process.env.NEXTAUTH_URL = '';
     process.env.APP_URL = '   ';
-    process.env.VERCEL_URL = 'magilocale.vercel.app';
-    expect(resolvePublicAppUrl()).toBe('https://magilocale.vercel.app');
+    process.env.VERCEL_URL = 'localekit.vercel.app';
+    expect(resolvePublicAppUrl()).toBe('https://localekit.vercel.app');
   });
 });

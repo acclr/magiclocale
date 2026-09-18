@@ -1,24 +1,24 @@
 import { cookies } from 'next/headers';
 import { after } from 'next/server';
 import { cache, type ReactNode } from 'react';
-import { MagicLocaleClient } from './client';
+import { LocaleKitClient } from './client';
 import { loadTranslationBundle } from './load-bundle';
-import { MagiLocaleNextClientProvider } from './next-client.js';
-import type { MagicLocaleConfig, TranslationBundle } from './types';
+import { LocaleKitNextClientProvider } from './next-client.js';
+import type { LocaleKitConfig, TranslationBundle } from './types';
 
-export type MagiLocaleNextConfig = MagicLocaleConfig & {
+export type LocaleKitNextConfig = LocaleKitConfig & {
   cookieName?: string;
   defaultLocale?: string;
   locales?: readonly string[];
 };
 
-export type MagiLocaleServerTranslator = {
+export type LocaleKitServerTranslator = {
   locale: string;
   translate: (key: string, defaultText: string) => string;
 };
 
-export function createMagiLocaleNext(config: MagiLocaleNextConfig) {
-  const cookieName = config.cookieName ?? 'magilocale-locale';
+export function createLocaleKitNext(config: LocaleKitNextConfig) {
+  const cookieName = config.cookieName ?? 'localekit-locale';
   const sourceLocale = config.sourceLocale ?? 'en';
   const defaultLocale = config.defaultLocale ?? config.locale ?? sourceLocale;
   const allowedLocales = new Set(
@@ -43,7 +43,7 @@ export function createMagiLocaleNext(config: MagiLocaleNextConfig) {
       reportError(config, error);
     }
 
-    const client = new MagicLocaleClient({
+    const client = new LocaleKitClient({
       ...config,
       locale,
       initialBundle,
@@ -52,23 +52,23 @@ export function createMagiLocaleNext(config: MagiLocaleNextConfig) {
     return { client, initialBundle, locale, flushScheduled: false };
   });
 
-  async function MagiLocaleProvider({
+  async function LocaleKitProvider({
     children,
   }: Readonly<{ children: ReactNode }>) {
     const { initialBundle, locale } = await getRequestState();
     return (
-      <MagiLocaleNextClientProvider
+      <LocaleKitNextClientProvider
         config={browserConfig}
         initialLocale={locale}
         initialBundle={initialBundle}
         cookieName={cookieName}
       >
         {children}
-      </MagiLocaleNextClientProvider>
+      </LocaleKitNextClientProvider>
     );
   }
 
-  async function getMagiLocale(): Promise<MagiLocaleServerTranslator> {
+  async function getLocaleKit(): Promise<LocaleKitServerTranslator> {
     const state = await getRequestState();
     if (!state.flushScheduled) {
       state.flushScheduled = true;
@@ -86,10 +86,10 @@ export function createMagiLocaleNext(config: MagiLocaleNextConfig) {
     };
   }
 
-  return { MagiLocaleProvider, getMagiLocale };
+  return { LocaleKitProvider, getLocaleKit };
 }
 
-function toBrowserConfig(config: MagiLocaleNextConfig): MagicLocaleConfig {
+function toBrowserConfig(config: LocaleKitNextConfig): LocaleKitConfig {
   return {
     baseUrl: config.baseUrl,
     projectId: config.projectId,
@@ -107,11 +107,11 @@ function toBrowserConfig(config: MagiLocaleNextConfig): MagicLocaleConfig {
   };
 }
 
-function reportError(config: MagicLocaleConfig, error: unknown): void {
+function reportError(config: LocaleKitConfig, error: unknown): void {
   const normalized = error instanceof Error ? error : new Error(String(error));
   if (config.onError) {
     config.onError(normalized);
     return;
   }
-  console.warn('[MagicLocale]', normalized.message);
+  console.warn('[LocaleKit]', normalized.message);
 }

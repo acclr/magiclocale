@@ -1,9 +1,9 @@
-export type MagilocalePlanId = 'starter' | 'enterprise';
+export type LocaleKitPlanId = 'starter' | 'enterprise';
 
 export type BillingScope = 'team' | 'project';
 
-export type MagilocalePlan = {
-  id: MagilocalePlanId;
+export type LocaleKitPlan = {
+  id: LocaleKitPlanId;
   name: string;
   amountCents: number;
   interval: 'month';
@@ -19,7 +19,7 @@ export const STARTER_MAX_ENVIRONMENTS = 2;
 export const STARTER_MAX_FLAGS = 25;
 export const ENTERPRISE_MAX_ENVIRONMENTS = 3;
 
-export const MAGILOCALE_PLANS: Record<MagilocalePlanId, MagilocalePlan> = {
+export const LOCALEKIT_PLANS: Record<LocaleKitPlanId, LocaleKitPlan> = {
   starter: {
     id: 'starter',
     name: 'Starter',
@@ -109,9 +109,9 @@ export function flagLimitMessage(maxFlags: number): string {
   );
 }
 
-export type MagilocaleEntitlement = {
-  planId: MagilocalePlanId;
-  plan: MagilocalePlan;
+export type LocaleKitEntitlement = {
+  planId: LocaleKitPlanId;
+  plan: LocaleKitPlan;
   subscribed: boolean;
   maxLocales: number | null;
   maxEnvironments: number | null;
@@ -131,11 +131,11 @@ export function customerIdForScope(
   return teamBillingId ?? null;
 }
 
-export function resolveMagilocalePlan(
+export function resolveLocaleKitPlan(
   livePriceIds: string[],
-  catalogPriceIds: Record<MagilocalePlanId, string>,
+  catalogPriceIds: Record<LocaleKitPlanId, string>,
   billingScope: BillingScope
-): MagilocaleEntitlement {
+): LocaleKitEntitlement {
   const enterprisePriceId = catalogPriceIds.enterprise;
   const starterPriceId = catalogPriceIds.starter;
   const hasEnterprise = Boolean(
@@ -148,11 +148,11 @@ export function resolveMagilocalePlan(
   if (hasEnterprise) {
     return {
       planId: 'enterprise',
-      plan: MAGILOCALE_PLANS.enterprise,
+      plan: LOCALEKIT_PLANS.enterprise,
       subscribed: true,
-      maxLocales: MAGILOCALE_PLANS.enterprise.maxLocales,
-      maxEnvironments: MAGILOCALE_PLANS.enterprise.maxEnvironments,
-      maxFlags: MAGILOCALE_PLANS.enterprise.maxFlags,
+      maxLocales: LOCALEKIT_PLANS.enterprise.maxLocales,
+      maxEnvironments: LOCALEKIT_PLANS.enterprise.maxEnvironments,
+      maxFlags: LOCALEKIT_PLANS.enterprise.maxFlags,
       priceId: enterprisePriceId,
       billingScope,
     };
@@ -160,11 +160,11 @@ export function resolveMagilocalePlan(
 
   return {
     planId: 'starter',
-    plan: MAGILOCALE_PLANS.starter,
+    plan: LOCALEKIT_PLANS.starter,
     subscribed: Boolean(starterPrice),
-    maxLocales: MAGILOCALE_PLANS.starter.maxLocales,
-    maxEnvironments: MAGILOCALE_PLANS.starter.maxEnvironments,
-    maxFlags: MAGILOCALE_PLANS.starter.maxFlags,
+    maxLocales: LOCALEKIT_PLANS.starter.maxLocales,
+    maxEnvironments: LOCALEKIT_PLANS.starter.maxEnvironments,
+    maxFlags: LOCALEKIT_PLANS.starter.maxFlags,
     priceId: starterPrice ?? null,
     billingScope,
   };

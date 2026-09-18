@@ -12,7 +12,7 @@ const HeroSection = () => {
       <div className="text-center">
         <div className="max-w-7xl">
           <h1 className="text-5xl font-bold">
-            {translate('landing.hero.title', 'Magilocale')}
+            {translate('landing.hero.title', 'LocaleKit')}
           </h1>
           <p className="py-6 text-2xl font-normal">
             {translate(

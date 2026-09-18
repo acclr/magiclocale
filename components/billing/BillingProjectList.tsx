@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 
-import type { BillingScope, MagilocaleEntitlement } from '@/domain/billing';
+import type { BillingScope, LocaleKitEntitlement } from '@/domain/billing';
 
 export type BilledProjectSummary = {
   id: string;
   name: string;
   billingScope: BillingScope;
-  entitlement: MagilocaleEntitlement;
+  entitlement: LocaleKitEntitlement;
 };
 
 const BillingProjectList = ({

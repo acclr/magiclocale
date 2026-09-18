@@ -10,10 +10,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { MagicLocaleClient } from './client';
-import type { MagicLocaleConfig, TranslationBundle } from './types';
+import { LocaleKitClient } from './client';
+import type { LocaleKitConfig, TranslationBundle } from './types';
 
-export type MagiLocaleContextValue = {
+export type LocaleKitContextValue = {
   locale: string;
   isLoading: boolean;
   translate: (key: string, defaultText: string) => string;
@@ -27,12 +27,12 @@ export type MagiLocaleContextValue = {
   identify: (context: import('./types').FlagEvaluationContext) => void;
 };
 
-export const MagiLocaleContext = createContext<MagiLocaleContextValue | null>(
+export const LocaleKitContext = createContext<LocaleKitContextValue | null>(
   null
 );
 
-export type MagiLocaleProviderProps = {
-  config: MagicLocaleConfig;
+export type LocaleKitProviderProps = {
+  config: LocaleKitConfig;
   initialLocale?: string;
   initialBundle?: TranslationBundle;
   cookieName?: string;
@@ -40,20 +40,20 @@ export type MagiLocaleProviderProps = {
   children: ReactNode;
 };
 
-export function MagiLocaleProvider({
+export function LocaleKitProvider({
   config,
   initialLocale,
   initialBundle,
-  cookieName = 'magilocale-locale',
+  cookieName = 'localekit-locale',
   onServerRefresh,
   children,
-}: MagiLocaleProviderProps) {
-  const clientRef = useRef<MagicLocaleClient | null>(null);
+}: LocaleKitProviderProps) {
+  const clientRef = useRef<LocaleKitClient | null>(null);
   const [, setRevision] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!clientRef.current) {
-    clientRef.current = new MagicLocaleClient({
+    clientRef.current = new LocaleKitClient({
       ...config,
       locale: initialLocale ?? config.locale ?? config.sourceLocale ?? 'en',
       initialBundle: initialBundle ?? config.initialBundle,
@@ -123,7 +123,7 @@ export function MagiLocaleProvider({
       client.identify(context),
     [client]
   );
-  const value = useMemo<MagiLocaleContextValue>(
+  const value = useMemo<LocaleKitContextValue>(
     () => ({
       locale,
       isLoading,
@@ -147,16 +147,16 @@ export function MagiLocaleProvider({
   );
 
   return (
-    <MagiLocaleContext.Provider value={value}>
+    <LocaleKitContext.Provider value={value}>
       {children}
-    </MagiLocaleContext.Provider>
+    </LocaleKitContext.Provider>
   );
 }
 
-export function useMagiLocale(): MagiLocaleContextValue {
-  const context = useContext(MagiLocaleContext);
+export function useLocaleKit(): LocaleKitContextValue {
+  const context = useContext(LocaleKitContext);
   if (!context) {
-    throw new Error('useMagiLocale must be used inside MagiLocaleProvider.');
+    throw new Error('useLocaleKit must be used inside LocaleKitProvider.');
   }
   return context;
 }
@@ -165,14 +165,14 @@ export function useFlag(
   key: string,
   fallback: boolean | import('./types').FlagValue = false
 ) {
-  const { isEnabled, getValue } = useMagiLocale();
+  const { isEnabled, getValue } = useLocaleKit();
   if (typeof fallback === 'boolean') {
     return isEnabled(key, fallback);
   }
   return getValue(key, fallback);
 }
 
-export { MagiLocaleProvider as FlagProvider };
+export { LocaleKitProvider as FlagProvider };
 
 function persistLocale(cookieName: string, locale: string): void {
   document.cookie =

@@ -3,7 +3,7 @@ import type { IncomingMessage } from 'http';
 import {
   createSelfHostedSdkConfig,
   emptySelfHostedLocalePageProps,
-  MAGILOCALE_LOCALE_COOKIE,
+  LOCALEKIT_LOCALE_COOKIE,
   parseSelfHostedLocale,
   type SelfHostedLocalePageProps,
 } from './self-hosted-locale';
@@ -43,7 +43,7 @@ export async function getSelfHostedLocalePageProps(input: {
       ? project.locales
       : [sourceLocale];
   const locale = parseSelfHostedLocale(
-    readCookie(input.req, MAGILOCALE_LOCALE_COOKIE),
+    readCookie(input.req, LOCALEKIT_LOCALE_COOKIE),
     locales,
     sourceLocale
   );

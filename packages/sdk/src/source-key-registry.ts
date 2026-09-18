@@ -1,4 +1,4 @@
-import type { ResolvedMagicLocaleConfig, SourceKey } from './types';
+import type { ResolvedLocaleKitConfig, SourceKey } from './types';
 import type { SourceKeyTransport } from './transport';
 
 export class SourceKeyRegistry {
@@ -10,7 +10,7 @@ export class SourceKeyRegistry {
   constructor(
     private readonly transport: SourceKeyTransport,
     private readonly config: Pick<
-      ResolvedMagicLocaleConfig,
+      ResolvedLocaleKitConfig,
       'batchSize' | 'debounceMs' | 'maxRetries' | 'retryDelayMs' | 'onError'
     >
   ) {}
@@ -97,7 +97,7 @@ export class SourceKeyRegistry {
         }
       }
     }
-    throw lastError ?? new Error('MagicLocale ingest failed.');
+    throw lastError ?? new Error('LocaleKit ingest failed.');
   }
 
   private schedule(): void {
@@ -119,10 +119,10 @@ export class SourceKeyRegistry {
 
 function validateSourceKey(key: string, sourceText: string): void {
   if (typeof key !== 'string' || key.trim().length === 0) {
-    throw new Error('MagicLocale translation key must not be empty.');
+    throw new Error('LocaleKit translation key must not be empty.');
   }
   if (typeof sourceText !== 'string' || sourceText.trim().length === 0) {
-    throw new Error('MagicLocale default text must not be empty.');
+    throw new Error('LocaleKit default text must not be empty.');
   }
 }
 

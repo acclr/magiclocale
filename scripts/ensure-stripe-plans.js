@@ -9,13 +9,13 @@ async function ensurePlans() {
   const stripe = new Stripe(secret);
   const starter = await ensurePlan(stripe, {
     planId: 'starter',
-    name: 'Magilocale Starter',
+    name: 'LocaleKit Starter',
     description: '$5/month for standard usage, up to 4 languages per project.',
     amount: 500,
   });
   const enterprise = await ensurePlan(stripe, {
     planId: 'enterprise',
-    name: 'Magilocale Enterprise',
+    name: 'LocaleKit Enterprise',
     description: '$50/month for 5+ languages and higher usage.',
     amount: 5000,
   });
@@ -28,13 +28,13 @@ async function ensurePlans() {
 async function ensurePlan(stripe, input) {
   const products = await stripe.products.list({ active: true, limit: 100 });
   let product = products.data.find(
-    (item) => item.metadata?.magilocale_plan === input.planId
+    (item) => item.metadata?.localekit_plan === input.planId
   );
   if (!product) {
     product = await stripe.products.create({
       name: input.name,
       description: input.description,
-      metadata: { magilocale_plan: input.planId },
+      metadata: { localekit_plan: input.planId },
     });
   }
 
@@ -58,7 +58,7 @@ async function ensurePlan(stripe, input) {
     currency: 'usd',
     unit_amount: input.amount,
     recurring: { interval: 'month' },
-    metadata: { magilocale_plan: input.planId },
+    metadata: { localekit_plan: input.planId },
   });
   return created.id;
 }

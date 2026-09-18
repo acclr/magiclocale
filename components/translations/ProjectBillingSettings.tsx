@@ -1,13 +1,13 @@
-import MagilocalePricing from '@/components/billing/MagilocalePricing';
-import MagilocaleSubscriptions from '@/components/billing/MagilocaleSubscriptions';
+import LocaleKitPricing from '@/components/billing/LocaleKitPricing';
+import LocaleKitSubscriptions from '@/components/billing/LocaleKitSubscriptions';
 import LinkToPortal from '@/components/billing/LinkToPortal';
 import { Card } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import fetcher from '@/lib/fetcher';
 import type {
   BillingScope,
-  MagilocaleEntitlement,
-  MagilocalePlan,
+  LocaleKitEntitlement,
+  LocaleKitPlan,
 } from '@/domain/billing';
 import type { ApiResponse } from 'types';
 import useCanAccess from 'hooks/useCanAccess';
@@ -17,7 +17,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import useSWR from 'swr';
 
-type CatalogPlan = MagilocalePlan & {
+type CatalogPlan = LocaleKitPlan & {
   priceId: string | null;
   current: boolean;
 };
@@ -26,7 +26,7 @@ type ProjectBillingResponse = {
   billingScope: BillingScope;
   hasBillingCustomer: boolean;
   projectId: string;
-  entitlement: MagilocaleEntitlement;
+  entitlement: LocaleKitEntitlement;
   plans: CatalogPlan[];
   subscriptions: Array<{
     id: string;
@@ -159,10 +159,10 @@ const ProjectBillingSettings = ({
             <LinkToPortal projectId={projectId} team={team} />
           )}
           {billing.subscriptions.length > 0 && (
-            <MagilocaleSubscriptions subscriptions={billing.subscriptions} />
+            <LocaleKitSubscriptions subscriptions={billing.subscriptions} />
           )}
           {canBill && (
-            <MagilocalePricing plans={billing.plans} projectId={projectId} />
+            <LocaleKitPricing plans={billing.plans} projectId={projectId} />
           )}
         </>
       )}

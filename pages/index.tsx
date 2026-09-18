@@ -32,7 +32,7 @@ const HomeContent = () => {
         <title>
           {translate(
             'landing.meta.title',
-            'Magilocale — product copy, localized'
+            'LocaleKit — product copy, localized'
           )}
         </title>
       </Head>
@@ -42,7 +42,7 @@ const HomeContent = () => {
           <div className="flex-1">
             <Button asChild variant="ghost" className="text-xl">
               <Link href="/">
-                {translate('landing.nav.brand', 'Magilocale')}
+                {translate('landing.nav.brand', 'LocaleKit')}
               </Link>
             </Button>
           </div>

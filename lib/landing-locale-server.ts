@@ -9,8 +9,8 @@ export async function getLandingLocalePageProps(
   return getSelfHostedLocalePageProps({
     req: context.req,
     appUrl: process.env.APP_URL ?? '',
-    projectId: process.env.MAGILOCALE_LANDING_PROJECT_ID,
-    ingestToken: process.env.MAGILOCALE_LANDING_API_KEY,
-    sourceLocale: process.env.MAGILOCALE_LANDING_SOURCE_LOCALE,
+    projectId: process.env.LOCALEKIT_LANDING_PROJECT_ID,
+    ingestToken: process.env.LOCALEKIT_LANDING_API_KEY,
+    sourceLocale: process.env.LOCALEKIT_LANDING_SOURCE_LOCALE,
   });
 }

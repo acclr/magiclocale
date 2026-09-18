@@ -17,13 +17,16 @@ type DaisyColor =
 type DaisyVariant = 'outline' | 'link';
 type DaisySize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
-type ButtonProps = React.ComponentProps<typeof UiButton> & {
+type ButtonProps = Omit<React.ComponentProps<typeof UiButton>, 'size'> & {
   color?: DaisyColor;
+  size?: React.ComponentProps<typeof UiButton>['size'] | DaisySize;
   loading?: boolean;
   fullWidth?: boolean;
+  wide?: boolean;
   active?: boolean;
   startIcon?: React.ReactNode;
   endIcon?: React.ReactNode;
+  children?: React.ReactNode;
 };
 
 const mapVariant = (
@@ -62,6 +65,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       size,
       loading,
       fullWidth,
+      wide,
       active,
       startIcon,
       endIcon,
@@ -79,7 +83,7 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         size={mapSize(size)}
         disabled={disabled || loading}
         aria-pressed={active}
-        className={cn(fullWidth && 'w-full', className)}
+        className={cn((fullWidth || wide) && 'w-full', className)}
         {...props}
       >
         {loading ? <Spinner data-icon="inline-start" /> : startIcon}

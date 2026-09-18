@@ -7,7 +7,7 @@ type BillingSubscription = {
   endDate: string;
 };
 
-const MagilocaleSubscriptions = ({
+const LocaleKitSubscriptions = ({
   subscriptions,
 }: {
   subscriptions: BillingSubscription[];
@@ -45,4 +45,4 @@ const MagilocaleSubscriptions = ({
   );
 };
 
-export default MagilocaleSubscriptions;
+export default LocaleKitSubscriptions;
