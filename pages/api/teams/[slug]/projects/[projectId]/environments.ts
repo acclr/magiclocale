@@ -81,16 +81,31 @@ export default createTeamProjectApiHandler({
         translationProjectParamsSchema,
         req.query
       );
-      const { environmentId, name } = validateWithSchema(
+      const { environmentId, name, parentEnvironmentId } = validateWithSchema(
         updateEnvironmentSchema,
         req.body
       );
-      const environment = await getEnvironmentService().rename(
+      let environment = await getEnvironmentService().get(
         teamMember.team.id,
         projectId,
-        environmentId,
-        name
+        environmentId
       );
+      if (name) {
+        environment = await getEnvironmentService().rename(
+          teamMember.team.id,
+          projectId,
+          environmentId,
+          name
+        );
+      }
+      if (parentEnvironmentId !== undefined) {
+        environment = await getEnvironmentService().setParent(
+          teamMember.team.id,
+          projectId,
+          environmentId,
+          parentEnvironmentId
+        );
+      }
       res.status(200).json({ data: environment });
     },
   },

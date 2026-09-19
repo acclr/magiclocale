@@ -1,5 +1,9 @@
 import type { EnvironmentService } from '../environments/environment-service';
 import type { Environment } from '../environments/types';
+import {
+  noopKeyCatalogWriter,
+  type KeyCatalogWriter,
+} from '../keys/ports';
 import type { ProjectService } from '../translations/project-service';
 import type { FlagChangeRecorder } from './change-recorder';
 import { noopFlagChangeRecorder } from './change-recorder';
@@ -28,6 +32,13 @@ export class FlagLimitError extends Error {
   }
 }
 
+export class ProductionFlagChangeError extends Error {
+  constructor() {
+    super('Production flag changes require a confirmation reason.');
+    this.name = 'ProductionFlagChangeError';
+  }
+}
+
 /**
  * Owns the flag catalog (project-wide) and its per-environment configuration.
  * Enabling a flag in staging never touches production, because behaviour is
@@ -38,7 +49,8 @@ export class FlagService {
     private readonly repository: FlagRepository,
     private readonly projectService: ProjectService,
     private readonly environmentService: EnvironmentService,
-    private readonly changeRecorder: FlagChangeRecorder = noopFlagChangeRecorder
+    private readonly changeRecorder: FlagChangeRecorder = noopFlagChangeRecorder,
+    private readonly catalog: KeyCatalogWriter = noopKeyCatalogWriter
   ) {}
 
   async list(
@@ -119,6 +131,13 @@ export class FlagService {
       await this.ensureConfig(flag, environment.id);
     }
 
+    await this.catalog.upsertDefinition({
+      projectId: project.id,
+      type: 'feature-flag',
+      key,
+      description: flag.description,
+    });
+
     return flag;
   }
 
@@ -130,7 +149,7 @@ export class FlagService {
   ): Promise<FeatureFlag> {
     const project = await this.projectService.get(teamId, projectId);
     const flag = await this.requireProjectFlag(project.id, flagId);
-    return this.repository.updateFlag(flag.id, {
+    const updated = await this.repository.updateFlag(flag.id, {
       ...(patch.name !== undefined ? { name: patch.name.trim() } : {}),
       ...(patch.description !== undefined
         ? { description: patch.description?.trim() || null }
@@ -140,6 +159,14 @@ export class FlagService {
         : {}),
       ...(patch.archived !== undefined ? { archived: patch.archived } : {}),
     });
+    await this.catalog.upsertDefinition({
+      projectId: project.id,
+      type: 'feature-flag',
+      key: updated.key,
+      description: updated.description,
+      lifecycle: updated.archived ? 'archived' : 'active',
+    });
+    return updated;
   }
 
   async delete(
@@ -158,7 +185,8 @@ export class FlagService {
     flagId: string,
     environmentRef: string | null | undefined,
     patch: UpsertFlagConfigInput,
-    actor?: string | null
+    actor?: string | null,
+    reason?: string | null
   ): Promise<FlagWithConfig> {
     const { project, environment } = await this.requireScope(
       teamId,
@@ -167,6 +195,7 @@ export class FlagService {
     );
     const flag = await this.requireProjectFlag(project.id, flagId);
     const config = await this.ensureConfig(flag, environment.id);
+    this.requireProductionReason(environment, reason);
 
     if (
       patch.rolloutPercentage !== undefined &&
@@ -175,8 +204,12 @@ export class FlagService {
       this.requirePercentage(patch.rolloutPercentage);
     }
 
-    const updated = await this.repository.updateConfig(config.id, patch);
-    await this.record(flag, config, updated, actor);
+    const updated = await this.repository.updateConfig(config.id, {
+      ...patch,
+      inherited: patch.inherited ?? false,
+    });
+    await this.record(flag, config, updated, actor, reason);
+    await this.cascadeInherited(flag, environment, updated, actor);
     return { flag, config: updated };
   }
 
@@ -186,7 +219,8 @@ export class FlagService {
     flagId: string,
     environmentRef: string | null | undefined,
     rules: FlagRuleInput[],
-    actor?: string | null
+    actor?: string | null,
+    reason?: string | null
   ): Promise<FlagWithConfig> {
     const { project, environment } = await this.requireScope(
       teamId,
@@ -195,6 +229,7 @@ export class FlagService {
     );
     const flag = await this.requireProjectFlag(project.id, flagId);
     const config = await this.ensureConfig(flag, environment.id);
+    this.requireProductionReason(environment, reason);
 
     const normalized = rules.map((rule) => {
       const attribute = rule.attribute.trim();
@@ -227,8 +262,86 @@ export class FlagService {
     });
 
     const updated = await this.repository.replaceRules(config.id, normalized);
-    await this.record(flag, config, updated, actor);
+    if (config.inherited) {
+      await this.repository.updateConfig(config.id, { inherited: false });
+    }
+    await this.record(flag, config, updated, actor, reason);
     return { flag, config: updated };
+  }
+
+  async matrix(teamId: string, projectId: string) {
+    const project = await this.projectService.get(teamId, projectId);
+    const environments = await this.environmentService.listForProject(
+      project.id
+    );
+    const flags = await this.repository.listFlags(project.id);
+    const items: Array<{
+      flag: FeatureFlag;
+      configs: Record<string, FlagEnvironmentConfig>;
+    }> = [];
+    for (const flag of flags) {
+      const configs: Record<string, FlagEnvironmentConfig> = {};
+      for (const environment of environments) {
+        configs[environment.id] = await this.ensureConfig(flag, environment.id);
+      }
+      items.push({ flag, configs });
+    }
+    return { environments, flags: items };
+  }
+
+  async promoteConfig(
+    teamId: string,
+    projectId: string,
+    flagId: string,
+    sourceRef: string,
+    targetRef: string,
+    actor?: string | null,
+    reason?: string | null
+  ): Promise<FlagWithConfig> {
+    const { project } = await this.requireScope(teamId, projectId, sourceRef);
+    const source = await this.environmentService.resolve(project.id, sourceRef);
+    const target = await this.environmentService.resolve(project.id, targetRef);
+    this.requireProductionReason(target, reason);
+    const flag = await this.requireProjectFlag(project.id, flagId);
+    const sourceConfig = await this.ensureConfig(flag, source.id);
+    const targetConfig = await this.ensureConfig(flag, target.id);
+    const copied = await this.repository.copyConfig(
+      sourceConfig.id,
+      targetConfig.id,
+      false
+    );
+    await this.record(flag, targetConfig, copied, actor, reason);
+    return { flag, config: copied };
+  }
+
+  async inheritFromParent(
+    teamId: string,
+    projectId: string,
+    flagId: string,
+    environmentRef?: string | null,
+    actor?: string | null
+  ): Promise<FlagWithConfig> {
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
+    if (!environment.parentEnvironmentId) {
+      throw new Error('This environment has no parent to inherit from');
+    }
+    const flag = await this.requireProjectFlag(project.id, flagId);
+    const parentConfig = await this.ensureConfig(
+      flag,
+      environment.parentEnvironmentId
+    );
+    const targetConfig = await this.ensureConfig(flag, environment.id);
+    const copied = await this.repository.copyConfig(
+      parentConfig.id,
+      targetConfig.id,
+      true
+    );
+    await this.record(flag, targetConfig, copied, actor);
+    return { flag, config: copied };
   }
 
   /**
@@ -292,8 +405,19 @@ export class FlagService {
     environmentId: string
   ): Promise<void> {
     const flags = await this.repository.listFlags(projectId);
+    const environment = await this.environmentService.requireProjectEnvironment(
+      projectId,
+      environmentId
+    );
     for (const flag of flags) {
-      await this.ensureConfig(flag, environmentId);
+      const config = await this.ensureConfig(flag, environment.id);
+      if (environment.parentEnvironmentId) {
+        const parentConfig = await this.ensureConfig(
+          flag,
+          environment.parentEnvironmentId
+        );
+        await this.repository.copyConfig(parentConfig.id, config.id, true);
+      }
     }
   }
 
@@ -314,7 +438,8 @@ export class FlagService {
     flag: FeatureFlag,
     before: FlagEnvironmentConfig,
     after: FlagEnvironmentConfig,
-    actor?: string | null
+    actor?: string | null,
+    reason?: string | null
   ): Promise<void> {
     try {
       await this.changeRecorder.recordFlagChange({
@@ -323,9 +448,46 @@ export class FlagService {
         before: toFlagSnapshot(flag, before),
         after: toFlagSnapshot(flag, after),
         actor: actor ?? null,
+        reason: reason ?? null,
       });
     } catch (error) {
       console.error('Unable to record feature flag change.', error);
+    }
+  }
+
+  private requireProductionReason(
+    environment: Environment,
+    reason?: string | null
+  ): void {
+    if (environment.isProduction && !reason?.trim()) {
+      throw new ProductionFlagChangeError();
+    }
+  }
+
+  private async cascadeInherited(
+    flag: FeatureFlag,
+    parent: Environment,
+    parentConfig: FlagEnvironmentConfig,
+    actor?: string | null
+  ): Promise<void> {
+    const environments = await this.environmentService.listForProject(
+      flag.projectId
+    );
+    for (const child of environments) {
+      if (child.parentEnvironmentId !== parent.id) {
+        continue;
+      }
+      const childConfig = await this.ensureConfig(flag, child.id);
+      if (!childConfig.inherited) {
+        continue;
+      }
+      const copied = await this.repository.copyConfig(
+        parentConfig.id,
+        childConfig.id,
+        true
+      );
+      await this.record(flag, childConfig, copied, actor);
+      await this.cascadeInherited(flag, child, copied, actor);
     }
   }
 

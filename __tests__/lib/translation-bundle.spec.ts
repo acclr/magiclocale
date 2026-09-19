@@ -36,6 +36,7 @@ function createRepository(): MemoryRepository {
         name: 'Production',
         isProduction: true,
         liveVersionId: null,
+        parentEnvironmentId: null,
       },
     ],
     keys: [

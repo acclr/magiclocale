@@ -328,6 +328,14 @@ export class PrismaTranslationRepository
     return toKey(key);
   }
 
+  async renameKey(id: string, key: string): Promise<TranslationKey> {
+    const updated = await this.client.translationKey.update({
+      where: { id },
+      data: { key },
+    });
+    return toKey(updated);
+  }
+
   async listTranslations(
     projectId: string,
     environmentId: string

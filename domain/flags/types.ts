@@ -72,6 +72,8 @@ export type FlagEnvironmentConfig = {
   offValue: FlagValue;
   rolloutPercentage: number | null;
   rolloutSalt: string;
+  inherited: boolean;
+  updatedAt?: Date;
   rules: FlagRule[];
 };
 
@@ -102,6 +104,7 @@ export type UpsertFlagConfigInput = {
   defaultValue?: FlagValue;
   offValue?: FlagValue;
   rolloutPercentage?: number | null;
+  inherited?: boolean;
 };
 
 export type FlagRuleInput = {

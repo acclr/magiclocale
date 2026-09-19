@@ -1,3 +1,5 @@
+import type { KeyCatalogRepository } from '../keys/repository';
+import type { KeyMeta, SourceUsage } from '../keys/types';
 import type { EnvironmentService } from '../environments/environment-service';
 import type { Environment } from '../environments/types';
 import {
@@ -21,7 +23,8 @@ export class TeamTranslationService {
     private readonly repository: TranslationRepository,
     private readonly projectService: ProjectService,
     private readonly translationService: TranslationService,
-    private readonly environmentService: EnvironmentService
+    private readonly environmentService: EnvironmentService,
+    private readonly keys?: KeyCatalogRepository
   ) {}
 
   async dashboard(
@@ -39,10 +42,79 @@ export class TeamTranslationService {
       this.repository.listKeys(project.id),
       this.repository.listTranslations(project.id, environment.id),
     ]);
+    let catalog: KeyMeta[] = [];
+    let usages: SourceUsage[] = [];
+    try {
+      if (this.keys) {
+        [catalog, usages] = await Promise.all([
+          this.keys.listAll(project.id),
+          this.keys.listUsagesForProject(project.id),
+        ]);
+      }
+    } catch (error) {
+      console.error('Unable to load key catalog for dashboard.', error);
+    }
+    const catalogByKey = Object.fromEntries(
+      catalog.map((item) => [item.key, item])
+    );
+    const catalogById = Object.fromEntries(catalog.map((item) => [item.id, item]));
+    const usageFilesByKey: Record<string, string[]> = {};
+    for (const usage of usages) {
+      const meta = catalogById[usage.keyMetaId];
+      if (!meta) {
+        continue;
+      }
+      const files = usageFilesByKey[meta.key] ?? [];
+      if (files.indexOf(usage.file) === -1) {
+        files.push(usage.file);
+      }
+      usageFilesByKey[meta.key] = files;
+    }
     return paginateTranslationDashboard(
-      projectTranslationDashboard(project, environment, keys, translations),
+      projectTranslationDashboard(
+        project,
+        environment,
+        keys,
+        translations,
+        catalogByKey,
+        usageFilesByKey
+      ),
       query
     );
+  }
+
+  async saveManualByKey(
+    teamId: string,
+    projectId: string,
+    environmentRef: string | null | undefined,
+    keyName: string,
+    locale: string,
+    value: string,
+    actor?: string | null
+  ): Promise<Translation> {
+    const { project } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
+    const key = await this.repository.findKeyByName(project.id, keyName);
+    if (!key) {
+      throw new Error(`Translation key not found: ${keyName}`);
+    }
+    return this.saveManual(
+      teamId,
+      projectId,
+      environmentRef,
+      key.id,
+      locale,
+      value,
+      actor
+    );
+  }
+
+  async getKeyByName(teamId: string, projectId: string, keyName: string) {
+    const project = await this.projectService.get(teamId, projectId);
+    return this.repository.findKeyByName(project.id, keyName);
   }
 
   async saveManual(

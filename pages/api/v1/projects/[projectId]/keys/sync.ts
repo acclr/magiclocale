@@ -9,6 +9,7 @@ import {
 } from '@/lib/api/public-sdk-cors';
 import {
   getEnvironmentService,
+  getKeyCatalogService,
   getTranslationService,
 } from '@/lib/translations';
 import { parseSourceKeyPayload } from '@/lib/translations/source-key-payload';
@@ -54,18 +55,49 @@ export default async function handler(
       return res.status(422).json({ error: parsed.error });
     }
 
-    // Discovered keys land in the working copy of the environment the calling
-    // app belongs to, so a staging build cannot alter what production serves.
     const environment = await getEnvironmentService().resolve(
       projectId,
       environmentRef
     );
-    const result = await getTranslationService().syncFromSource(
-      projectId,
-      environment.id,
-      parsed.keys
+
+    const translations = parsed.keys.filter(
+      (item) => (item.type ?? 'translation') === 'translation'
     );
-    return res.status(200).json({ ...result, environment: environment.slug });
+    const flags = parsed.keys.filter((item) => item.type === 'feature-flag');
+
+    const result =
+      translations.length > 0
+        ? await getTranslationService().syncFromSource(
+            projectId,
+            environment.id,
+            translations
+          )
+        : {
+            createdKeys: 0,
+            sourceChanges: 0,
+            filled: 0,
+            regenerated: 0,
+            needsReview: 0,
+            fillFailed: 0,
+          };
+
+    const catalog = getKeyCatalogService();
+    let detectedFlags = 0;
+    for (const item of flags) {
+      await catalog.recordDetection({
+        projectId,
+        type: 'feature-flag',
+        key: item.key,
+        usage: item.usage,
+      });
+      detectedFlags += 1;
+    }
+
+    return res.status(200).json({
+      ...result,
+      detectedFlags,
+      environment: environment.slug,
+    });
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
       return res.status(error.status).json({ error: error.message });

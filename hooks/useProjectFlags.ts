@@ -88,11 +88,15 @@ export function useProjectFlags(
       await refresh();
       return result;
     },
-    setRules: async (flagId: string, rules: FlagRuleInput[]) => {
+    setRules: async (
+      flagId: string,
+      rules: FlagRuleInput[],
+      reason?: string
+    ) => {
       const result = await send<FlagWithConfig>(
         `${baseUrl}/${flagId}/rules`,
         'PUT',
-        { environment, rules }
+        { environment, rules, reason }
       );
       await refresh();
       return result;

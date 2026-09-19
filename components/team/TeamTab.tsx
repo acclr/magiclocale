@@ -24,6 +24,8 @@ const TeamTab = ({ activeTab, team, heading }: TeamTabProps) => {
   const { t } = useTranslation('common');
   const titleKey = titles[activeTab];
 
+  return <div className="p-4" />;
+
   return (
     <div className="flex flex-col pb-6">
       <p className="text-xs font-semibold uppercase tracking-wide text-primary">

@@ -6,6 +6,7 @@ export type FlagChange = {
   before: FlagSnapshot | null;
   after: FlagSnapshot | null;
   actor?: string | null;
+  reason?: string | null;
 };
 
 /**

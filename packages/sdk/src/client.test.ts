@@ -36,7 +36,7 @@ describe('LocaleKitClient', () => {
       'http://localhost:3000/api/v1/projects/proj_acme/keys/sync'
     );
     expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))).toEqual({
-      keys: [{ key: 'demo.welcome', sourceText: 'Welcome' }],
+      keys: [{ key: 'demo.welcome', sourceText: 'Welcome', type: 'translation' }],
     });
     client.dispose();
   });
@@ -48,7 +48,7 @@ describe('LocaleKitClient', () => {
     client.translate('demo.title', 'New title');
     await client.flush();
     expect(JSON.parse(String(fetch.mock.calls[0]?.[1]?.body))).toEqual({
-      keys: [{ key: 'demo.title', sourceText: 'New title' }],
+      keys: [{ key: 'demo.title', sourceText: 'New title', type: 'translation' }],
     });
     client.translate('demo.title', 'New title');
     await client.flush();

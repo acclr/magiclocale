@@ -36,6 +36,8 @@ describe('public SDK middleware paths', () => {
   it.each([
     '/api/v1/projects/project_a/keys/sync',
     '/api/v1/projects/project_a/translations',
+    '/api/v1/projects/project_a/flags',
+    '/api/v1/projects/project_a/flags/evaluate',
   ])('bypasses NextAuth for the exact public endpoint %s', (pathname) => {
     expect(isPublicSdkApiPath(pathname)).toBe(true);
   });

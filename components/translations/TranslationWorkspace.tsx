@@ -19,6 +19,15 @@ import TranslationDrawer from './TranslationDrawer';
 import TranslationSaveBar from './TranslationSaveBar';
 import PublishBar from '../versions/PublishBar';
 
+function getLanguageName(locale) {
+  const code = new Intl.Locale(locale).language;
+
+  return new Intl.DisplayNames([code], {
+    type: 'language',
+  }).of(code);
+}
+
+
 type TranslationWorkspaceProps = {
   slug: string;
   projectId: string;
@@ -45,6 +54,8 @@ const TranslationWorkspace = ({
       label: t('translation-filter-needs-review'),
     },
     { id: 'missing', label: t('translation-filter-missing') },
+    { id: 'unused', label: t('translation-filter-unused') },
+    { id: 'deprecated', label: t('translation-filter-deprecated') },
   ];
   const [filter, setFilter] = useState<TranslationFilter>('all');
   const [search, setSearch] = useState('');
@@ -348,14 +359,15 @@ const TranslationWorkspace = ({
                               type="checkbox"
                             />
                           )}
-                          <span
-                            className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold"
-                            style={{
-                              backgroundColor: color.hex,
-                              color: color.onHex,
-                            }}
-                          >
+                          <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold">
                             <LocaleName code={projectLocale} option={display} />
+                            <span className="ml-1">
+                              {getLanguageName(
+                                projectLocale
+                              )?.[0].toUpperCase() +
+                                (getLanguageName(projectLocale)?.slice(1) ??
+                                  '')}
+                            </span>
                           </span>
                           {projectLocale === dashboard.project.sourceLocale && (
                             <span className="badge badge-sm">

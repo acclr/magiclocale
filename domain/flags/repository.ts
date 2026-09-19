@@ -24,6 +24,7 @@ export interface FlagRepository {
   countFlags(projectId: string): Promise<number>;
   createFlag(input: CreateFlagInput): Promise<FeatureFlag>;
   updateFlag(id: string, patch: UpdateFlagInput): Promise<FeatureFlag>;
+  renameFlag(id: string, key: string): Promise<FeatureFlag>;
   deleteFlag(id: string): Promise<void>;
 
   getConfig(
@@ -37,6 +38,11 @@ export interface FlagRepository {
   updateConfig(
     id: string,
     patch: UpsertFlagConfigInput
+  ): Promise<FlagEnvironmentConfig>;
+  copyConfig(
+    sourceConfigId: string,
+    targetConfigId: string,
+    inherited: boolean
   ): Promise<FlagEnvironmentConfig>;
 
   /** Replaces the full ordered rule list for a config in one transaction. */

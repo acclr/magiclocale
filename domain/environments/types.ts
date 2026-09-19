@@ -7,6 +7,7 @@ export type Environment = {
   name: string;
   isProduction: boolean;
   liveVersionId: string | null;
+  parentEnvironmentId: string | null;
 };
 
 export type CreateEnvironmentInput = {
@@ -14,11 +15,13 @@ export type CreateEnvironmentInput = {
   slug: string;
   name: string;
   isProduction?: boolean;
+  parentEnvironmentId?: string | null;
 };
 
 export type UpdateEnvironmentInput = {
   name?: string;
   liveVersionId?: string | null;
+  parentEnvironmentId?: string | null;
 };
 
 /**

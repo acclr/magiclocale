@@ -47,7 +47,7 @@ const PrimarySidebar = ({
   return (
     <div
       className={`flex h-full grow flex-col gap-y-5 overflow-y-auto bg-sidebar text-sidebar-foreground ${
-        isCollapsed ? 'items-center px-2' : 'px-5'
+        isCollapsed ? 'items-center px-5' : 'px-5'
       }`}
     >
       <div
@@ -68,7 +68,9 @@ const PrimarySidebar = ({
       </div>
       <TeamDropdown collapsed={isCollapsed} />
       <Navigation collapsed={isCollapsed} />
-      <div className={`mt-auto mb-4 flex w-full ${isCollapsed ? 'justify-center' : ''}`}>
+      <div
+        className={`mt-auto mb-4 flex w-full ${isCollapsed ? 'justify-center' : ''}`}
+      >
         <AccountMenu collapsed={isCollapsed} />
       </div>
     </div>

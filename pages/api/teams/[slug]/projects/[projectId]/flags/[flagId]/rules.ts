@@ -18,7 +18,7 @@ export default createTeamProjectApiHandler({
     action: 'update',
     async handle({ req, res, teamMember }) {
       const { projectId, flagId } = validateWithSchema(flagIdParams, req.query);
-      const { environment, rules } = validateWithSchema(
+      const { environment, rules, reason } = validateWithSchema(
         flagRulesSchema.omit({ flagId: true }),
         req.body
       );
@@ -31,7 +31,8 @@ export default createTeamProjectApiHandler({
           ...rule,
           value: rule.value as FlagValue,
         })) as FlagRuleInput[],
-        teamMember.user.email
+        teamMember.user.email,
+        reason
       );
       res.status(200).json({ data: result });
     },

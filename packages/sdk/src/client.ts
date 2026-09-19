@@ -62,10 +62,12 @@ export class LocaleKitClient {
   }
 
   isEnabled(key: string, fallback = false): boolean {
+    this.registry.enqueueFlag(key);
     return this.flags.isEnabled(key, fallback);
   }
 
   getValue(key: string, fallback: FlagValue = null): FlagValue {
+    this.registry.enqueueFlag(key);
     return this.flags.getValue(key, fallback);
   }
 

@@ -1,4 +1,5 @@
 import FlagList from '@/components/flags/FlagList';
+import FlagMatrix from '@/components/flags/FlagMatrix';
 import PublishBar from '@/components/versions/PublishBar';
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
 import useCanAccess from 'hooks/useCanAccess';
@@ -47,6 +48,11 @@ const ProjectFlagsPage: NextPageWithLayout = () => {
       <FlagList
         canEdit={canAccess('team_feature_flag', ['update'])}
         environment={environment}
+        projectId={projectId}
+        slug={slug}
+      />
+      <FlagMatrix
+        canEdit={canAccess('team_feature_flag', ['update'])}
         projectId={projectId}
         slug={slug}
       />

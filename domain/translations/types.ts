@@ -66,7 +66,9 @@ export type TranslationFilter =
   | 'ai'
   | 'manual'
   | 'needs-review'
-  | 'missing';
+  | 'missing'
+  | 'unused'
+  | 'deprecated';
 
 export type AutomaticAiSkipReason =
   | 'ai-locked'
@@ -84,4 +86,12 @@ export type AutomaticAiWriteResult =
 export type IncomingSourceKey = {
   key: string;
   sourceText: string;
+  type?: 'translation' | 'feature-flag';
+  usage?: {
+    file: string;
+    line: number;
+    column?: number | null;
+    repository?: string | null;
+    branch?: string | null;
+  } | null;
 };

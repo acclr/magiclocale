@@ -1,6 +1,7 @@
 import app from '@/lib/app';
-import Image from 'next/image';
 import Link from 'next/link';
+
+import KeykitLogo from '@/components/shared/KeykitLogo';
 
 const Brand = ({ collapsed = false }: { collapsed?: boolean }) => {
   const href = '/dashboard';
@@ -8,12 +9,12 @@ const Brand = ({ collapsed = false }: { collapsed?: boolean }) => {
   return (
     <Link
       href={href}
-      className={`flex shrink-0 items-center text-xl font-bold text-foreground ${
+      className={`flex shrink-0 items-center text-xl font-bold text-foreground transition-[width] duration-200 ease-out ${
         collapsed ? 'justify-center' : 'gap-2'
       }`}
     >
-      <Image src={app.logoUrl} alt={app.name} width={30} height={30} />
-      {collapsed ? <span className="sr-only">{app.name}</span> : app.name}
+      <KeykitLogo collapsed={collapsed} />
+      {collapsed ? <span className="sr-only">{app.name}</span> : null}
     </Link>
   );
 };

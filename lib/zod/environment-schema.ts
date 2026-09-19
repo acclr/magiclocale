@@ -21,11 +21,13 @@ export const environmentSlugSchema = z
 export const createEnvironmentSchema = z.object({
   slug: environmentSlugSchema,
   name: z.string().trim().min(1).max(60).optional(),
+  parentEnvironmentId: z.string().uuid().nullable().optional(),
 });
 
 export const updateEnvironmentSchema = z.object({
   environmentId: z.string().uuid(),
-  name: z.string().trim().min(1).max(60),
+  name: z.string().trim().min(1).max(60).optional(),
+  parentEnvironmentId: z.string().uuid().nullable().optional(),
 });
 
 export const deleteEnvironmentSchema = z.object({

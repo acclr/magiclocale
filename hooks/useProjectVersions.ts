@@ -107,7 +107,11 @@ export function useProjectEnvironments(slug: string, projectId: string) {
     isLoading,
     isError: error,
     refresh: () => mutate(),
-    create: async (input: { slug: string; name?: string }) => {
+    create: async (input: {
+      slug: string;
+      name?: string;
+      parentEnvironmentId?: string | null;
+    }) => {
       const environment = await send<Environment>(url, 'POST', input);
       await mutate();
       return environment;
@@ -116,6 +120,17 @@ export function useProjectEnvironments(slug: string, projectId: string) {
       const environment = await send<Environment>(url, 'PATCH', {
         environmentId,
         name,
+      });
+      await mutate();
+      return environment;
+    },
+    setParent: async (
+      environmentId: string,
+      parentEnvironmentId: string | null
+    ) => {
+      const environment = await send<Environment>(url, 'PATCH', {
+        environmentId,
+        parentEnvironmentId,
       });
       await mutate();
       return environment;

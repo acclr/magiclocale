@@ -5,6 +5,7 @@ export * from './schema';
 export * from './translation-schema';
 export * from './environment-schema';
 export * from './flag-schema';
+export * from './key-schema';
 
 export const validateWithSchema = <ZSchema extends ZodType>(
   schema: ZSchema,

@@ -99,6 +99,7 @@ export class VersionService {
       before: change.before,
       after: change.after,
       actor: change.actor ?? null,
+      reason: change.reason ?? null,
     });
   }
 
@@ -113,6 +114,26 @@ export class VersionService {
 
   async listChanges(versionId: string): Promise<VersionChange[]> {
     return this.repository.listChanges(versionId);
+  }
+
+  async listChangesForKey(
+    environmentId: string,
+    entityType: 'translation' | 'flag',
+    entityKey: string
+  ): Promise<VersionChange[]> {
+    const versions = await this.repository.listVersions(environmentId, 50);
+    const changes: VersionChange[] = [];
+    for (const version of versions) {
+      const items = await this.repository.listChanges(version.id);
+      for (const change of items) {
+        if (change.entityType === entityType && change.entityKey === entityKey) {
+          changes.push(change);
+        }
+      }
+    }
+    return changes.sort(
+      (left, right) => left.createdAt.getTime() - right.createdAt.getTime()
+    );
   }
 
   async status(environmentId: string): Promise<EnvironmentStatus> {

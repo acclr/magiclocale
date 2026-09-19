@@ -59,6 +59,7 @@ const TranslationCell = ({
   cell,
   fallbackValue = '',
   canEdit,
+  onOpen,
   onSave,
 }: TranslationCellProps) => {
   const { t } = useTranslation('common');
@@ -205,16 +206,22 @@ const TranslationCell = ({
       />
       <div className="flex p-0.5 justify-start opacity-30 group-hover:opacity-100 min-w-7 flex-col w-max items-center">
         {!isDirty && (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="flex items-center rounded-md hover:bg-foreground/5 justify-center p-1 w-full">
-                <StatusIcon
-                  className={cn('w-[16px] h-[16px]', iconStyles[normalized])}
-                />
-              </div>
-            </TooltipTrigger>
-            <TooltipContent side="right">{statusLabel}</TooltipContent>
-          </Tooltip>
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  className="flex items-center rounded-md hover:bg-foreground/5 justify-center p-1 w-full"
+                  onClick={onOpen}
+                  type="button"
+                >
+                  <StatusIcon
+                    className={cn('w-[16px] h-[16px]', iconStyles[normalized])}
+                  />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent side="right">{statusLabel}</TooltipContent>
+            </Tooltip>
+          </>
         )}
         {isDirty && (
           <>

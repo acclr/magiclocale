@@ -15,17 +15,45 @@ export class SourceKeyRegistry {
     >
   ) {}
 
-  enqueue(key: string, sourceText: string): void {
+  enqueue(key: string, sourceText: string, usage?: SourceKey['usage']): void {
     validateSourceKey(key, sourceText);
     const normalizedKey = key.trim();
+    const fingerprint = `${sourceText}:${usageFingerprint(usage)}`;
     if (
-      this.pending.get(normalizedKey)?.sourceText === sourceText ||
-      (!this.pending.has(normalizedKey) &&
-        this.acknowledged.get(normalizedKey) === sourceText)
+      this.pending.get(`translation:${normalizedKey}`)?.sourceText ===
+        sourceText ||
+      (!this.pending.has(`translation:${normalizedKey}`) &&
+        this.acknowledged.get(`translation:${normalizedKey}`) === fingerprint)
     ) {
       return;
     }
-    this.pending.set(normalizedKey, { key: normalizedKey, sourceText });
+    this.pending.set(`translation:${normalizedKey}`, {
+      key: normalizedKey,
+      sourceText,
+      type: 'translation',
+      usage,
+    });
+    this.schedule();
+  }
+
+  enqueueFlag(key: string, usage?: SourceKey['usage']): void {
+    if (typeof key !== 'string' || key.trim().length === 0) {
+      throw new Error('LocaleKit flag key must not be empty.');
+    }
+    const normalizedKey = key.trim();
+    const fingerprint = usageFingerprint(usage);
+    const mapKey = `feature-flag:${normalizedKey}`;
+    if (
+      !this.pending.has(mapKey) &&
+      this.acknowledged.get(mapKey) === fingerprint
+    ) {
+      return;
+    }
+    this.pending.set(mapKey, {
+      key: normalizedKey,
+      type: 'feature-flag',
+      usage,
+    });
     this.schedule();
   }
 
@@ -60,20 +88,26 @@ export class SourceKeyRegistry {
     while (this.pending.size > 0) {
       const batch = [...this.pending.values()].slice(0, this.config.batchSize);
       for (const item of batch) {
-        if (this.pending.get(item.key)?.sourceText === item.sourceText) {
-          this.pending.delete(item.key);
+        const mapKey = `${item.type ?? 'translation'}:${item.key}`;
+        if (this.pending.get(mapKey)?.key === item.key) {
+          this.pending.delete(mapKey);
         }
       }
 
       try {
         await this.pushWithRetry(batch, keepalive);
         for (const item of batch) {
-          this.acknowledged.set(item.key, item.sourceText);
+          const mapKey = `${item.type ?? 'translation'}:${item.key}`;
+          this.acknowledged.set(
+            mapKey,
+            `${item.sourceText ?? ''}:${usageFingerprint(item.usage)}`
+          );
         }
       } catch (error) {
         for (const item of batch) {
-          if (!this.pending.has(item.key)) {
-            this.pending.set(item.key, item);
+          const mapKey = `${item.type ?? 'translation'}:${item.key}`;
+          if (!this.pending.has(mapKey)) {
+            this.pending.set(mapKey, item);
           }
         }
         throw asError(error);
@@ -115,6 +149,13 @@ export class SourceKeyRegistry {
       this.timer = null;
     }
   }
+}
+
+function usageFingerprint(usage?: SourceKey['usage']): string {
+  if (!usage?.file) {
+    return '';
+  }
+  return `${usage.file}:${usage.line ?? ''}:${usage.column ?? ''}`;
 }
 
 function validateSourceKey(key: string, sourceText: string): void {

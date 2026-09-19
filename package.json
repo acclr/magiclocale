@@ -23,6 +23,8 @@
     "test:cov": "jest --coverage --env=jsdom",
     "build-ci": "prisma generate && npm run sdk:build && next build",
     "db:migrate": "prisma migrate deploy",
+    "db:migrate:production": "node scripts/migrate-production.js",
+    "db:migrate:vercel": "node scripts/migrate-vercel-production.js",
     "db:validate": "prisma validate",
     "sync-stripe": "node --env-file .env sync-stripe.js",
     "stripe:ensure-plans": "node --env-file .env scripts/ensure-stripe-plans.js",
@@ -104,7 +106,8 @@
     "release-it": "20.0.1",
     "tailwindcss": "^4.3.3",
     "ts-node": "10.9.2",
-    "typescript": "5.9.3"
+    "typescript": "5.9.3",
+    "vercel": "^59.23.2"
   },
   "overrides": {
     "typeorm": {

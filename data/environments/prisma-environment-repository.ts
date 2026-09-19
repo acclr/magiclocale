@@ -20,6 +20,7 @@ function toEnvironment(environment: PrismaEnvironment): Environment {
     name: environment.name,
     isProduction: environment.isProduction,
     liveVersionId: environment.liveVersionId,
+    parentEnvironmentId: environment.parentEnvironmentId,
   };
 }
 
@@ -71,6 +72,7 @@ export class PrismaEnvironmentRepository implements EnvironmentRepository {
           slug: input.slug,
           name: input.name,
           isProduction: input.isProduction ?? false,
+          parentEnvironmentId: input.parentEnvironmentId ?? null,
         },
       });
       return toEnvironment(environment);
@@ -105,6 +107,9 @@ export class PrismaEnvironmentRepository implements EnvironmentRepository {
         ...(patch.name !== undefined ? { name: patch.name } : {}),
         ...(patch.liveVersionId !== undefined
           ? { liveVersionId: patch.liveVersionId }
+          : {}),
+        ...(patch.parentEnvironmentId !== undefined
+          ? { parentEnvironmentId: patch.parentEnvironmentId }
           : {}),
       },
     });

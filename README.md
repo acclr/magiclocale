@@ -235,7 +235,22 @@ npx playwright test tests/e2e/translations/production-flow.spec.ts
 3. Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally
    `OPENAI_BASE_URL`.
 4. Set `LOCALEKIT_ALLOWED_ORIGIN` to the deployed client origin.
-5. Run `npx prisma migrate deploy`.
+5. Apply database migrations **before** creating users (Vercel does not run
+   these automatically). From your machine, using the **non-pooling** Postgres
+   URL from the Vercel dashboard:
+
+   ```bash
+   DATABASE_URL="postgresql://..." npm run db:migrate:production
+   ```
+
+   Or pull env from Vercel (after `vercel login` + `vercel link` once):
+
+   ```bash
+   npm run db:migrate:vercel
+   ```
+
+   This writes `.env.production.local` (gitignored), applies migrations, and
+   prefers `POSTGRES_URL_NON_POOLING` for DDL.
 6. Build with `npm run build-ci` and start with `npm run start`.
 
 Run the app and migration commands from the same release so generated Prisma

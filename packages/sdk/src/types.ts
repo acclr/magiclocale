@@ -1,6 +1,14 @@
 export type SourceKey = {
   key: string;
-  sourceText: string;
+  sourceText?: string;
+  type?: 'translation' | 'feature-flag';
+  usage?: {
+    file?: string;
+    line?: number;
+    column?: number | null;
+    repository?: string | null;
+    branch?: string | null;
+  };
 };
 
 export type TranslationBundle = {

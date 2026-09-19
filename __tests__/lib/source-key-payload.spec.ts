@@ -16,8 +16,8 @@ describe('parseSourceKeyPayload', () => {
     ).toEqual({
       success: true,
       keys: [
-        { key: 'demo.title', sourceText: 'New title' },
-        { key: 'demo.cta', sourceText: 'Get started' },
+        { key: 'demo.title', sourceText: 'New title', type: 'translation', usage: null },
+        { key: 'demo.cta', sourceText: 'Get started', type: 'translation', usage: null },
       ],
     });
   });

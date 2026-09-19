@@ -70,6 +70,8 @@ export const flagConfigSchema = z.object({
   defaultValue: flagValueSchema.optional(),
   offValue: flagValueSchema.optional(),
   rolloutPercentage: rolloutPercentageSchema.optional(),
+  inherited: z.boolean().optional(),
+  reason: z.string().trim().max(500).optional(),
 });
 
 export const flagRuleSchema = z.object({
@@ -85,6 +87,7 @@ export const flagRulesSchema = z.object({
   flagId: z.string().uuid(),
   environment: environmentRefSchema.optional(),
   rules: z.array(flagRuleSchema).max(50),
+  reason: z.string().trim().max(500).optional(),
 });
 
 export const flagListQuerySchema = z.object({

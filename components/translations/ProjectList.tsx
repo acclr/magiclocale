@@ -165,7 +165,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           {projects.map((project: Project) => (
             <Link
               className="card bg-card transition hover:bg-muted"
-              href={`/teams/${slug}/projects/${project.id}`}
+              href={`/teams/${slug}/projects/${project.id}/keys`}
               key={project.id}
             >
               <div className="card-body">

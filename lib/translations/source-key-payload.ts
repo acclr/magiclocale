@@ -1,8 +1,10 @@
 import type { IncomingSourceKey } from '../../domain/translations';
+import type { KeyType } from '../../domain/keys';
 
 export const MAX_KEYS_PER_BATCH = 100;
 const MAX_KEY_LENGTH = 200;
 const MAX_SOURCE_TEXT_LENGTH = 10_000;
+const MAX_FILE_LENGTH = 500;
 
 export type SourceKeyPayloadResult =
   | { success: true; keys: IncomingSourceKey[] }
@@ -42,28 +44,76 @@ export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
       };
     }
 
-    if (
-      typeof item.sourceText !== 'string' ||
-      item.sourceText.trim().length === 0
-    ) {
-      return {
-        success: false,
-        error: 'Every sourceText must be a non-empty string.',
-      };
+    const type = parseType(item.type);
+    const sourceText =
+      typeof item.sourceText === 'string' ? item.sourceText : '';
+
+    if (type === 'translation') {
+      if (sourceText.trim().length === 0) {
+        return {
+          success: false,
+          error: 'Every sourceText must be a non-empty string.',
+        };
+      }
+      if (sourceText.length > MAX_SOURCE_TEXT_LENGTH) {
+        return {
+          success: false,
+          error: `Source text may not exceed ${MAX_SOURCE_TEXT_LENGTH} characters.`,
+        };
+      }
     }
 
-    if (item.sourceText.length > MAX_SOURCE_TEXT_LENGTH) {
-      return {
-        success: false,
-        error: `Source text may not exceed ${MAX_SOURCE_TEXT_LENGTH} characters.`,
-      };
-    }
-
+    const usage = parseUsage(item.usage);
     const key = item.key.trim();
-    deduplicated.set(key, { key, sourceText: item.sourceText });
+    deduplicated.set(`${type}:${key}`, {
+      key,
+      sourceText: type === 'translation' ? sourceText : sourceText || key,
+      type,
+      usage,
+    });
   }
 
   return { success: true, keys: Array.from(deduplicated.values()) };
+}
+
+function parseType(value: unknown): KeyType {
+  if (
+    value === 'feature-flag' ||
+    value === 'flag' ||
+    value === 'featureFlag'
+  ) {
+    return 'feature-flag';
+  }
+  return 'translation';
+}
+
+function parseUsage(
+  value: unknown
+): IncomingSourceKey['usage'] {
+  if (!isRecord(value) || typeof value.file !== 'string' || !value.file.trim()) {
+    return null;
+  }
+  if (value.file.length > MAX_FILE_LENGTH) {
+    return null;
+  }
+  const line = typeof value.line === 'number' ? value.line : Number(value.line);
+  if (!Number.isInteger(line) || line < 0) {
+    return null;
+  }
+  const column =
+    typeof value.column === 'number'
+      ? value.column
+      : value.column === undefined
+        ? null
+        : Number(value.column);
+  return {
+    file: value.file.trim(),
+    line,
+    column: Number.isInteger(column) ? column : null,
+    repository:
+      typeof value.repository === 'string' ? value.repository : null,
+    branch: typeof value.branch === 'string' ? value.branch : null,
+  };
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

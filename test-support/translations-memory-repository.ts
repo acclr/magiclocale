@@ -139,6 +139,7 @@ export class MemoryRepository
       name: input.name,
       isProduction: input.isProduction ?? false,
       liveVersionId: null,
+      parentEnvironmentId: input.parentEnvironmentId ?? null,
     };
     this.state.environments.push(environment);
     return environment;
@@ -204,6 +205,15 @@ export class MemoryRepository
     }
     key.sourceText = sourceText;
     return key;
+  }
+
+  async renameKey(id: string, key: string): Promise<TranslationKey> {
+    const existing = this.state.keys.find((item) => item.id === id);
+    if (!existing) {
+      throw new Error(`Translation key not found: ${id}`);
+    }
+    existing.key = key;
+    return existing;
   }
 
   async listTranslations(

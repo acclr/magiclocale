@@ -15,8 +15,8 @@ type FlagDrawerProps = {
   item: FlagWithConfig;
   canEdit: boolean;
   onClose: () => void;
-  onSaveConfig: (patch: UpsertFlagConfigInput) => Promise<unknown>;
-  onSaveRules: (rules: FlagRuleInput[]) => Promise<unknown>;
+  onSaveConfig: (patch: UpsertFlagConfigInput & { reason?: string }) => Promise<unknown>;
+  onSaveRules: (rules: FlagRuleInput[], reason?: string) => Promise<unknown>;
   onUpdate: (patch: {
     name?: string;
     description?: string;
@@ -55,6 +55,7 @@ const FlagDrawer = ({
       rolloutPercentage: rule.rolloutPercentage,
     }))
   );
+  const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -91,8 +92,10 @@ const FlagDrawer = ({
         defaultValue: parseValue(defaultValue),
         offValue: parseValue(offValue),
         rolloutPercentage: useRollout ? rollout : null,
-      });
-      await onSaveRules(rules);
+        inherited: false,
+        ...(reason.trim() ? { reason: reason.trim() } : {}),
+      } as UpsertFlagConfigInput & { reason?: string });
+      await onSaveRules(rules, reason.trim() || undefined);
       toast.success(t('flag-saved'));
     } catch (error) {
       toast.error(
@@ -259,22 +262,108 @@ const FlagDrawer = ({
                 placeholder="values, comma separated"
                 value={rule.values.join(', ')}
               />
-              {canEdit ? (
-                <button
-                  className="btn btn-ghost btn-xs text-error"
-                  onClick={() =>
+              <input
+                className="input input-bordered input-sm font-mono md:col-span-2"
+                disabled={!canEdit}
+                onChange={(event) =>
+                  setRules((current) =>
+                    current.map((itemRule, itemIndex) =>
+                      itemIndex === index
+                        ? {
+                            ...itemRule,
+                            value: parseValue(event.target.value),
+                          }
+                        : itemRule
+                    )
+                  )
+                }
+                placeholder="rule value (JSON)"
+                value={JSON.stringify(rule.value)}
+              />
+              <label className="form-control md:col-span-2">
+                <span className="label-text text-xs">
+                  Rule rollout {rule.rolloutPercentage ?? 100}%
+                </span>
+                <input
+                  className="range range-sm"
+                  disabled={!canEdit}
+                  max={100}
+                  min={0}
+                  onChange={(event) =>
                     setRules((current) =>
-                      current.filter((_, itemIndex) => itemIndex !== index)
+                      current.map((itemRule, itemIndex) =>
+                        itemIndex === index
+                          ? {
+                              ...itemRule,
+                              rolloutPercentage: Number(event.target.value),
+                            }
+                          : itemRule
+                      )
                     )
                   }
-                  type="button"
-                >
-                  {t('remove')}
-                </button>
+                  type="range"
+                  value={rule.rolloutPercentage ?? 100}
+                />
+              </label>
+              {canEdit ? (
+                <div className="flex gap-2">
+                  <button
+                    className="btn btn-ghost btn-xs"
+                    disabled={index === 0}
+                    onClick={() =>
+                      setRules((current) => {
+                        const next = [...current];
+                        const [moved] = next.splice(index, 1);
+                        next.splice(index - 1, 0, moved);
+                        return next;
+                      })
+                    }
+                    type="button"
+                  >
+                    Up
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-xs"
+                    disabled={index === rules.length - 1}
+                    onClick={() =>
+                      setRules((current) => {
+                        const next = [...current];
+                        const [moved] = next.splice(index, 1);
+                        next.splice(index + 1, 0, moved);
+                        return next;
+                      })
+                    }
+                    type="button"
+                  >
+                    Down
+                  </button>
+                  <button
+                    className="btn btn-ghost btn-xs text-error"
+                    onClick={() =>
+                      setRules((current) =>
+                        current.filter((_, itemIndex) => itemIndex !== index)
+                      )
+                    }
+                    type="button"
+                  >
+                    {t('remove')}
+                  </button>
+                </div>
               ) : null}
             </div>
           ))}
         </div>
+
+        {canEdit ? (
+          <label className="form-control">
+            <span className="label-text">Change reason (required in production)</span>
+            <input
+              className="input input-bordered input-sm"
+              onChange={(event) => setReason(event.target.value)}
+              value={reason}
+            />
+          </label>
+        ) : null}
 
         {canEdit ? (
           <div className="flex flex-wrap justify-between gap-2">

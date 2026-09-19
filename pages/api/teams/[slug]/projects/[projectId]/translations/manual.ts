@@ -1,3 +1,4 @@
+import { validateVariables } from '@/domain/keys';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getTeamTranslationService } from '@/lib/translations';
 import {
@@ -28,7 +29,17 @@ export default createTeamProjectApiHandler({
         value,
         teamMember.user.email
       );
-      res.status(200).json({ data: translation });
+      const dashboard = await getTeamTranslationService().dashboard(
+        teamMember.team.id,
+        projectId,
+        environment,
+        { page: 1, pageSize: 1, search: '' }
+      );
+      const row = dashboard.rows.find((item) => item.keyId === keyId);
+      const issues = row
+        ? validateVariables(row.sourceText, value)
+        : [];
+      res.status(200).json({ data: translation, issues });
     },
   },
 });

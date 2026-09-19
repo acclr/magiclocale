@@ -57,6 +57,7 @@ function setup() {
         name: 'Production',
         isProduction: true,
         liveVersionId: null,
+        parentEnvironmentId: null,
       },
       {
         id: 'env-foreign',
@@ -65,6 +66,7 @@ function setup() {
         name: 'Production',
         isProduction: true,
         liveVersionId: null,
+        parentEnvironmentId: null,
       },
     ],
     translations: [],

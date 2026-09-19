@@ -1,0 +1,12 @@
+{
+  "name": "@keykit/cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "keykit": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts"
+  }
+}

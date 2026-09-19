@@ -44,27 +44,27 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#181B1F',
-              color: '#E4E6E8',
-              border: '1px solid #2A2E34',
+              background: '#141416',
+              color: '#ececee',
+              border: '1px solid #2e2e32',
             },
           }}
         />
         <TooltipProvider>
           <Themer
             overrideTheme={{
-              '--primary-color': '#EFB12A',
-              '--primary-hover': '#D99C18',
-              '--primary-color-50': '#FFFBEB',
-              '--primary-color-100': '#FEF3C7',
-              '--primary-color-200': '#FDE68A',
-              '--primary-color-300': '#FCD34D',
-              '--primary-color-500': '#EFB12A',
-              '--primary-color-600': '#D99C18',
-              '--primary-color-700': '#B45309',
-              '--primary-color-800': '#92400E',
-              '--primary-color-900': '#78350F',
-              '--primary-color-950': '#451A03',
+              '--primary-color': '#FF5900',
+              '--primary-hover': '#CC3E02',
+              '--primary-color-50': '#FFF7EC',
+              '--primary-color-100': '#FFECD3',
+              '--primary-color-200': '#FFD6A5',
+              '--primary-color-300': '#FFB96D',
+              '--primary-color-500': '#FF700A',
+              '--primary-color-600': '#FF5900',
+              '--primary-color-700': '#CC3E02',
+              '--primary-color-800': '#A1320B',
+              '--primary-color-900': '#822B0C',
+              '--primary-color-950': '#461304',
             }}
           >
             <DashboardLocaleProvider>

@@ -1,4 +1,5 @@
 /* eslint @typescript-eslint/no-var-requires: "off" */
+const path = require('path');
 const { i18n } = require('./next-i18next.config');
 const { withSentryConfig } = require('@sentry/nextjs');
 
@@ -36,6 +37,18 @@ const nextConfig = {
     ],
   },
   i18n,
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        '.prisma/client/index-browser': path.join(
+          __dirname,
+          'node_modules/.prisma/client/index.js'
+        ),
+      };
+    }
+    return config;
+  },
   rewrites: async () => {
     return [
       {

@@ -59,7 +59,7 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
             items: projects.map((project) => ({
               id: project.id,
               name: project.name,
-              href: `/teams/${currentTeam.slug}/projects/${project.id}`,
+              href: `/teams/${currentTeam.slug}/projects/${project.id}/keys`,
               icon: CubeIcon,
             })),
           },

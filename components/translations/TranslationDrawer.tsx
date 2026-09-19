@@ -1,5 +1,6 @@
 import type { DashboardRow } from '../../domain/translations';
 import { localeColor } from '../../domain/translations';
+import { extractVariables, validateVariables } from '../../domain/keys';
 import type { TranslationWorkspaceActions } from '../../hooks/useTranslationWorkspace';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useEffect, useState } from 'react';
@@ -32,6 +33,8 @@ const TranslationDrawer = ({
   const [suggestion, setSuggestion] = useState<string | null>(null);
   const [isPending, setIsPending] = useState(false);
   const isSourceLocale = locale === sourceLocale;
+  const variableIssues = validateVariables(row.sourceText, value);
+  const sourceVariables = extractVariables(row.sourceText);
 
   useEffect(() => {
     setValue(cell.value ?? '');
@@ -154,6 +157,23 @@ const TranslationDrawer = ({
                 </span>
               )}
             </label>
+            {sourceVariables.length ? (
+              <p className="text-xs text-muted-foreground">
+                {t('variables')}:{' '}
+                {sourceVariables.map((name) => `{{${name}}}`).join(', ')}
+              </p>
+            ) : null}
+            {variableIssues.length ? (
+              <div className="alert alert-warning text-sm">
+                {variableIssues.map((issue) => (
+                  <p key={`${issue.kind}-${issue.name}`}>
+                    {issue.kind === 'missing'
+                      ? t('variable-missing', { name: issue.name })
+                      : t('variable-unexpected', { name: issue.name })}
+                  </p>
+                ))}
+              </div>
+            ) : null}
 
             {cell.status === 'needs-review' && (
               <div className="alert alert-warning block">

@@ -16,6 +16,7 @@ const environment: Environment = {
   name: 'Production',
   isProduction: true,
   liveVersionId: null,
+  parentEnvironmentId: null,
 };
 
 describe('projectTranslationDashboard', () => {
@@ -67,7 +68,7 @@ describe('projectTranslationDashboard', () => {
 
     expect(dashboard.rows[0]).toMatchObject({
       keyId: 'key',
-      searchText: 'nav.save save',
+      searchText: expect.stringContaining('nav.save save'),
       statuses: expect.arrayContaining(['manual', 'ai', 'missing']),
       missingLocales: ['de'],
       cells: {
@@ -85,6 +86,8 @@ describe('projectTranslationDashboard', () => {
       manual: 1,
       'needs-review': 0,
       missing: 1,
+      unused: 1,
+      deprecated: 0,
     });
     expect(dashboard.pagination).toEqual({
       page: 1,
@@ -138,5 +141,57 @@ describe('projectTranslationDashboard', () => {
       totalPages: 2,
     });
     expect(dashboard.counts.all).toBe(3);
+  });
+
+  it('filters by translated locale values and usage files', () => {
+    const project: Project = {
+      id: 'project',
+      teamId: 'team',
+      name: 'Website',
+      sourceLocale: 'en',
+      locales: ['en', 'de'],
+      localeFormat: 'language',
+      billingScope: 'team',
+      billingId: null,
+    };
+    const keys: TranslationKey[] = [
+      { id: 'one', projectId: project.id, key: 'billing.save', sourceText: 'Save' },
+      { id: 'two', projectId: project.id, key: 'nav.close', sourceText: 'Close' },
+    ];
+    const translations: Translation[] = [
+      {
+        id: 'de-one',
+        translationKeyId: 'one',
+        environmentId: environment.id,
+        locale: 'de',
+        ...asManualTranslation('Speichern'),
+        updatedAt: new Date(),
+      },
+    ];
+    const dashboard = paginateTranslationDashboard(
+      projectTranslationDashboard(
+        project,
+        environment,
+        keys,
+        translations,
+        {},
+        { 'billing.save': ['src/features/billing/Page.tsx'] }
+      ),
+      { search: 'locale:de speichern' }
+    );
+    expect(dashboard.rows.map((row) => row.key)).toEqual(['billing.save']);
+
+    const byFile = paginateTranslationDashboard(
+      projectTranslationDashboard(
+        project,
+        environment,
+        keys,
+        translations,
+        {},
+        { 'billing.save': ['src/features/billing/Page.tsx'] }
+      ),
+      { search: 'file:billing' }
+    );
+    expect(byFile.rows.map((row) => row.key)).toEqual(['billing.save']);
   });
 });

@@ -117,6 +117,8 @@ function toConfig(
     offValue: config.offValue as FlagValue,
     rolloutPercentage: config.rolloutPercentage,
     rolloutSalt: config.rolloutSalt,
+    inherited: config.inherited,
+    updatedAt: config.updatedAt,
     rules: (config.rules ?? [])
       .slice()
       .sort((left, right) => left.order - right.order)
@@ -187,6 +189,14 @@ export class PrismaFlagRepository implements FlagRepository {
           : {}),
         ...(patch.archived !== undefined ? { archived: patch.archived } : {}),
       },
+    });
+    return toFlag(flag);
+  }
+
+  async renameFlag(id: string, key: string): Promise<FeatureFlag> {
+    const flag = await this.client.featureFlag.update({
+      where: { id },
+      data: { key, name: key },
     });
     return toFlag(flag);
   }
@@ -268,6 +278,7 @@ export class PrismaFlagRepository implements FlagRepository {
         ...(patch.rolloutPercentage !== undefined
           ? { rolloutPercentage: patch.rolloutPercentage }
           : {}),
+        ...(patch.inherited !== undefined ? { inherited: patch.inherited } : {}),
       },
       include: { rules: true },
     });
@@ -303,6 +314,56 @@ export class PrismaFlagRepository implements FlagRepository {
       });
       if (!config) {
         throw new Error(`Feature flag config not found: ${configId}`);
+      }
+      return toConfig(config);
+    });
+  }
+
+  async copyConfig(
+    sourceConfigId: string,
+    targetConfigId: string,
+    inherited: boolean
+  ): Promise<FlagEnvironmentConfig> {
+    const source = await this.client.flagEnvironmentConfig.findUnique({
+      where: { id: sourceConfigId },
+      include: { rules: { orderBy: { order: 'asc' } } },
+    });
+    if (!source) {
+      throw new Error(`Feature flag config not found: ${sourceConfigId}`);
+    }
+
+    return this.client.$transaction(async (transaction) => {
+      await transaction.flagEnvironmentConfig.update({
+        where: { id: targetConfigId },
+        data: {
+          enabled: source.enabled,
+          defaultValue: source.defaultValue ?? Prisma.JsonNull,
+          offValue: source.offValue ?? Prisma.JsonNull,
+          rolloutPercentage: source.rolloutPercentage,
+          inherited,
+        },
+      });
+      await transaction.flagRule.deleteMany({ where: { configId: targetConfigId } });
+      for (const rule of source.rules) {
+        await transaction.flagRule.create({
+          data: {
+            configId: targetConfigId,
+            order: rule.order,
+            description: rule.description,
+            attribute: rule.attribute,
+            operator: rule.operator,
+            values: rule.values,
+            value: rule.value ?? Prisma.JsonNull,
+            rolloutPercentage: rule.rolloutPercentage,
+          },
+        });
+      }
+      const config = await transaction.flagEnvironmentConfig.findUnique({
+        where: { id: targetConfigId },
+        include: { rules: true },
+      });
+      if (!config) {
+        throw new Error(`Feature flag config not found: ${targetConfigId}`);
       }
       return toConfig(config);
     });

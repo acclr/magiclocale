@@ -1,13 +1,22 @@
+import { PrismaArchitectureRepository } from '../../data/architecture/prisma-architecture-repository';
 import { PrismaEnvironmentRepository } from '../../data/environments/prisma-environment-repository';
 import { PrismaFlagRepository } from '../../data/flags/prisma-flag-repository';
+import { PrismaKeyCatalogRepository } from '../../data/keys/prisma-key-catalog-repository';
+import { PrismaMigrationRepository } from '../../data/migrations/prisma-migration-repository';
 import { OpenAITranslator } from '../../data/translations/openai-translator';
 import { PrismaTranslationRepository } from '../../data/translations/prisma-translation-repository';
 import { PrismaVersionRepository } from '../../data/versions/prisma-version-repository';
+import { ArchitectureService } from '../../domain/architecture';
 import {
   EnvironmentService,
   type EnvironmentRepository,
 } from '../../domain/environments';
 import { FlagService, type FlagRepository } from '../../domain/flags';
+import {
+  KeyCatalogService,
+  type KeyCatalogRepository,
+} from '../../domain/keys';
+import { MigrationService } from '../../domain/migrations';
 import {
   ProjectService,
   TeamTranslationService,
@@ -33,6 +42,9 @@ export type TranslationServices = {
   environmentService: EnvironmentService;
   versionService: VersionService;
   flagService: FlagService;
+  keyCatalogService: KeyCatalogService;
+  architectureService: ArchitectureService;
+  migrationService: MigrationService;
 };
 
 export type TranslationServiceDependencies = {
@@ -40,6 +52,7 @@ export type TranslationServiceDependencies = {
   environmentRepository?: EnvironmentRepository;
   versionRepository?: VersionRepository;
   flagRepository?: FlagRepository;
+  keyCatalogRepository?: KeyCatalogRepository;
   translator?: Translator;
 };
 
@@ -75,6 +88,9 @@ export function createTranslationServices(
     dependencies.versionRepository ?? new PrismaVersionRepository(prisma);
   const flagRepository =
     dependencies.flagRepository ?? new PrismaFlagRepository(prisma);
+  const keyCatalogRepository =
+    dependencies.keyCatalogRepository ??
+    new PrismaKeyCatalogRepository(prisma);
   const translator = dependencies.translator ?? createEnvironmentTranslator();
 
   const projectService = new ProjectService(repository);
@@ -82,6 +98,17 @@ export function createTranslationServices(
     environmentRepository,
     projectService
   );
+  const keyCatalogService = new KeyCatalogService(
+    keyCatalogRepository,
+    projectService
+  );
+  const catalogWriter = {
+    recordDetection: (input: Parameters<KeyCatalogRepository['recordDetection']>[0]) =>
+      keyCatalogRepository.recordDetection(input),
+    upsertDefinition: (
+      input: Parameters<KeyCatalogRepository['upsert']>[0]
+    ) => keyCatalogRepository.upsert(input),
+  };
 
   const flagService = new FlagService(
     flagRepository,
@@ -89,7 +116,8 @@ export function createTranslationServices(
     environmentService,
     {
       recordFlagChange: (change) => versionService.recordFlagChange(change),
-    }
+    },
+    catalogWriter
   );
 
   const versionService = new VersionService(
@@ -102,10 +130,31 @@ export function createTranslationServices(
     }
   );
 
-  const translationService = new TranslationService(repository, translator, {
-    recordTranslationChange: (change) =>
-      versionService.recordTranslationChange(change),
-  });
+  const translationService = new TranslationService(
+    repository,
+    translator,
+    {
+      recordTranslationChange: (change) =>
+        versionService.recordTranslationChange(change),
+    },
+    catalogWriter
+  );
+
+  const architectureService = new ArchitectureService(
+    new PrismaArchitectureRepository(prisma),
+    keyCatalogRepository,
+    repository,
+    flagRepository,
+    projectService,
+    environmentService
+  );
+  const migrationService = new MigrationService(
+    new PrismaMigrationRepository(prisma),
+    keyCatalogRepository,
+    repository,
+    flagRepository,
+    projectService
+  );
 
   return {
     projectService,
@@ -113,12 +162,16 @@ export function createTranslationServices(
       repository,
       projectService,
       translationService,
-      environmentService
+      environmentService,
+      keyCatalogRepository
     ),
     translationService,
     environmentService,
     versionService,
     flagService,
+    keyCatalogService,
+    architectureService,
+    migrationService,
   };
 }
 
@@ -137,6 +190,14 @@ export function getVersionRepository(): PrismaVersionRepository {
 }
 
 export function getTranslationServices(): TranslationServices {
+  const prismaReady =
+    typeof (prisma as { team?: { findMany?: unknown } }).team?.findMany ===
+    'function';
+  if (!prismaReady) {
+    services = undefined;
+    repositorySingleton = undefined;
+    versionRepositorySingleton = undefined;
+  }
   services ??= createTranslationServices({
     repository: getTranslationRepository(),
     versionRepository: getVersionRepository(),
@@ -166,4 +227,16 @@ export function getVersionService(): VersionService {
 
 export function getFlagService(): FlagService {
   return getTranslationServices().flagService;
+}
+
+export function getKeyCatalogService(): KeyCatalogService {
+  return getTranslationServices().keyCatalogService;
+}
+
+export function getArchitectureService(): ArchitectureService {
+  return getTranslationServices().architectureService;
+}
+
+export function getMigrationService(): MigrationService {
+  return getTranslationServices().migrationService;
 }

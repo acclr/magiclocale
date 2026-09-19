@@ -50,6 +50,7 @@ export type VersionChange = {
   before: unknown;
   after: unknown;
   actor: string | null;
+  reason: string | null;
   createdAt: Date;
 };
 
@@ -61,6 +62,7 @@ export type NewVersionChange = {
   before: unknown;
   after: unknown;
   actor: string | null;
+  reason?: string | null;
 };
 
 export type DiffKind = 'added' | 'changed' | 'removed';

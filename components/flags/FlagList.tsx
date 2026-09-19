@@ -178,7 +178,9 @@ const FlagList = ({ slug, projectId, environment, canEdit }: FlagListProps) => {
             setSelectedKey(null);
           }}
           onSaveConfig={(patch) => flags.setConfig(selected.flag.id, patch)}
-          onSaveRules={(rules) => flags.setRules(selected.flag.id, rules)}
+          onSaveRules={(rules, reason) =>
+            flags.setRules(selected.flag.id, rules, reason)
+          }
           onUpdate={(patch) => flags.updateFlag(selected.flag.id, patch)}
         />
       ) : null}

@@ -56,7 +56,7 @@ const Drawer = () => {
       )}
 
       <div
-        className="hidden shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-foreground transition-[width] duration-200 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+        className="hidden shrink-0 border-r border-foreground/5 bg-[#040404] text-sidebar-foreground transition-[width] duration-200 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         style={{ width: primaryWidth }}
       >
         <PrimarySidebar />

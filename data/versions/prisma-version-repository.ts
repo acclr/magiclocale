@@ -81,6 +81,7 @@ function toChange(change: PrismaVersionChange): VersionChange {
     before: change.before,
     after: change.after,
     actor: change.actor,
+    reason: change.reason ?? null,
     createdAt: change.createdAt,
   };
 }
@@ -216,6 +217,7 @@ export class PrismaVersionRepository implements VersionRepository {
         before: asJson(change.before),
         after: asJson(change.after),
         actor: change.actor,
+        reason: change.reason ?? null,
       },
     });
   }

@@ -18,7 +18,7 @@ export default createTeamProjectApiHandler({
     action: 'update',
     async handle({ req, res, teamMember }) {
       const { projectId, flagId } = validateWithSchema(flagIdParams, req.query);
-      const { environment, ...patch } = validateWithSchema(
+      const { environment, reason, ...patch } = validateWithSchema(
         flagConfigSchema.omit({ flagId: true }),
         req.body
       );
@@ -32,7 +32,8 @@ export default createTeamProjectApiHandler({
           defaultValue: patch.defaultValue as FlagValue | undefined,
           offValue: patch.offValue as FlagValue | undefined,
         },
-        teamMember.user.email
+        teamMember.user.email,
+        reason
       );
       res.status(200).json({ data: result });
     },

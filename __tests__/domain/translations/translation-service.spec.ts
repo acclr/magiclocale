@@ -63,6 +63,7 @@ function seedState(): StoreState {
         name: 'Production',
         isProduction: true,
         liveVersionId: null,
+        parentEnvironmentId: null,
       },
     ],
     keys: [

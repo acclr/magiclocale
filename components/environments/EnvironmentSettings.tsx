@@ -19,6 +19,7 @@ const EnvironmentSettings = ({
   const environments = useProjectEnvironments(slug, projectId);
   const [slugValue, setSlugValue] = useState('');
   const [name, setName] = useState('');
+  const [parentId, setParentId] = useState('');
   const [busy, setBusy] = useState(false);
 
   const create = async (event: React.FormEvent) => {
@@ -28,9 +29,11 @@ const EnvironmentSettings = ({
       await environments.create({
         slug: slugValue,
         name: name || undefined,
+        parentEnvironmentId: parentId || null,
       });
       setSlugValue('');
       setName('');
+      setParentId('');
       toast.success(t('environment-created'));
     } catch (error) {
       toast.error(
@@ -63,10 +66,43 @@ const EnvironmentSettings = ({
                 <p className="text-xs text-muted-foreground">
                   {environment.slug}
                   {environment.isProduction ? ' · production' : ''}
+                  {environment.parentEnvironmentId
+                    ? ` · parent ${
+                        environments.environments.find(
+                          (item) => item.id === environment.parentEnvironmentId
+                        )?.name ?? ''
+                      }`
+                    : ''}
                 </p>
               </div>
               {canEdit && !environment.isProduction ? (
-                <button
+                <div className="flex items-center gap-2">
+                  <select
+                    className="select select-bordered select-xs"
+                    onChange={(event) => {
+                      void environments
+                        .setParent(environment.id, event.target.value || null)
+                        .then(() => toast.success(t('saved')))
+                        .catch((error) =>
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : t('save-failed')
+                          )
+                        );
+                    }}
+                    value={environment.parentEnvironmentId ?? ''}
+                  >
+                    <option value="">{t('none')}</option>
+                    {environments.environments
+                      .filter((item) => item.id !== environment.id)
+                      .map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.name}
+                        </option>
+                      ))}
+                  </select>
+                  <button
                   className="btn btn-ghost btn-xs text-error"
                   onClick={async () => {
                     if (
@@ -93,6 +129,7 @@ const EnvironmentSettings = ({
                 >
                   {t('delete')}
                 </button>
+                </div>
               ) : null}
             </li>
           ))}
@@ -117,6 +154,21 @@ const EnvironmentSettings = ({
                 placeholder="Staging"
                 value={name}
               />
+            </label>
+            <label className="form-control">
+              <span className="label-text text-xs">{t('parent-environment')}</span>
+              <select
+                className="select select-bordered select-sm"
+                onChange={(event) => setParentId(event.target.value)}
+                value={parentId}
+              >
+                <option value="">{t('none')}</option>
+                {environments.environments.map((environment) => (
+                  <option key={environment.id} value={environment.id}>
+                    {environment.name}
+                  </option>
+                ))}
+              </select>
             </label>
             <button className="btn btn-primary btn-sm" disabled={busy} type="submit">
               {busy ? t('adding-environment') : t('add-environment')}

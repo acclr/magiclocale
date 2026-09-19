@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider   = "prisma-client-js"
+  engineType = "library"
 }
 
 datasource db {
@@ -59,6 +60,55 @@ enum FlagType {
 enum FlagVisibility {
   PUBLIC
   SERVER_ONLY
+}
+
+enum KeyType {
+  TRANSLATION
+  FEATURE_FLAG
+}
+
+enum KeyLifecycle {
+  ACTIVE
+  UNUSED
+  DEPRECATED
+  ARCHIVED
+}
+
+enum FindingKind {
+  UNUSED_KEY
+  STALE_FLAG
+  DUPLICATE_TRANSLATION
+  OVERLAPPING_FLAGS
+  NAMESPACE_INCONSISTENCY
+  MISSING_OWNER
+  MISSING_DESCRIPTION
+  NAMING_ISSUE
+  UNKNOWN_FLAG
+  TEMPORARY_FLAG_OVERDUE
+}
+
+enum FindingStatus {
+  OPEN
+  REVIEWED
+  IGNORED
+  INTENTIONAL
+}
+
+enum MigrationStatus {
+  DRAFT
+  READY
+  APPLIED
+  CANCELLED
+}
+
+enum MigrationOperationType {
+  RENAME_KEY
+  MOVE_KEY
+  MERGE_TRANSLATIONS
+  DEPRECATE_KEY
+  ARCHIVE_KEY
+  DELETE_KEY
+  ASSIGN_OWNER
 }
 
 enum FlagRuleOperator {
@@ -161,10 +211,14 @@ model TranslationProject {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
 
-  team         Team             @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  keys         TranslationKey[]
-  environments Environment[]
-  featureFlags FeatureFlag[]
+  team               Team                   @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  keys               TranslationKey[]
+  environments       Environment[]
+  featureFlags       FeatureFlag[]
+  keyMetas           KeyMeta[]
+  architectureRules  ArchitectureRule[]
+  findings           ArchitectureFinding[]
+  migrations         KeyMigration[]
 
   @@unique([teamId, name])
   @@index([teamId])
@@ -197,6 +251,8 @@ model Translation {
   source           TranslationSource
   aiLocked         Boolean           @default(false)
   status           TranslationStatus
+  reviewedAt       DateTime?
+  approvedAt       DateTime?
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
 
@@ -215,16 +271,19 @@ model Translation {
 /// Shared by translations and feature flags, and independently live: each
 /// environment serves its own published version to the apps pointed at it.
 model Environment {
-  id            String   @id @default(uuid())
-  projectId     String
-  slug          String
-  name          String
-  isProduction  Boolean  @default(false)
-  liveVersionId String?  @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                   String   @id @default(uuid())
+  projectId            String
+  slug                 String
+  name                 String
+  isProduction         Boolean  @default(false)
+  liveVersionId        String?  @unique
+  parentEnvironmentId  String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
 
   project      TranslationProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  parent       Environment?            @relation("EnvironmentParent", fields: [parentEnvironmentId], references: [id], onDelete: SetNull)
+  children     Environment[]           @relation("EnvironmentParent")
   liveVersion  Version?                @relation("EnvironmentLiveVersion", fields: [liveVersionId], references: [id], onDelete: SetNull)
   versions     Version[]               @relation("EnvironmentVersions")
   translations Translation[]
@@ -233,6 +292,7 @@ model Environment {
 
   @@unique([projectId, slug])
   @@index([projectId])
+  @@index([parentEnvironmentId])
 }
 
 /// A numbered change set for one environment. Exactly one DRAFT version may
@@ -294,6 +354,7 @@ model VersionChange {
   before     Json?
   after      Json?
   actor      String?
+  reason     String?
   createdAt  DateTime                @default(now())
 
   version Version @relation(fields: [versionId], references: [id], onDelete: Cascade)
@@ -332,6 +393,7 @@ model FlagEnvironmentConfig {
   offValue          Json
   rolloutPercentage Int?
   rolloutSalt       String
+  inherited         Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
@@ -361,6 +423,120 @@ model FlagRule {
 
   @@index([configId])
   @@index([configId, order])
+}
+
+/// Shared identity for translation keys and feature flags. Type-specific
+/// rows stay on TranslationKey / FeatureFlag; this catalog owns metadata,
+/// lifecycle, and source usages for both.
+model KeyMeta {
+  id             String       @id @default(uuid())
+  projectId      String
+  type           KeyType
+  key            String
+  namespace      String?
+  description    String?
+  developerNote  String?
+  owner          String?
+  tags           String[]     @default([])
+  lifecycle      KeyLifecycle @default(ACTIVE)
+  lastDetectedAt DateTime?
+  replacementKey String?
+  reviewAt       DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  project  TranslationProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  usages   SourceUsage[]
+  findings ArchitectureFinding[]
+
+  @@unique([projectId, type, key])
+  @@index([projectId])
+  @@index([projectId, type])
+  @@index([projectId, namespace])
+  @@index([projectId, lifecycle])
+}
+
+model SourceUsage {
+  id         String   @id @default(uuid())
+  keyMetaId  String
+  file       String
+  line       Int
+  column     Int?
+  repository String?
+  branch     String?
+  lastSeenAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  keyMeta KeyMeta @relation(fields: [keyMetaId], references: [id], onDelete: Cascade)
+
+  @@unique([keyMetaId, file, line, column])
+  @@index([keyMetaId])
+}
+
+model ArchitectureRule {
+  id        String   @id @default(uuid())
+  projectId String
+  keyType   KeyType?
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  project TranslationProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+}
+
+model ArchitectureFinding {
+  id          String        @id @default(uuid())
+  projectId   String
+  keyMetaId   String?
+  kind        FindingKind
+  status      FindingStatus @default(OPEN)
+  title       String
+  message     String
+  suggestion  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  project TranslationProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  keyMeta KeyMeta?           @relation(fields: [keyMetaId], references: [id], onDelete: SetNull)
+
+  @@index([projectId])
+  @@index([projectId, status])
+  @@index([keyMetaId])
+}
+
+model KeyMigration {
+  id          String          @id @default(uuid())
+  projectId   String
+  name        String
+  status      MigrationStatus @default(DRAFT)
+  createdBy   String?
+  appliedAt   DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  project    TranslationProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  operations KeyMigrationOperation[]
+
+  @@index([projectId])
+}
+
+model KeyMigrationOperation {
+  id           String                  @id @default(uuid())
+  migrationId  String
+  order        Int
+  type         MigrationOperationType
+  keyType      KeyType
+  fromKey      String
+  toKey        String?
+  payload      Json?
+  createdAt    DateTime                @default(now())
+
+  migration KeyMigration @relation(fields: [migrationId], references: [id], onDelete: Cascade)
+
+  @@index([migrationId])
+  @@index([migrationId, order])
 }
 
 model TeamMember {

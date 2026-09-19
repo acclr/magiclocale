@@ -1,4 +1,8 @@
 import {
+  noopKeyCatalogWriter,
+  type KeyCatalogWriter,
+} from '../keys/ports';
+import {
   noopTranslationChangeRecorder,
   toCellSnapshot,
   type TranslationChangeRecorder,
@@ -35,7 +39,8 @@ export class TranslationService {
   constructor(
     private readonly repository: TranslationRepository,
     private readonly translator: Translator,
-    private readonly changeRecorder: TranslationChangeRecorder = noopTranslationChangeRecorder
+    private readonly changeRecorder: TranslationChangeRecorder = noopTranslationChangeRecorder,
+    private readonly catalog: KeyCatalogWriter = noopKeyCatalogWriter
   ) {}
 
   async saveManualEdit(
@@ -340,6 +345,12 @@ export class TranslationService {
           sourceText: item.sourceText,
         });
         createdKeys += 1;
+        await this.catalog.recordDetection({
+          projectId,
+          type: 'translation',
+          key: item.key,
+          usage: item.usage,
+        });
         const sourceRow = await this.repository.createTranslation({
           translationKeyId: created.id,
           environmentId,
@@ -357,6 +368,13 @@ export class TranslationService {
         fillFailed += fill.fillFailed;
         continue;
       }
+
+      await this.catalog.recordDetection({
+        projectId,
+        type: 'translation',
+        key: item.key,
+        usage: item.usage,
+      });
 
       if (existing.sourceText === item.sourceText) {
         const fill = await this.fillTargetsBestEffort(

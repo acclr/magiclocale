@@ -1,5 +1,11 @@
 const fetcher = async (url: string) => {
   const response = await fetch(url);
+  const contentType = response.headers.get('content-type') ?? '';
+  if (!contentType.includes('application/json')) {
+    throw new Error(
+      `Request failed (${response.status}). The server did not return JSON.`
+    );
+  }
   const json = await response.json();
 
   if (!response.ok) {

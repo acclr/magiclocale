@@ -6,6 +6,8 @@ import { Separator } from '@/components/ui/separator';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
 import { useLandingI18n } from './LandingLocaleProvider';
+import Image from 'next/image';
+import app from '@/lib/app';
 
 type LandingShellProps = {
   children: ReactNode;
@@ -48,20 +50,28 @@ const LandingShell = ({ children }: LandingShellProps) => {
             href="/"
             className="font-heading text-lg font-semibold tracking-tight text-foreground"
           >
-            {translate('landing.nav.brand', 'LocaleKit')}
+            <Image
+              src={app.logoWhiteUrl}
+              alt={app.name}
+              width={85}
+              height={30}
+            />
           </Link>
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {navLinks.map((item) => (
               <Button key={item.href} asChild variant="ghost" size="sm">
-                <a href={item.href}>
-                  {translate(item.key, item.fallback)}
-                </a>
+                <a href={item.href}>{translate(item.key, item.fallback)}</a>
               </Button>
             ))}
           </nav>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <LandingLocaleSwitcher />
-            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
               <Link href="/auth/login">
                 {translate('landing.nav.sign-in', 'Sign in')}
               </Link>

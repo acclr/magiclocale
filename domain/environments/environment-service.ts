@@ -100,7 +100,7 @@ export class EnvironmentService {
   async create(
     teamId: string,
     projectId: string,
-    input: { slug: string; name?: string }
+    input: { slug: string; name?: string; parentEnvironmentId?: string | null }
   ): Promise<Environment> {
     const project = await this.projectService.get(teamId, projectId);
     const slug = this.requireSlug(input.slug);
@@ -118,6 +118,29 @@ export class EnvironmentService {
       slug,
       name: input.name?.trim() || this.titleCase(slug),
       isProduction: false,
+      parentEnvironmentId: input.parentEnvironmentId ?? null,
+    });
+  }
+
+  async setParent(
+    teamId: string,
+    projectId: string,
+    environmentId: string,
+    parentEnvironmentId: string | null
+  ): Promise<Environment> {
+    const environment = await this.get(teamId, projectId, environmentId);
+    if (parentEnvironmentId) {
+      if (parentEnvironmentId === environment.id) {
+        throw new Error('An environment cannot be its own parent');
+      }
+      const parent = await this.requireProjectEnvironment(
+        environment.projectId,
+        parentEnvironmentId
+      );
+      await this.assertNoCycle(environment.id, parent.id);
+    }
+    return this.repository.updateEnvironment(environment.id, {
+      parentEnvironmentId,
     });
   }
 
@@ -158,6 +181,22 @@ export class EnvironmentService {
       throw new Error(`Environment not found: ${environmentId}`);
     }
     return environment;
+  }
+
+  private async assertNoCycle(
+    environmentId: string,
+    proposedParentId: string
+  ): Promise<void> {
+    const visited = new Set<string>([environmentId]);
+    let current: string | null = proposedParentId;
+    while (current) {
+      if (visited.has(current)) {
+        throw new Error('Environment parent links cannot form a cycle');
+      }
+      visited.add(current);
+      const node = await this.repository.getEnvironment(current);
+      current = node?.parentEnvironmentId ?? null;
+    }
   }
 
   private requireSlug(slug: string): string {

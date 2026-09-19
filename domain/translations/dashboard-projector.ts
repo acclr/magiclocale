@@ -1,4 +1,6 @@
 import type { Environment } from '../environments/types';
+import type { KeyMeta } from '../keys/types';
+import { parseSearchQuery } from '../keys/search';
 import type {
   Project,
   Translation,
@@ -24,6 +26,11 @@ export type DashboardRow = {
   key: string;
   sourceText: string;
   searchText: string;
+  namespace: string | null;
+  owner: string | null;
+  usageCount: number;
+  usageFiles: string[];
+  lifecycle: string;
   cells: Record<string, DashboardCell>;
   statuses: Array<TranslationStatus | 'missing'>;
   missingLocales: string[];
@@ -79,7 +86,9 @@ export function projectTranslationDashboard(
   project: Project,
   environment: Environment,
   keys: TranslationKey[],
-  translations: Translation[]
+  translations: Translation[],
+  catalogByKey: Record<string, KeyMeta> = {},
+  usageFilesByKey: Record<string, string[]> = {}
 ): TranslationDashboard {
   const translationsByCell = new Map(
     translations.map((translation) => [
@@ -93,6 +102,8 @@ export function projectTranslationDashboard(
     manual: 0,
     'needs-review': 0,
     missing: 0,
+    unused: 0,
+    deprecated: 0,
   };
 
   const rows = keys.map((key): DashboardRow => {
@@ -132,16 +143,37 @@ export function projectTranslationDashboard(
       })
     );
 
+    const catalog = catalogByKey[key.key];
+    const cellValues = project.locales
+      .map((locale) => translationsByCell.get(`${key.id}:${locale}`)?.value ?? '')
+      .join(' ');
+
     return {
       keyId: key.id,
       key: key.key,
       sourceText: key.sourceText,
-      searchText: `${key.key} ${key.sourceText}`.toLocaleLowerCase(),
+      searchText: `${key.key} ${key.sourceText} ${cellValues} ${
+        catalog?.description ?? ''
+      } ${catalog?.owner ?? ''}`.toLocaleLowerCase(),
+      namespace: catalog?.namespace ?? null,
+      owner: catalog?.owner ?? null,
+      usageCount: catalog?.usageCount ?? 0,
+      usageFiles: usageFilesByKey[key.key] ?? [],
+      lifecycle: catalog?.lifecycle ?? 'active',
       cells,
       statuses: Array.from(statuses),
       missingLocales,
     };
   });
+
+  for (const row of rows) {
+    if (row.lifecycle === 'unused' || row.usageCount === 0) {
+      counts.unused += 1;
+    }
+    if (row.lifecycle === 'deprecated') {
+      counts.deprecated += 1;
+    }
+  }
 
   return {
     project,
@@ -163,11 +195,62 @@ export function paginateTranslationDashboard(
   queryInput: Partial<DashboardQuery> = {}
 ): TranslationDashboard {
   const query = normalizeDashboardQuery(queryInput);
+  const parsed = parseSearchQuery(query.search);
   const filtered = dashboard.rows.filter((row) => {
-    if (query.filter !== 'all' && !row.statuses.includes(query.filter)) {
+    if (query.filter === 'unused') {
+      if (row.lifecycle !== 'unused' && row.usageCount !== 0) {
+        return false;
+      }
+    } else if (query.filter === 'deprecated') {
+      if (row.lifecycle !== 'deprecated') {
+        return false;
+      }
+    } else if (query.filter !== 'all' && !row.statuses.includes(query.filter)) {
       return false;
     }
-    return !query.search || row.searchText.includes(query.search);
+    if (parsed.fields.namespace && !row.key.startsWith(parsed.fields.namespace)) {
+      return false;
+    }
+    if (parsed.fields.owner && (row.owner ?? '').toLowerCase() !== parsed.fields.owner.toLowerCase()) {
+      return false;
+    }
+    if (parsed.fields.file) {
+      const needle = parsed.fields.file.toLowerCase();
+      if (!row.usageFiles.some((file) => file.toLowerCase().includes(needle))) {
+        return false;
+      }
+    }
+    const locale = parsed.fields.locale;
+    if (locale) {
+      const cell = row.cells[locale];
+      if (!cell) {
+        return false;
+      }
+      if (parsed.fields.status === 'missing' && !cell.missing) {
+        return false;
+      }
+      if (
+        parsed.text &&
+        !(cell.value ?? '').toLocaleLowerCase().includes(parsed.text) &&
+        !row.key.toLocaleLowerCase().includes(parsed.text) &&
+        !row.sourceText.toLocaleLowerCase().includes(parsed.text)
+      ) {
+        return false;
+      }
+    } else if (parsed.fields.status === 'missing' && !row.missingLocales.length) {
+      return false;
+    }
+    if (parsed.fields.usage === '0' && row.usageCount !== 0) {
+      return false;
+    }
+    const haystack = row.searchText;
+    if (parsed.fields.source && !row.sourceText.toLocaleLowerCase().includes(parsed.fields.source.toLocaleLowerCase())) {
+      return false;
+    }
+    if (locale) {
+      return true;
+    }
+    return !parsed.text || haystack.includes(parsed.text);
   });
   const totalKeys = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalKeys / query.pageSize));
