@@ -19,7 +19,7 @@ const FAQSection = () => {
       title={translate('landing.faq.title', 'Frequently asked questions')}
       description={translate(
         'landing.faq.subtitle',
-        'This page is a LocaleKit project — edit these answers from Translation Projects.'
+        'This page is a Keykit project — edit these answers from Translation Projects.'
       )}
       className="border-t border-border/40 bg-muted/15"
     >

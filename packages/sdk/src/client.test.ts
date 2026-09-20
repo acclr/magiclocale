@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { LocaleKitClient } from './client';
+import { KeykitClient } from './client';
 import type { FetchLike } from './types';
 
 function createClient(fetch: FetchLike, overrides = {}) {
-  return new LocaleKitClient({
+  return new KeykitClient({
     baseUrl: 'http://localhost:3000/',
     projectId: 'proj_acme',
     ingestToken: 'test-token',
@@ -24,7 +24,7 @@ function ok(): Response {
   });
 }
 
-describe('LocaleKitClient', () => {
+describe('KeykitClient', () => {
   it('returns default text synchronously and pushes only on flush', async () => {
     const fetch = vi.fn<FetchLike>().mockResolvedValue(ok());
     const client = createClient(fetch);

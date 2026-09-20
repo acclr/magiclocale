@@ -23,7 +23,7 @@ if (appUrl) {
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@localekit/sdk'],
+  transpilePackages: ['@keykit/sdk'],
   images: {
     remotePatterns: [
       {

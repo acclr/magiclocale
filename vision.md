@@ -146,7 +146,7 @@ Both key types share:
 
 They then have type-specific configuration.
 
-The in-app product name is Keykit. The npm package remains `@localekit/sdk` until a dedicated package rename.
+The product and npm package name is Keykit (`@keykit/sdk`).
 
 ---
 

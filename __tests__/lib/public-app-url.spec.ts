@@ -14,16 +14,16 @@ describe('resolvePublicAppUrl', () => {
   });
 
   it('prefers NEXTAUTH_URL and strips a trailing slash', () => {
-    process.env.NEXTAUTH_URL = 'https://app.localekit.com/';
+    process.env.NEXTAUTH_URL = 'https://app.keykit.com/';
     process.env.APP_URL = 'https://ignored.example';
     process.env.VERCEL_URL = 'ignored.vercel.app';
-    expect(resolvePublicAppUrl()).toBe('https://app.localekit.com');
+    expect(resolvePublicAppUrl()).toBe('https://app.keykit.com');
   });
 
   it('uses VERCEL_URL when auth urls are empty', () => {
     process.env.NEXTAUTH_URL = '';
     process.env.APP_URL = '   ';
-    process.env.VERCEL_URL = 'localekit.vercel.app';
-    expect(resolvePublicAppUrl()).toBe('https://localekit.vercel.app');
+    process.env.VERCEL_URL = 'keykit.vercel.app';
+    expect(resolvePublicAppUrl()).toBe('https://keykit.vercel.app');
   });
 });

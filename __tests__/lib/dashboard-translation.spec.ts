@@ -24,7 +24,7 @@ describe('dashboard translation helpers', () => {
     ).toBe('{{count}} unpublished changes');
   });
 
-  it('interpolates values and registers the source key with LocaleKit', () => {
+  it('interpolates values and registers the source key with Keykit', () => {
     const seen: Array<[string, string]> = [];
     expect(
       translateDashboardKey(

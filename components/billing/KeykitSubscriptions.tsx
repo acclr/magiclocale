@@ -7,7 +7,7 @@ type BillingSubscription = {
   endDate: string;
 };
 
-const LocaleKitSubscriptions = ({
+const KeykitSubscriptions = ({
   subscriptions,
 }: {
   subscriptions: BillingSubscription[];
@@ -45,4 +45,4 @@ const LocaleKitSubscriptions = ({
   );
 };
 
-export default LocaleKitSubscriptions;
+export default KeykitSubscriptions;

@@ -9,12 +9,12 @@ const env = {
   redirectIfAuthenticated: '/dashboard',
   securityHeadersEnabled: process.env.SECURITY_HEADERS_ENABLED ?? false,
 
-  // SMTP configuration for NextAuth
+  // SMTP (e.g. Resend: smtp.resend.com, user resend, password = API key)
   smtp: {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT),
     user: process.env.SMTP_USER,
-    password: process.env.SMTP_PASSWORD,
+    password: process.env.SMTP_PASSWORD || process.env.RESEND_API_KEY,
     from: process.env.SMTP_FROM,
   },
 

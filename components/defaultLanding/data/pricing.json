@@ -1,28 +1,41 @@
 [
   {
-    "id": "starter",
-    "amount": "5",
+    "id": "free",
+    "amount": "0",
+    "currency": "USD",
+    "duration": "month",
+    "highlight": false,
+    "description": "Evaluate Keykit with a teammate on one project.",
+    "benefits": [
+      { "id": "seats", "text": "2 team members" },
+      { "id": "projects", "text": "1 project · 2 languages" },
+      { "id": "keys", "text": "1,000 source keys" }
+    ]
+  },
+  {
+    "id": "premium",
+    "amount": "12",
     "currency": "USD",
     "duration": "month",
     "highlight": true,
-    "description": "Standard usage for agencies and product teams localizing a handful of languages.",
+    "description": "For product teams — priced below Crowdin Pro and Lokalise entry tiers.",
     "benefits": [
-      { "id": "locales", "text": "Up to 4 languages per billed project" },
-      { "id": "envs", "text": "2 environments & 25 feature flags" },
+      { "id": "seats", "text": "10 team members · 5 projects" },
+      { "id": "locales", "text": "6 languages & 10,000 keys per project" },
       { "id": "workflow", "text": "Key discovery, AI fill, and review" }
     ]
   },
   {
     "id": "enterprise",
-    "amount": "50",
+    "amount": "49",
     "currency": "USD",
     "duration": "month",
     "highlight": false,
-    "description": "When a project needs five or more languages or higher usage limits.",
+    "description": "Unlimited projects, languages, keys, and seats for larger apps.",
     "benefits": [
-      { "id": "locales", "text": "Unlimited languages per billed project" },
-      { "id": "envs", "text": "3 environments & unlimited flags" },
-      { "id": "support", "text": "Same workflow, built for scale" }
+      { "id": "locales", "text": "Unlimited languages & source keys" },
+      { "id": "envs", "text": "5 environments & unlimited flags" },
+      { "id": "support", "text": "Priority AI translation usage" }
     ]
   }
 ]

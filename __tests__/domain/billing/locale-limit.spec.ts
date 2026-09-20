@@ -1,26 +1,26 @@
 import {
+  PREMIUM_MAX_ENVIRONMENTS,
+  PREMIUM_MAX_FLAGS,
+  PREMIUM_MAX_LOCALES,
   canAddEnvironment,
   canAddFlag,
   canAddProjectLocale,
   localeLimitMessage,
-  STARTER_MAX_ENVIRONMENTS,
-  STARTER_MAX_FLAGS,
-  STARTER_MAX_LOCALES,
 } from '../../../domain/billing';
 
-describe('locale limits', () => {
-  it('caps starter projects at four languages and leaves enterprise uncapped', () => {
-    expect(canAddProjectLocale(3, STARTER_MAX_LOCALES)).toBe(true);
-    expect(canAddProjectLocale(4, STARTER_MAX_LOCALES)).toBe(false);
+describe('billing limits', () => {
+  it('caps premium projects at six languages and leaves enterprise uncapped', () => {
+    expect(canAddProjectLocale(5, PREMIUM_MAX_LOCALES)).toBe(true);
+    expect(canAddProjectLocale(6, PREMIUM_MAX_LOCALES)).toBe(false);
     expect(canAddProjectLocale(20, null)).toBe(true);
-    expect(localeLimitMessage(STARTER_MAX_LOCALES)).toContain('Enterprise');
+    expect(localeLimitMessage(PREMIUM_MAX_LOCALES)).toContain('6');
   });
 
-  it('caps starter environments and flags', () => {
-    expect(canAddEnvironment(1, STARTER_MAX_ENVIRONMENTS)).toBe(true);
-    expect(canAddEnvironment(2, STARTER_MAX_ENVIRONMENTS)).toBe(false);
-    expect(canAddFlag(24, STARTER_MAX_FLAGS)).toBe(true);
-    expect(canAddFlag(25, STARTER_MAX_FLAGS)).toBe(false);
+  it('caps premium environments and flags', () => {
+    expect(canAddEnvironment(1, PREMIUM_MAX_ENVIRONMENTS)).toBe(true);
+    expect(canAddEnvironment(2, PREMIUM_MAX_ENVIRONMENTS)).toBe(false);
+    expect(canAddFlag(49, PREMIUM_MAX_FLAGS)).toBe(true);
+    expect(canAddFlag(50, PREMIUM_MAX_FLAGS)).toBe(false);
     expect(canAddFlag(100, null)).toBe(true);
   });
 });

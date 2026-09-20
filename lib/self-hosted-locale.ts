@@ -1,6 +1,6 @@
-import type { TranslationBundle } from '@localekit/sdk';
+import type { TranslationBundle } from '@keykit/sdk';
 
-export const LOCALEKIT_LOCALE_COOKIE = 'localekit-locale';
+export const KEYKIT_LOCALE_COOKIE = 'keykit-locale';
 export const SELF_HOSTED_REFRESH_INTERVAL_MS = 30_000;
 
 export type SelfHostedSdkConfig = {

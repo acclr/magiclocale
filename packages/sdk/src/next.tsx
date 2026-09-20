@@ -1,24 +1,24 @@
 import { cookies } from 'next/headers';
 import { after } from 'next/server';
 import { cache, type ReactNode } from 'react';
-import { LocaleKitClient } from './client';
+import { KeykitClient } from './client';
 import { loadTranslationBundle } from './load-bundle';
-import { LocaleKitNextClientProvider } from './next-client.js';
-import type { LocaleKitConfig, TranslationBundle } from './types';
+import { KeykitNextClientProvider } from './next-client.js';
+import type { KeykitConfig, TranslationBundle } from './types';
 
-export type LocaleKitNextConfig = LocaleKitConfig & {
+export type KeykitNextConfig = KeykitConfig & {
   cookieName?: string;
   defaultLocale?: string;
   locales?: readonly string[];
 };
 
-export type LocaleKitServerTranslator = {
+export type KeykitServerTranslator = {
   locale: string;
   translate: (key: string, defaultText: string) => string;
 };
 
-export function createLocaleKitNext(config: LocaleKitNextConfig) {
-  const cookieName = config.cookieName ?? 'localekit-locale';
+export function createKeykitNext(config: KeykitNextConfig) {
+  const cookieName = config.cookieName ?? 'keykit-locale';
   const sourceLocale = config.sourceLocale ?? 'en';
   const defaultLocale = config.defaultLocale ?? config.locale ?? sourceLocale;
   const allowedLocales = new Set(
@@ -43,7 +43,7 @@ export function createLocaleKitNext(config: LocaleKitNextConfig) {
       reportError(config, error);
     }
 
-    const client = new LocaleKitClient({
+    const client = new KeykitClient({
       ...config,
       locale,
       initialBundle,
@@ -52,23 +52,23 @@ export function createLocaleKitNext(config: LocaleKitNextConfig) {
     return { client, initialBundle, locale, flushScheduled: false };
   });
 
-  async function LocaleKitProvider({
+  async function KeykitProvider({
     children,
   }: Readonly<{ children: ReactNode }>) {
     const { initialBundle, locale } = await getRequestState();
     return (
-      <LocaleKitNextClientProvider
+      <KeykitNextClientProvider
         config={browserConfig}
         initialLocale={locale}
         initialBundle={initialBundle}
         cookieName={cookieName}
       >
         {children}
-      </LocaleKitNextClientProvider>
+      </KeykitNextClientProvider>
     );
   }
 
-  async function getLocaleKit(): Promise<LocaleKitServerTranslator> {
+  async function getKeykit(): Promise<KeykitServerTranslator> {
     const state = await getRequestState();
     if (!state.flushScheduled) {
       state.flushScheduled = true;
@@ -86,10 +86,10 @@ export function createLocaleKitNext(config: LocaleKitNextConfig) {
     };
   }
 
-  return { LocaleKitProvider, getLocaleKit };
+  return { KeykitProvider, getKeykit };
 }
 
-function toBrowserConfig(config: LocaleKitNextConfig): LocaleKitConfig {
+function toBrowserConfig(config: KeykitNextConfig): KeykitConfig {
   return {
     baseUrl: config.baseUrl,
     projectId: config.projectId,
@@ -107,11 +107,11 @@ function toBrowserConfig(config: LocaleKitNextConfig): LocaleKitConfig {
   };
 }
 
-function reportError(config: LocaleKitConfig, error: unknown): void {
+function reportError(config: KeykitConfig, error: unknown): void {
   const normalized = error instanceof Error ? error : new Error(String(error));
   if (config.onError) {
     config.onError(normalized);
     return;
   }
-  console.warn('[LocaleKit]', normalized.message);
+  console.warn('[Keykit]', normalized.message);
 }

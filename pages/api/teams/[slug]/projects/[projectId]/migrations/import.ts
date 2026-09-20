@@ -1,7 +1,10 @@
 import { flattenTranslationJson } from '@/domain/migrations';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
+import { enforceSourceKeyCapacity } from '@/lib/billing/enforce-limits';
+import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import {
   getEnvironmentService,
+  getProjectService,
   getTranslationService,
 } from '@/lib/translations';
 import {
@@ -34,6 +37,19 @@ export default createTeamProjectApiHandler({
         teamMember.team.id,
         projectId,
         env.id
+      );
+      const project = await getProjectService().get(
+        teamMember.team.id,
+        projectId
+      );
+      const entitlement = await getProjectEntitlement(
+        project,
+        teamMember.team.billingId
+      );
+      await enforceSourceKeyCapacity(
+        projectId,
+        entitlement,
+        keys.map((item) => item.key)
       );
       const data = await getTranslationService().syncFromSource(
         projectId,

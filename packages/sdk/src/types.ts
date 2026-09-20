@@ -84,7 +84,7 @@ export type FetchLike = (
   init?: RequestInit
 ) => Promise<Response>;
 
-export type LocaleKitConfig = {
+export type KeykitConfig = {
   baseUrl: string;
   projectId: string;
   ingestToken: string;
@@ -104,9 +104,9 @@ export type LocaleKitConfig = {
   onError?: (error: Error) => void;
 };
 
-export type ResolvedLocaleKitConfig = Required<
+export type ResolvedKeykitConfig = Required<
   Omit<
-    LocaleKitConfig,
+    KeykitConfig,
     | 'fetch'
     | 'onError'
     | 'initialBundle'

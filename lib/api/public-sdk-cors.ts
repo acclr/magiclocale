@@ -7,7 +7,7 @@ export type PublicSdkCorsPolicy = {
 export function getPublicSdkCorsPolicy(): PublicSdkCorsPolicy {
   return {
     allowedOrigins: uniqueOrigins([
-      process.env.LOCALEKIT_ALLOWED_ORIGIN ?? DEFAULT_ALLOWED_ORIGIN,
+      process.env.KEYKIT_ALLOWED_ORIGIN ?? DEFAULT_ALLOWED_ORIGIN,
       process.env.APP_URL,
     ]),
   };

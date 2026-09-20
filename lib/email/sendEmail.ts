@@ -1,16 +1,9 @@
 import nodemailer from 'nodemailer';
 
 import env from '../env';
+import { getSmtpTransportOptions } from './smtpTransport';
 
-const transporter = nodemailer.createTransport({
-  host: env.smtp.host,
-  port: env.smtp.port,
-  secure: false,
-  auth: {
-    user: env.smtp.user,
-    pass: env.smtp.password,
-  },
-});
+const transporter = nodemailer.createTransport(getSmtpTransportOptions());
 
 interface EmailData {
   to: string;

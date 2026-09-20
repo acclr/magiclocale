@@ -29,7 +29,7 @@ const HomeContent = () => {
         <title>
           {translate(
             'landing.meta.title',
-            'LocaleKit — product copy, localized'
+            'Keykit — product copy, localized'
           )}
         </title>
         <meta

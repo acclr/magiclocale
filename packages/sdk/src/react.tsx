@@ -10,10 +10,10 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { LocaleKitClient } from './client';
-import type { LocaleKitConfig, TranslationBundle } from './types';
+import { KeykitClient } from './client';
+import type { KeykitConfig, TranslationBundle } from './types';
 
-export type LocaleKitContextValue = {
+export type KeykitContextValue = {
   locale: string;
   isLoading: boolean;
   translate: (key: string, defaultText: string) => string;
@@ -27,12 +27,12 @@ export type LocaleKitContextValue = {
   identify: (context: import('./types').FlagEvaluationContext) => void;
 };
 
-export const LocaleKitContext = createContext<LocaleKitContextValue | null>(
+export const KeykitContext = createContext<KeykitContextValue | null>(
   null
 );
 
-export type LocaleKitProviderProps = {
-  config: LocaleKitConfig;
+export type KeykitProviderProps = {
+  config: KeykitConfig;
   initialLocale?: string;
   initialBundle?: TranslationBundle;
   cookieName?: string;
@@ -40,20 +40,20 @@ export type LocaleKitProviderProps = {
   children: ReactNode;
 };
 
-export function LocaleKitProvider({
+export function KeykitProvider({
   config,
   initialLocale,
   initialBundle,
-  cookieName = 'localekit-locale',
+  cookieName = 'keykit-locale',
   onServerRefresh,
   children,
-}: LocaleKitProviderProps) {
-  const clientRef = useRef<LocaleKitClient | null>(null);
+}: KeykitProviderProps) {
+  const clientRef = useRef<KeykitClient | null>(null);
   const [, setRevision] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!clientRef.current) {
-    clientRef.current = new LocaleKitClient({
+    clientRef.current = new KeykitClient({
       ...config,
       locale: initialLocale ?? config.locale ?? config.sourceLocale ?? 'en',
       initialBundle: initialBundle ?? config.initialBundle,
@@ -123,7 +123,7 @@ export function LocaleKitProvider({
       client.identify(context),
     [client]
   );
-  const value = useMemo<LocaleKitContextValue>(
+  const value = useMemo<KeykitContextValue>(
     () => ({
       locale,
       isLoading,
@@ -147,16 +147,16 @@ export function LocaleKitProvider({
   );
 
   return (
-    <LocaleKitContext.Provider value={value}>
+    <KeykitContext.Provider value={value}>
       {children}
-    </LocaleKitContext.Provider>
+    </KeykitContext.Provider>
   );
 }
 
-export function useLocaleKit(): LocaleKitContextValue {
-  const context = useContext(LocaleKitContext);
+export function useKeykit(): KeykitContextValue {
+  const context = useContext(KeykitContext);
   if (!context) {
-    throw new Error('useLocaleKit must be used inside LocaleKitProvider.');
+    throw new Error('useKeykit must be used inside KeykitProvider.');
   }
   return context;
 }
@@ -165,14 +165,14 @@ export function useFlag(
   key: string,
   fallback: boolean | import('./types').FlagValue = false
 ) {
-  const { isEnabled, getValue } = useLocaleKit();
+  const { isEnabled, getValue } = useKeykit();
   if (typeof fallback === 'boolean') {
     return isEnabled(key, fallback);
   }
   return getValue(key, fallback);
 }
 
-export { LocaleKitProvider as FlagProvider };
+export { KeykitProvider as FlagProvider };
 
 function persistLocale(cookieName: string, locale: string): void {
   document.cookie =

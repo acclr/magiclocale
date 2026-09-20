@@ -1,4 +1,4 @@
-import { LocaleKitProvider, useLocaleKit } from '@localekit/sdk/react';
+import { KeykitProvider, useKeykit } from '@keykit/sdk/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
@@ -25,13 +25,13 @@ function loadDashboardLocale(): Promise<DashboardLocalePageProps> {
 }
 
 function ConnectedDashboardI18n({ children }: { children: ReactNode }) {
-  const localeKit = useLocaleKit();
+  const keykit = useKeykit();
   const value = useMemo<DashboardI18n>(
     () => ({
-      locale: localeKit.locale,
-      translate: localeKit.translate,
+      locale: keykit.locale,
+      translate: keykit.translate,
     }),
-    [localeKit]
+    [keykit]
   );
 
   return (
@@ -63,12 +63,12 @@ export function DashboardLocaleProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <LocaleKitProvider
+    <KeykitProvider
       config={dashboard.config}
       initialLocale={dashboard.locale}
       initialBundle={dashboard.initialBundle ?? undefined}
     >
       <ConnectedDashboardI18n>{children}</ConnectedDashboardI18n>
-    </LocaleKitProvider>
+    </KeykitProvider>
   );
 }

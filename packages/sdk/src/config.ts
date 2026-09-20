@@ -1,8 +1,8 @@
-import type { LocaleKitConfig, ResolvedLocaleKitConfig } from './types';
+import type { KeykitConfig, ResolvedKeykitConfig } from './types';
 
 export function resolveConfig(
-  config: LocaleKitConfig
-): ResolvedLocaleKitConfig {
+  config: KeykitConfig
+): ResolvedKeykitConfig {
   assertNonEmpty(config.baseUrl, 'baseUrl');
   assertNonEmpty(config.projectId, 'projectId');
   assertNonEmpty(config.ingestToken, 'ingestToken');
@@ -15,7 +15,7 @@ export function resolveConfig(
     config.fetch ?? globalThis.fetch?.bind(globalThis);
   if (!fetchImplementation) {
     throw new Error(
-      'LocaleKit requires a fetch implementation in this runtime.'
+      'Keykit requires a fetch implementation in this runtime.'
     );
   }
 
@@ -43,14 +43,14 @@ export function resolveConfig(
     onError:
       config.onError ??
       ((error) => {
-        console.warn('[LocaleKit]', error.message);
+        console.warn('[Keykit]', error.message);
       }),
   };
 }
 
 function assertNonEmpty(value: string, name: string): void {
   if (value.trim().length === 0) {
-    throw new Error(`LocaleKit ${name} must not be empty.`);
+    throw new Error(`Keykit ${name} must not be empty.`);
   }
 }
 
@@ -61,7 +61,7 @@ function positiveInteger(
 ): number {
   const resolved = value ?? fallback;
   if (!Number.isInteger(resolved) || resolved <= 0) {
-    throw new Error(`LocaleKit ${name} must be a positive integer.`);
+    throw new Error(`Keykit ${name} must be a positive integer.`);
   }
   return resolved;
 }
@@ -73,7 +73,7 @@ function nonNegativeInteger(
 ): number {
   const resolved = value ?? fallback;
   if (!Number.isInteger(resolved) || resolved < 0) {
-    throw new Error(`LocaleKit ${name} must be a non-negative integer.`);
+    throw new Error(`Keykit ${name} must be a non-negative integer.`);
   }
   return resolved;
 }

@@ -14,7 +14,7 @@ import {
 import { useLandingI18n } from './LandingLocaleProvider';
 
 const previewRows = [
-  { key: 'landing.hero.title', en: 'LocaleKit', sv: 'LocaleKit' },
+  { key: 'landing.hero.title', en: 'Keykit', sv: 'Keykit' },
   {
     key: 'landing.hero.subtitle',
     en: 'Ship copy in every language',
@@ -38,11 +38,11 @@ const HeroSection = () => {
             <SparklesIcon className="size-3.5" />
             {translate(
               'landing.hero.badge',
-              'Live on LocaleKit — change this page from the dashboard'
+              'Live on Keykit — change this page from the dashboard'
             )}
           </Badge>
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
-            {translate('landing.hero.title', 'LocaleKit')}
+            {translate('landing.hero.title', 'Keykit')}
             <span className="block text-primary">
               {translate(
                 'landing.hero.headline-accent',

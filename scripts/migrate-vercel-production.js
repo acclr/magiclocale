@@ -4,7 +4,7 @@
  * Prerequisites (one-time):
  *   1. npm install   (installs the `vercel` CLI from devDependencies)
  *   2. npx vercel login
- *   3. npx vercel link   (choose your team + the magiclocale project)
+ *   3. npx vercel link   (choose your team + the Keykit project)
  *
  * Usage:
  *   npm run db:migrate:vercel

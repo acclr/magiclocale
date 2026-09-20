@@ -7,9 +7,14 @@ import {
   getPublicSdkCorsPolicy,
   isAllowedOrigin,
 } from '@/lib/api/public-sdk-cors';
+import { enforceSourceKeyCapacity } from '@/lib/billing/enforce-limits';
+import { getProjectEntitlement } from '@/lib/billing/entitlement';
+import { prisma } from '@/lib/prisma';
+import { ApiError } from '@/lib/errors';
 import {
   getEnvironmentService,
   getKeyCatalogService,
+  getProjectService,
   getTranslationService,
 } from '@/lib/translations';
 import { parseSourceKeyPayload } from '@/lib/translations/source-key-payload';
@@ -44,11 +49,12 @@ export default async function handler(
   }
 
   try {
-    const { environmentRef } = await authenticatePublicSdkApiRequest(
+    const auth = await authenticatePublicSdkApiRequest(
       req.headers.authorization,
       projectId,
       getSingleQueryValue(req.query.environment)
     );
+    const { environmentRef } = auth;
 
     const parsed = parseSourceKeyPayload(req.body);
     if (!parsed.success) {
@@ -64,6 +70,24 @@ export default async function handler(
       (item) => (item.type ?? 'translation') === 'translation'
     );
     const flags = parsed.keys.filter((item) => item.type === 'feature-flag');
+
+    const teamBillingId = await prisma.team.findUnique({
+      where: { id: auth.project.teamId },
+      select: { billingId: true },
+    });
+    const project = await getProjectService().get(
+      auth.project.teamId,
+      projectId
+    );
+    const entitlement = await getProjectEntitlement(
+      project,
+      teamBillingId?.billingId ?? null
+    );
+    await enforceSourceKeyCapacity(
+      projectId,
+      entitlement,
+      translations.map((item) => item.key)
+    );
 
     const result =
       translations.length > 0
@@ -100,6 +124,9 @@ export default async function handler(
     });
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
+      return res.status(error.status).json({ error: error.message });
+    }
+    if (error instanceof ApiError) {
       return res.status(error.status).json({ error: error.message });
     }
 

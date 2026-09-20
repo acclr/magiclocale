@@ -17,6 +17,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { recordMetric } from '@/lib/metrics';
 import { extractEmailDomain, isEmailAllowed } from '@/lib/email/utils';
 import { Invitation, Role } from '@prisma/client';
+import { enforceTeamMemberLimit } from '@/lib/billing/enforce-limits';
 import { countTeamMembers } from 'models/teamMember';
 import {
   acceptInvitationSchema,
@@ -76,6 +77,8 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
   };
 
   let invitation: undefined | Invitation = undefined;
+
+  await enforceTeamMemberLimit(teamMember.teamId, teamMember.team.billingId);
 
   // Invite via email
   if (sentViaEmail) {

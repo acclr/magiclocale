@@ -5,18 +5,18 @@ import {
   TranslationCache,
   type TranslationChangeListener,
 } from './translation-cache';
-import { HttpSourceKeyTransport, type LocaleKitTransport } from './transport';
+import { HttpSourceKeyTransport, type KeykitTransport } from './transport';
 import type {
   FlagEvaluationContext,
   FlagValue,
-  LocaleKitConfig,
+  KeykitConfig,
 } from './types';
 
-export class LocaleKitClient {
+export class KeykitClient {
   private readonly registry: SourceKeyRegistry;
   private readonly cache: TranslationCache;
   private readonly flags: FlagCache;
-  private readonly transport: LocaleKitTransport;
+  private readonly transport: KeykitTransport;
   private readonly refreshIntervalMs: number;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private readonly onPageHide = () => {
@@ -34,7 +34,7 @@ export class LocaleKitClient {
   };
   private readonly onError: (error: Error) => void;
 
-  constructor(config: LocaleKitConfig, transport?: LocaleKitTransport) {
+  constructor(config: KeykitConfig, transport?: KeykitTransport) {
     const resolved = resolveConfig(config);
     this.onError = resolved.onError;
     this.refreshIntervalMs = resolved.refreshIntervalMs;
@@ -82,7 +82,7 @@ export class LocaleKitClient {
   async setLocale(locale: string): Promise<void> {
     const normalized = locale.trim();
     if (!normalized) {
-      throw new Error('LocaleKit locale must not be empty.');
+      throw new Error('Keykit locale must not be empty.');
     }
     await this.refreshTranslations(normalized);
     this.cache.setLocale(normalized);

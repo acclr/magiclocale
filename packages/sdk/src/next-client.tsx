@@ -1,18 +1,18 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
-import { LocaleKitProvider, type LocaleKitProviderProps } from './react';
+import { KeykitProvider, type KeykitProviderProps } from './react';
 
-export type LocaleKitNextClientProviderProps = Omit<
-  LocaleKitProviderProps,
+export type KeykitNextClientProviderProps = Omit<
+  KeykitProviderProps,
   'onServerRefresh'
 >;
 
-export function LocaleKitNextClientProvider(
-  props: LocaleKitNextClientProviderProps
+export function KeykitNextClientProvider(
+  props: KeykitNextClientProviderProps
 ) {
   const router = useRouter();
   return (
-    <LocaleKitProvider {...props} onServerRefresh={() => router.refresh()} />
+    <KeykitProvider {...props} onServerRefresh={() => router.refresh()} />
   );
 }

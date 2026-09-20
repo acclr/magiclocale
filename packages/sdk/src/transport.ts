@@ -1,6 +1,6 @@
 import type {
   FlagPayload,
-  ResolvedLocaleKitConfig,
+  ResolvedKeykitConfig,
   SourceKey,
   TranslationBundle,
 } from './types';
@@ -9,13 +9,13 @@ export interface SourceKeyTransport {
   push(keys: SourceKey[], keepalive?: boolean): Promise<void>;
 }
 
-export interface LocaleKitTransport extends SourceKeyTransport {
+export interface KeykitTransport extends SourceKeyTransport {
   pull(locale: string): Promise<TranslationBundle>;
   pullFlags?(): Promise<FlagPayload>;
 }
 
-export class HttpSourceKeyTransport implements LocaleKitTransport {
-  constructor(private readonly config: ResolvedLocaleKitConfig) {}
+export class HttpSourceKeyTransport implements KeykitTransport {
+  constructor(private readonly config: ResolvedKeykitConfig) {}
 
   async push(keys: SourceKey[], keepalive = false): Promise<void> {
     const endpoint =
@@ -34,7 +34,7 @@ export class HttpSourceKeyTransport implements LocaleKitTransport {
 
     if (!response.ok) {
       throw new Error(
-        `LocaleKit ingest failed (${response.status}): ${await readError(
+        `Keykit ingest failed (${response.status}): ${await readError(
           response
         )}`
       );
@@ -55,7 +55,7 @@ export class HttpSourceKeyTransport implements LocaleKitTransport {
 
     if (!response.ok) {
       throw new Error(
-        `LocaleKit translation refresh failed (${
+        `Keykit translation refresh failed (${
           response.status
         }): ${await readError(response)}`
       );
@@ -77,7 +77,7 @@ export class HttpSourceKeyTransport implements LocaleKitTransport {
 
     if (!response.ok) {
       throw new Error(
-        `LocaleKit flag refresh failed (${
+        `Keykit flag refresh failed (${
           response.status
         }): ${await readError(response)}`
       );

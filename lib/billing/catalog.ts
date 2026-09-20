@@ -1,27 +1,38 @@
 import 'server-only';
 
-import { LOCALEKIT_PLANS, type BillingScope } from '../../domain/billing';
+import {
+  KEYKIT_PLANS,
+  type BillingScope,
+  type KeykitPlanId,
+} from '../../domain/billing';
 import { getByCustomerId } from '../../models/subscription';
 import {
   getEntitlementForCustomer,
-  getLocaleKitStripePriceIds,
+  getKeykitStripePriceIds,
   planIdForPriceId,
 } from './entitlement';
+
+const CATALOG_PLAN_ORDER: KeykitPlanId[] = ['free', 'premium', 'enterprise'];
 
 export async function getBillingCatalog(
   customerId: string | null | undefined,
   billingScope: BillingScope
 ) {
   const entitlement = await getEntitlementForCustomer(customerId, billingScope);
-  const priceIds = getLocaleKitStripePriceIds();
+  const priceIds = getKeykitStripePriceIds();
   const subscriptions = customerId ? await getByCustomerId(customerId) : [];
 
   return {
     entitlement,
-    plans: (['starter', 'enterprise'] as const).map((id) => ({
-      ...LOCALEKIT_PLANS[id],
-      priceId: priceIds[id] || null,
-      current: entitlement.planId === id && entitlement.subscribed,
+    plans: CATALOG_PLAN_ORDER.map((id) => ({
+      ...KEYKIT_PLANS[id],
+      priceId:
+        id === 'free'
+          ? null
+          : priceIds[id as 'premium' | 'enterprise'] || null,
+      current:
+        entitlement.planId === id &&
+        (id === 'free' || entitlement.subscribed),
     })),
     subscriptions: subscriptions
       .filter((subscription) => subscription.active)
@@ -30,7 +41,7 @@ export async function getBillingCatalog(
         planId: planIdForPriceId(subscription.priceId),
         planName: (() => {
           const planId = planIdForPriceId(subscription.priceId);
-          return planId ? LOCALEKIT_PLANS[planId].name : 'LocaleKit';
+          return planId ? KEYKIT_PLANS[planId].name : 'Keykit';
         })(),
       })),
   };

@@ -1,13 +1,13 @@
-import LocaleKitPricing from '@/components/billing/LocaleKitPricing';
-import LocaleKitSubscriptions from '@/components/billing/LocaleKitSubscriptions';
+import KeykitPricing from '@/components/billing/KeykitPricing';
+import KeykitSubscriptions from '@/components/billing/KeykitSubscriptions';
 import LinkToPortal from '@/components/billing/LinkToPortal';
 import { Card } from '@/components/shared';
 import { defaultHeaders } from '@/lib/common';
 import fetcher from '@/lib/fetcher';
 import type {
   BillingScope,
-  LocaleKitEntitlement,
-  LocaleKitPlan,
+  KeykitEntitlement,
+  KeykitPlan,
 } from '@/domain/billing';
 import type { ApiResponse } from 'types';
 import useCanAccess from 'hooks/useCanAccess';
@@ -17,7 +17,7 @@ import { useState } from 'react';
 import toast from 'react-hot-toast';
 import useSWR from 'swr';
 
-type CatalogPlan = LocaleKitPlan & {
+type CatalogPlan = KeykitPlan & {
   priceId: string | null;
   current: boolean;
 };
@@ -26,7 +26,7 @@ type ProjectBillingResponse = {
   billingScope: BillingScope;
   hasBillingCustomer: boolean;
   projectId: string;
-  entitlement: LocaleKitEntitlement;
+  entitlement: KeykitEntitlement;
   plans: CatalogPlan[];
   subscriptions: Array<{
     id: string;
@@ -159,10 +159,10 @@ const ProjectBillingSettings = ({
             <LinkToPortal projectId={projectId} team={team} />
           )}
           {billing.subscriptions.length > 0 && (
-            <LocaleKitSubscriptions subscriptions={billing.subscriptions} />
+            <KeykitSubscriptions subscriptions={billing.subscriptions} />
           )}
           {canBill && (
-            <LocaleKitPricing plans={billing.plans} projectId={projectId} />
+            <KeykitPricing plans={billing.plans} projectId={projectId} />
           )}
         </>
       )}

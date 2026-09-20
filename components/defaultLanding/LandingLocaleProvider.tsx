@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { LocaleKitProvider, useLocaleKit } from '@localekit/sdk/react';
+import { KeykitProvider, useKeykit } from '@keykit/sdk/react';
 
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
 
@@ -51,16 +51,16 @@ function BridgedLandingI18n({
   locales: string[];
   children: ReactNode;
 }) {
-  const localeKit = useLocaleKit();
+  const keykit = useKeykit();
   const value = useMemo<LandingI18n>(
     () => ({
-      locale: localeKit.locale,
+      locale: keykit.locale,
       locales,
-      isLoading: localeKit.isLoading,
-      translate: localeKit.translate,
-      setLocale: localeKit.setLocale,
+      isLoading: keykit.isLoading,
+      translate: keykit.translate,
+      setLocale: keykit.setLocale,
     }),
-    [locales, localeKit]
+    [locales, keykit]
   );
 
   return (
@@ -86,7 +86,7 @@ export function LandingLocaleProvider({
   }
 
   return (
-    <LocaleKitProvider
+    <KeykitProvider
       config={landing.config}
       initialLocale={landing.locale}
       initialBundle={landing.initialBundle ?? undefined}
@@ -94,7 +94,7 @@ export function LandingLocaleProvider({
       <BridgedLandingI18n locales={landing.locales}>
         {children}
       </BridgedLandingI18n>
-    </LocaleKitProvider>
+    </KeykitProvider>
   );
 }
 

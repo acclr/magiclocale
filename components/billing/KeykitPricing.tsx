@@ -3,20 +3,20 @@ import { Button } from '@/components/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import useTeam from 'hooks/useTeam';
-import type { LocaleKitPlan } from '@/domain/billing';
+import type { KeykitPlan } from '@/domain/billing';
 import { CheckIcon } from '@heroicons/react/24/outline';
 
-type CatalogPlan = LocaleKitPlan & {
+type CatalogPlan = KeykitPlan & {
   priceId: string | null;
   current: boolean;
 };
 
-type LocaleKitPricingProps = {
+type KeykitPricingProps = {
   plans: CatalogPlan[];
   projectId?: string;
 };
 
-const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
+const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
   const { team } = useTeam();
   const { t } = useTranslation('common');
 
@@ -43,7 +43,7 @@ const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
 
   return (
     <section className="py-3">
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {plans.map((plan) => (
           <div
             className="relative rounded-md bg-card"
@@ -54,7 +54,9 @@ const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
                 {plan.name}
               </h3>
               <p className="mt-2 text-3xl font-semibold">
-                ${plan.amountCents / 100}
+                {plan.amountCents === 0
+                  ? t('plan-price-free')
+                  : `$${plan.amountCents / 100}`}
                 <span className="text-base font-normal text-gray-500">
                   {' '}
                   / {plan.interval}
@@ -72,6 +74,16 @@ const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
                   className="rounded-full"
                 >
                   {t('current')}
+                </Button>
+              ) : plan.id === 'free' ? (
+                <Button
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  disabled
+                  className="rounded-full"
+                >
+                  {t('plan-included')}
                 </Button>
               ) : (
                 <Button
@@ -110,4 +122,4 @@ const LocaleKitPricing = ({ plans, projectId }: LocaleKitPricingProps) => {
   );
 };
 
-export default LocaleKitPricing;
+export default KeykitPricing;

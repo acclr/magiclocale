@@ -27,6 +27,7 @@ import { prisma } from '@/lib/prisma';
 import { isAuthProviderEnabled } from '@/lib/auth';
 import { validateRecaptcha } from '@/lib/recaptcha';
 import { sendMagicLink } from '@/lib/email/sendMagicLink';
+import { getSmtpTransportOptions } from '@/lib/email/smtpTransport';
 import {
   clearLoginAttempts,
   exceededLoginAttemptsThreshold,
@@ -218,14 +219,7 @@ if (isAuthProviderEnabled('idp-initiated')) {
 if (isAuthProviderEnabled('email')) {
   providers.push(
     EmailProvider({
-      server: {
-        host: env.smtp.host,
-        port: env.smtp.port,
-        auth: {
-          user: env.smtp.user,
-          pass: env.smtp.password,
-        },
-      },
+      server: getSmtpTransportOptions(),
       from: env.smtp.from,
       maxAge: 1 * 60 * 60, // 1 hour
       sendVerificationRequest: async ({ identifier, url }) => {

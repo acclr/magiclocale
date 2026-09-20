@@ -2,7 +2,7 @@
   {
     "id": "discovery",
     "name": "Automatic key discovery",
-    "description": "Call translate(key, defaultText) in your app. LocaleKit ingests new keys as your team ships features — no spreadsheet handoffs."
+    "description": "Call translate(key, defaultText) in your app. Keykit ingests new keys as your team ships features — no spreadsheet handoffs."
   },
   {
     "id": "dashboard",
@@ -11,7 +11,7 @@
   },
   {
     "id": "sdk",
-    "name": "@localekit/sdk",
+    "name": "@keykit/sdk",
     "description": "Lightweight client for web and Next.js. Load bundles at runtime, switch locales, and keep flags in sync with the same project."
   },
   {
@@ -27,6 +27,6 @@
   {
     "id": "billing",
     "name": "Flexible billing",
-    "description": "Bill on a team retainer or per project — Starter for most teams, Enterprise when you need more languages and scale."
+    "description": "Bill on a team retainer or per project — Free to start, Premium for most teams, Enterprise for unlimited scale."
   }
 ]

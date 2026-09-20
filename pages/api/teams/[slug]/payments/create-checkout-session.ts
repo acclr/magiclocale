@@ -10,7 +10,7 @@ import {
 } from '@/lib/stripe';
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
-import { getLocaleKitStripePriceIds } from '@/lib/billing/entitlement';
+import { getKeykitStripePriceIds } from '@/lib/billing/entitlement';
 import { getProjectService } from '@/lib/translations';
 import { checkoutSessionSchema, validateWithSchema } from '@/lib/zod';
 
@@ -45,11 +45,11 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
 
   const teamMember = await throwIfNoTeamAccess(req, res);
   throwIfNotAllowed(teamMember, 'team_payments', 'create');
-  const allowedPrices = Object.values(getLocaleKitStripePriceIds()).filter(
+  const allowedPrices = Object.values(getKeykitStripePriceIds()).filter(
     Boolean
   );
   if (!allowedPrices.includes(price)) {
-    throw new ApiError(422, 'Unknown LocaleKit price.');
+    throw new ApiError(422, 'Unknown Keykit price.');
   }
   const session = await getSession(req, res);
 

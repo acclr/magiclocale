@@ -27,10 +27,10 @@ const PricingSection = () => {
       title={translate('landing.pricing.title', 'Simple monthly pricing')}
       description={translate(
         'landing.pricing.subtitle',
-        'Start on Starter. Move to Enterprise when you need more languages or headroom.'
+        'Start free with a teammate. Upgrade to Premium or Enterprise as you grow.'
       )}
     >
-      <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+      <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
         {plans.map((plan) => (
           <Card
             key={plan.id}

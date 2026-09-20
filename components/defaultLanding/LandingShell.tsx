@@ -91,7 +91,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-heading text-sm font-semibold">
-              {translate('landing.nav.brand', 'LocaleKit')}
+              {translate('landing.nav.brand', 'Keykit')}
             </p>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
               {translate(
@@ -115,7 +115,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
         <p className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
           {translate(
             'landing.footer.note',
-            'This marketing site is powered by LocaleKit — edit any string from Translation Projects.'
+            'This marketing site is powered by Keykit — edit any string from Translation Projects.'
           )}
         </p>
       </footer>

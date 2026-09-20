@@ -14,8 +14,8 @@ export async function getDashboardLocalePageProps(context: {
   return getSelfHostedLocalePageProps({
     req: context.req,
     appUrl: process.env.APP_URL ?? '',
-    projectId: process.env.LOCALEKIT_DASHBOARD_PROJECT_ID,
-    ingestToken: process.env.LOCALEKIT_DASHBOARD_API_KEY,
-    sourceLocale: process.env.LOCALEKIT_DASHBOARD_SOURCE_LOCALE,
+    projectId: process.env.KEYKIT_DASHBOARD_PROJECT_ID,
+    ingestToken: process.env.KEYKIT_DASHBOARD_API_KEY,
+    sourceLocale: process.env.KEYKIT_DASHBOARD_SOURCE_LOCALE,
   });
 }

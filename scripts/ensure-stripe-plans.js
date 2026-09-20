@@ -7,34 +7,41 @@ async function ensurePlans() {
   }
 
   const stripe = new Stripe(secret);
-  const starter = await ensurePlan(stripe, {
-    planId: 'starter',
-    name: 'LocaleKit Starter',
-    description: '$5/month for standard usage, up to 4 languages per project.',
-    amount: 500,
+  const premium = await ensurePlan(stripe, {
+    planId: 'premium',
+    name: 'Keykit Premium',
+    description:
+      '$12/month — 10 seats, 5 projects, 6 languages, 10k keys per project.',
+    amount: 1200,
   });
   const enterprise = await ensurePlan(stripe, {
     planId: 'enterprise',
-    name: 'LocaleKit Enterprise',
-    description: '$50/month for 5+ languages and higher usage.',
-    amount: 5000,
+    name: 'Keykit Enterprise',
+    description: '$49/month — unlimited projects, languages, keys, and seats.',
+    amount: 4900,
   });
 
   console.log('Add these to .env:');
-  console.log(`STRIPE_STARTER_PRICE_ID=${starter}`);
+  console.log(`STRIPE_PREMIUM_PRICE_ID=${premium}`);
   console.log(`STRIPE_ENTERPRISE_PRICE_ID=${enterprise}`);
+  console.log(
+    '(STRIPE_STARTER_PRICE_ID is still read as a fallback alias for Premium.)'
+  );
 }
 
 async function ensurePlan(stripe, input) {
   const products = await stripe.products.list({ active: true, limit: 100 });
   let product = products.data.find(
-    (item) => item.metadata?.localekit_plan === input.planId
+    (item) =>
+      item.metadata?.keykit_plan === input.planId ||
+      (input.planId === 'premium' &&
+        item.metadata?.keykit_plan === 'starter')
   );
   if (!product) {
     product = await stripe.products.create({
       name: input.name,
       description: input.description,
-      metadata: { localekit_plan: input.planId },
+      metadata: { keykit_plan: input.planId },
     });
   }
 
@@ -58,7 +65,7 @@ async function ensurePlan(stripe, input) {
     currency: 'usd',
     unit_amount: input.amount,
     recurring: { interval: 'month' },
-    metadata: { localekit_plan: input.planId },
+    metadata: { keykit_plan: input.planId },
   });
   return created.id;
 }

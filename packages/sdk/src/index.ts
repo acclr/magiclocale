@@ -1,20 +1,20 @@
-import { LocaleKitClient } from './client';
-import type { LocaleKitConfig } from './types';
+import { KeykitClient } from './client';
+import type { KeykitConfig } from './types';
 
-let defaultClient: LocaleKitClient | null = null;
+let defaultClient: KeykitClient | null = null;
 
-export function configureLocaleKit(
-  config: LocaleKitConfig
-): LocaleKitClient {
+export function configureKeykit(
+  config: KeykitConfig
+): KeykitClient {
   defaultClient?.dispose();
-  defaultClient = new LocaleKitClient(config);
+  defaultClient = new KeykitClient(config);
   return defaultClient;
 }
 
 export default function translate(key: string, defaultText: string): string {
   if (!defaultClient) {
     throw new Error(
-      'LocaleKit is not configured. Call configureLocaleKit() before translate().'
+      'Keykit is not configured. Call configureKeykit() before translate().'
     );
   }
   return defaultClient.translate(key, defaultText);
@@ -57,16 +57,16 @@ export function subscribe(listener: () => void): () => void {
   return requireClient().subscribe(listener);
 }
 
-function requireClient(): LocaleKitClient {
+function requireClient(): KeykitClient {
   if (!defaultClient) {
     throw new Error(
-      'LocaleKit is not configured. Call configureLocaleKit() first.'
+      'Keykit is not configured. Call configureKeykit() first.'
     );
   }
   return defaultClient;
 }
 
-export { LocaleKitClient } from './client';
+export { KeykitClient } from './client';
 export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
 export type {
@@ -75,7 +75,7 @@ export type {
   FlagPayload,
   FlagSnapshot,
   FlagValue,
-  LocaleKitConfig,
+  KeykitConfig,
   SourceKey,
   TranslationBundle,
 } from './types';

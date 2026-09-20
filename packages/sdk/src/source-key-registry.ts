@@ -1,4 +1,4 @@
-import type { ResolvedLocaleKitConfig, SourceKey } from './types';
+import type { ResolvedKeykitConfig, SourceKey } from './types';
 import type { SourceKeyTransport } from './transport';
 
 export class SourceKeyRegistry {
@@ -10,7 +10,7 @@ export class SourceKeyRegistry {
   constructor(
     private readonly transport: SourceKeyTransport,
     private readonly config: Pick<
-      ResolvedLocaleKitConfig,
+      ResolvedKeykitConfig,
       'batchSize' | 'debounceMs' | 'maxRetries' | 'retryDelayMs' | 'onError'
     >
   ) {}
@@ -38,7 +38,7 @@ export class SourceKeyRegistry {
 
   enqueueFlag(key: string, usage?: SourceKey['usage']): void {
     if (typeof key !== 'string' || key.trim().length === 0) {
-      throw new Error('LocaleKit flag key must not be empty.');
+      throw new Error('Keykit flag key must not be empty.');
     }
     const normalizedKey = key.trim();
     const fingerprint = usageFingerprint(usage);
@@ -131,7 +131,7 @@ export class SourceKeyRegistry {
         }
       }
     }
-    throw lastError ?? new Error('LocaleKit ingest failed.');
+    throw lastError ?? new Error('Keykit ingest failed.');
   }
 
   private schedule(): void {
@@ -160,10 +160,10 @@ function usageFingerprint(usage?: SourceKey['usage']): string {
 
 function validateSourceKey(key: string, sourceText: string): void {
   if (typeof key !== 'string' || key.trim().length === 0) {
-    throw new Error('LocaleKit translation key must not be empty.');
+    throw new Error('Keykit translation key must not be empty.');
   }
   if (typeof sourceText !== 'string' || sourceText.trim().length === 0) {
-    throw new Error('LocaleKit default text must not be empty.');
+    throw new Error('Keykit default text must not be empty.');
   }
 }
 

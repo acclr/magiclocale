@@ -1,51 +1,44 @@
 import {
-  customerIdForScope,
-  resolveLocaleKitPlan,
-  LOCALEKIT_PLANS,
+  KEYKIT_PLANS,
+  FREE_MAX_TEAM_MEMBERS,
+  resolveKeykitPlan,
 } from '../../../domain/billing';
 
 const catalog = {
-  starter: 'price_starter',
+  premium: 'price_premium',
   enterprise: 'price_enterprise',
 };
 
-describe('billing scope and plans', () => {
-  it('uses the project Stripe customer only for per-project billing', () => {
-    expect(customerIdForScope('team', 'cus_team', 'cus_project')).toBe(
-      'cus_team'
-    );
-    expect(customerIdForScope('project', 'cus_team', 'cus_project')).toBe(
-      'cus_project'
-    );
-    expect(customerIdForScope('project', 'cus_team', null)).toBeNull();
+describe('resolveKeykitPlan', () => {
+  it('defaults to the free tier without a subscription', () => {
+    expect(resolveKeykitPlan([], catalog, 'team')).toMatchObject({
+      planId: 'free',
+      subscribed: false,
+      maxTeamMembers: FREE_MAX_TEAM_MEMBERS,
+      maxProjects: KEYKIT_PLANS.free.maxProjects,
+    });
   });
 
-  it('resolves enterprise over starter for the billed customer', () => {
+  it('resolves enterprise over premium for the billed customer', () => {
     expect(
-      resolveLocaleKitPlan(
-        ['price_starter', 'price_enterprise'],
+      resolveKeykitPlan(
+        ['price_premium', 'price_enterprise'],
         catalog,
-        'project'
+        'team'
       )
     ).toMatchObject({
       planId: 'enterprise',
       subscribed: true,
-      billingScope: 'project',
-      maxLocales: LOCALEKIT_PLANS.enterprise.maxLocales,
-      maxEnvironments: LOCALEKIT_PLANS.enterprise.maxEnvironments,
-      maxFlags: LOCALEKIT_PLANS.enterprise.maxFlags,
+      maxLocales: KEYKIT_PLANS.enterprise.maxLocales,
+      maxEnvironments: KEYKIT_PLANS.enterprise.maxEnvironments,
+      maxFlags: KEYKIT_PLANS.enterprise.maxFlags,
     });
     expect(
-      resolveLocaleKitPlan(['price_starter'], catalog, 'team')
+      resolveKeykitPlan(['price_premium'], catalog, 'team')
     ).toMatchObject({
-      planId: 'starter',
+      planId: 'premium',
       subscribed: true,
-      billingScope: 'team',
-    });
-    expect(resolveLocaleKitPlan([], catalog, 'team')).toMatchObject({
-      planId: 'starter',
-      subscribed: false,
-      billingScope: 'team',
+      maxLocales: KEYKIT_PLANS.premium.maxLocales,
     });
   });
 });
