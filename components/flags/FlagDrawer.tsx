@@ -282,7 +282,9 @@ const FlagDrawer = ({
               />
               <label className="form-control md:col-span-2">
                 <span className="label-text text-xs">
-                  Rule rollout {rule.rolloutPercentage ?? 100}%
+                  {t('flag-rule-rollout', {
+                    percent: rule.rolloutPercentage ?? 100,
+                  })}
                 </span>
                 <input
                   className="range range-sm"
@@ -320,7 +322,7 @@ const FlagDrawer = ({
                     }
                     type="button"
                   >
-                    Up
+                    {t('reorder-up')}
                   </button>
                   <button
                     className="btn btn-ghost btn-xs"
@@ -335,7 +337,7 @@ const FlagDrawer = ({
                     }
                     type="button"
                   >
-                    Down
+                    {t('reorder-down')}
                   </button>
                   <button
                     className="btn btn-ghost btn-xs text-error"
@@ -356,7 +358,7 @@ const FlagDrawer = ({
 
         {canEdit ? (
           <label className="form-control">
-            <span className="label-text">Change reason (required in production)</span>
+            <span className="label-text">{t('production-change-reason')}</span>
             <input
               className="input input-bordered input-sm"
               onChange={(event) => setReason(event.target.value)}

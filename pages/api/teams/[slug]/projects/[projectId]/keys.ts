@@ -1,10 +1,6 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getKeyCatalogService } from '@/lib/translations';
-import {
-  keyCatalogQuerySchema,
-  translationProjectParamsSchema,
-  validateWithSchema,
-} from '@/lib/zod';
+import { keyCatalogQuerySchema, validateWithSchema } from '@/lib/zod';
 
 export default createTeamProjectApiHandler({
   GET: {

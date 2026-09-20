@@ -330,6 +330,8 @@ function Tree({
   nodes: ArchitectureNode[];
   base: string;
 }) {
+  const { t } = useTranslation('common');
+
   return (
     <ul className="space-y-3">
       {nodes.map((node) => (
@@ -339,14 +341,14 @@ function Tree({
             {node.translations.map((item) => (
               <li key={item.id}>
                 <Link className="link link-hover" href={`${base}/keys/${item.id}`}>
-                  translation · {item.key}
+                  {t('architecture-translation-key', { key: item.key })}
                 </Link>
               </li>
             ))}
             {node.flags.map((item) => (
               <li key={item.id}>
                 <Link className="link link-hover" href={`${base}/keys/${item.id}`}>
-                  flag · {item.key}
+                  {t('architecture-flag-key', { key: item.key })}
                 </Link>
               </li>
             ))}
