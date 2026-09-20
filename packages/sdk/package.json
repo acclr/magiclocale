@@ -1,6 +1,6 @@
 {
   "name": "@keykithq/sdk",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Keykit client SDK — discover translation keys and load bundles from Keykit",
   "type": "module",
   "main": "./dist/index.cjs",
