@@ -1,4 +1,4 @@
-import { KeykitProvider, useKeykit } from '@keykit/sdk/react';
+import { KeykitProvider, useKeykit } from '@keykithq/sdk/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {

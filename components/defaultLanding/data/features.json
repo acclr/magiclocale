@@ -11,7 +11,7 @@
   },
   {
     "id": "sdk",
-    "name": "@keykit/sdk",
+    "name": "@keykithq/sdk",
     "description": "Lightweight client for web and Next.js. Load bundles at runtime, switch locales, and keep flags in sync with the same project."
   },
   {

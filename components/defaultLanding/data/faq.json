@@ -12,6 +12,6 @@
   {
     "id": "sdk",
     "question": "How do customer apps get translations?",
-    "answer": "They install @keykit/sdk, point it at a project API key, and call translate(key, defaultText). New keys are ingested automatically."
+    "answer": "They install @keykithq/sdk, point it at a project API key, and call translate(key, defaultText). New keys are ingested automatically."
   }
 ]

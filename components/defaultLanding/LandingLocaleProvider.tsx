@@ -1,5 +1,5 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
-import { KeykitProvider, useKeykit } from '@keykit/sdk/react';
+import { KeykitProvider, useKeykit } from '@keykithq/sdk/react';
 
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
 

@@ -6,8 +6,7 @@ import { Separator } from '@/components/ui/separator';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
 import { useLandingI18n } from './LandingLocaleProvider';
-import Image from 'next/image';
-import app from '@/lib/app';
+import { Logo } from '@/components/shared/logo';
 
 type LandingShellProps = {
   children: ReactNode;
@@ -50,12 +49,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
             href="/"
             className="font-heading text-lg font-semibold tracking-tight text-foreground"
           >
-            <Image
-              src={app.logoWhiteUrl}
-              alt={app.name}
-              width={85}
-              height={30}
-            />
+            <Logo className="h-[30px]" />
           </Link>
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {navLinks.map((item) => (

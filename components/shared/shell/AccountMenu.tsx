@@ -5,14 +5,15 @@ import {
 import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
+import { cn } from 'cn';
 
-import Button from '../Button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { buttonVariants } from '@/components/ui/button';
 import { useCustomSignOut } from '@/hooks/useCustomSignout';
 
 const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
@@ -28,24 +29,24 @@ const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button
-          size={collapsed ? 'icon' : 'xl'}
-          variant="outline"
-          className={
-            collapsed
-              ? 'h-10 w-10'
-              : 'w-full justify-start text-sm font-semibold'
-          }
-          aria-label={user.name || t('account')}
-        >
-          <UserCircleIcon className={collapsed ? 'h-5 w-5' : 'mr-0.5'} />
-          {collapsed ? (
-            <span className="sr-only">{user.name}</span>
-          ) : (
-            user.name
-          )}
-        </Button>
+      <DropdownMenuTrigger
+        className={cn(
+          buttonVariants({
+            variant: 'outline',
+            size: collapsed ? 'icon' : 'xl',
+          }),
+          collapsed
+            ? 'h-10 w-10'
+            : 'w-full justify-start text-sm font-semibold'
+        )}
+        aria-label={user.name || t('account')}
+      >
+        <UserCircleIcon className={collapsed ? 'h-5 w-5' : 'mr-0.5'} />
+        {collapsed ? (
+          <span className="sr-only">{user.name}</span>
+        ) : (
+          user.name
+        )}
       </DropdownMenuTrigger>
       <DropdownMenuContent align={collapsed ? 'start' : 'end'} className="w-40">
         <DropdownMenuItem asChild>

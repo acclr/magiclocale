@@ -1,6 +1,5 @@
-import app from '@/lib/app';
+import { Logo } from '@/components/shared/logo';
 import { useTranslation } from '@/hooks/useTranslation';
-import Image from 'next/image';
 
 interface AuthLayoutProps {
   children: React.ReactNode;
@@ -19,13 +18,7 @@ export default function AuthLayout({
     <>
       <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-20 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
-          <Image
-            src={app.logoWhiteUrl}
-            className="mx-auto h-12"
-            alt={app.name}
-            width={120}
-            height={68}
-          />
+          <Logo className="mx-auto h-12" />
           {heading && (
             <h2 className="mt-6 text-center text-2xl font-bold leading-9 tracking-tight text-foreground">
               {t(heading)}

@@ -2,7 +2,7 @@
 
 Keykit is a team-based translation platform for application copy. The
 dashboard manages projects, locales, translation status, and human review,
-while `@keykit/sdk` discovers source keys and loads translated bundles at
+while `@keykithq/sdk` discovers source keys and loads translated bundles at
 runtime.
 
 ## Architecture
@@ -108,10 +108,10 @@ npm run sdk:build
 ```
 
 The workspace package can be referenced by another npm workspace as
-`"@keykit/sdk": "workspace:*"`. A basic client configuration is:
+`"@keykithq/sdk": "workspace:*"`. A basic client configuration is:
 
 ```ts
-import translate, { configureKeykit, flush } from '@keykit/sdk';
+import translate, { configureKeykit, flush } from '@keykithq/sdk';
 
 configureKeykit({
   baseUrl: 'http://localhost:4002',
@@ -128,13 +128,13 @@ await flush();
 `translate(key, defaultText)` returns the current bundle value or the source
 text fallback, queues source-key ingestion, and batches sync requests. React
 consumers can import `KeykitProvider` and `useKeykit` from
-`@keykit/sdk/react`. Next.js App Router consumers can use
-`createKeykitNext` from `@keykit/sdk/next`.
+`@keykithq/sdk/react`. Next.js App Router consumers can use
+`createKeykitNext` from `@keykithq/sdk/next`.
 
 ## Localize the Keykit landing page and dashboard
 
 This app is a customer of itself. The public homepage uses
-`translate(key, defaultText)` from `@keykit/sdk`. The signed-in dashboard
+`translate(key, defaultText)` from `@keykithq/sdk`. The signed-in dashboard
 keeps `next-i18next` `t('key')` calls and bridges them to a second dedicated
 project so those keys show up in the translation workspace.
 
@@ -187,7 +187,7 @@ npm run check-lint          # Run ESLint
 npm run check-types         # Run root TypeScript checks
 npm test                    # Run root Jest tests
 npm run test:e2e            # Run Playwright
-npm run sdk:check-types     # Type-check @keykit/sdk
+npm run sdk:check-types     # Type-check @keykithq/sdk
 npm run sdk:test            # Run SDK Vitest tests
 npm run sdk:build           # Build SDK ESM/CJS/types
 npm run stripe:ensure-plans # Create Premium ($12) and Enterprise ($49) Stripe prices

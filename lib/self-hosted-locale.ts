@@ -1,4 +1,4 @@
-import type { TranslationBundle } from '@keykit/sdk';
+import type { TranslationBundle } from '@keykithq/sdk';
 
 export const KEYKIT_LOCALE_COOKIE = 'keykit-locale';
 export const SELF_HOSTED_REFRESH_INTERVAL_MS = 30_000;

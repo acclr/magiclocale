@@ -3,11 +3,12 @@ import {
   Body,
   Container,
   Hr,
-  Img,
   Section,
   Tailwind,
   Text,
 } from '@react-email/components';
+
+import { LogoSquare } from '@/components/shared/logo';
 import app from '@/lib/app';
 
 interface EmailLayoutProps {
@@ -29,13 +30,7 @@ const EmailLayout = ({ children }: EmailLayoutProps) => {
     >
       <Body className="bg-white my-auto mx-auto font-sans">
         <Container className="border border-solid bg-white border-[#f0f0f0] rounded my-[40px] mx-auto p-[20px] w-[465px]">
-          <Img
-            src={app.logoSquareUrl}
-            width="50"
-            height="50"
-            alt={app.name}
-            className="my-8 mx-auto"
-          />
+          <LogoSquare className="my-8 mx-auto h-[50px] w-[50px]" />
           <Section>{children}</Section>
           <Section>
             <Hr className="border border-solid border-[#eaeaea] my-[20px] mx-0 w-full" />

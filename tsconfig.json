@@ -22,8 +22,8 @@
       "@/lib/*": ["lib/*"],
       "@/components/*": ["components/*"],
       "@/domain/*": ["domain/*"],
-      "@keykit/sdk": ["packages/sdk/dist/index"],
-      "@keykit/sdk/react": ["packages/sdk/dist/react"]
+      "@keykithq/sdk": ["packages/sdk/dist/index"],
+      "@keykithq/sdk/react": ["packages/sdk/dist/react"]
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],

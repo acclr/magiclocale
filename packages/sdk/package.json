@@ -1,7 +1,7 @@
 {
-  "name": "@keykit/sdk",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@keykithq/sdk",
+  "version": "0.0.1",
+  "description": "Keykit client SDK — discover translation keys and load bundles from Keykit",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -23,9 +23,13 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
   "peerDependencies": {
     "next": ">=15",
     "react": ">=18"
@@ -34,7 +38,8 @@
     "build": "tsup && tsc --emitDeclarationOnly --declaration --declarationMap false --outDir dist",
     "check-types": "tsc --noEmit",
     "dev": "tsup --watch",
-    "test": "vitest run"
+    "test": "vitest run",
+    "prepublishOnly": "npm run build"
   },
   "devDependencies": {
     "@types/react": "^18.3.13",

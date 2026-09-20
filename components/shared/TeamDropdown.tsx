@@ -14,8 +14,10 @@ import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 
+import { cn } from 'cn';
+
 import { maxLengthPolicies } from '@/lib/common';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -103,28 +105,26 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
     },
   ];
 
-  const trigger = collapsed ? (
-    <Button
-      variant="outline"
-      size="icon"
-      className="h-10 w-10 font-bold"
-      aria-label={label}
-    >
-      {label.charAt(0).toUpperCase() || <FolderIcon className="h-5 w-5" />}
-    </Button>
-  ) : (
-    <Button
-      variant="outline"
-      className="h-10 w-full justify-between rounded-md px-4 text-sm font-bold"
-    >
-      <span className="truncate">{label}</span>
-      <ChevronUpDownIcon className="h-5 w-5 shrink-0" />
-    </Button>
-  );
-
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
+      <DropdownMenuTrigger
+        className={cn(
+          buttonVariants({ variant: 'outline', size: collapsed ? 'icon' : 'xl' }),
+          collapsed
+            ? 'h-10 w-10 font-bold'
+            : 'h-10 w-full justify-between rounded-md px-4 text-sm font-bold'
+        )}
+        aria-label={label}
+      >
+        {collapsed ? (
+          label.charAt(0).toUpperCase() || <FolderIcon className="h-5 w-5" />
+        ) : (
+          <>
+            <span className="truncate">{label}</span>
+            <ChevronUpDownIcon className="h-5 w-5 shrink-0" />
+          </>
+        )}
+      </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="min-w-56">
         {menus.map(({ id, name, items }, index) => (
           <DropdownMenuGroup key={id}>
