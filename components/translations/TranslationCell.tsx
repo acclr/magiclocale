@@ -25,8 +25,6 @@ import {
 import toast from 'react-hot-toast';
 import { BotIcon, UserIcon } from 'lucide-react';
 
-const COLLAPSED_CELL_PX = 80;
-
 type TranslationCellProps = {
   keyId: string;
   cell: DashboardCell;
@@ -154,29 +152,31 @@ const TranslationCell = ({
   const StatusIcon = icons[normalized];
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
-  const [isOverflowing, setIsOverflowing] = useState(false);
-  const isExpanded = isFocused && isOverflowing;
+  const [isClipped, setIsClipped] = useState(false);
 
   useLayoutEffect(() => {
     const textarea = textareaRef.current;
     if (!textarea) {
       return;
     }
-    setIsOverflowing(textarea.scrollHeight > COLLAPSED_CELL_PX);
+
+    const measure = () => {
+      setIsClipped(textarea.scrollHeight > textarea.clientHeight + 1);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(textarea);
+    return () => observer.disconnect();
   }, [value, isFocused]);
 
   return (
     <div
       className={cn(
-        'group relative flex h-full min-h-full w-full min-w-96 flex-1 flex-row hover:ring-primary/40 focus-within:ring-2 focus-within:ring-primary/40',
-        isExpanded
-          ? 'hover:bg-[#222] focus-within:bg-[#222]'
-          : 'hover:bg-foreground/5 focus-within:bg-foreground/10',
-        isOverflowing &&
-          !isExpanded &&
-          "overflow-hidden after:pointer-events-none after:absolute after:bottom-0 after:z-10 after:h-5 after:w-full after:bg-linear-to-t after:from-black/70 after:to-transparent after:opacity-50 after:content-['']",
-        isExpanded &&
-          'absolute top-0 left-0 z-30 min-h-48 min-w-[32rem] bg-card shadow-xl ring-1 ring-border'
+        'group relative flex h-full min-h-full w-full min-w-96 flex-1 flex-row hover:ring-primary/40 focus-within:ring-2 focus-within:ring-primary/40 hover:bg-foreground/5 focus-within:bg-foreground/10',
+        isClipped &&
+          !isFocused &&
+          "overflow-hidden after:pointer-events-none after:absolute after:bottom-0 after:z-10 after:h-5 after:w-full after:bg-linear-to-t after:from-black/70 after:to-transparent after:opacity-50 after:content-['']"
       )}
       onBlur={(event) => {
         if (!event.currentTarget.contains(event.relatedTarget as Node)) {
@@ -188,8 +188,8 @@ const TranslationCell = ({
       <textarea
         aria-label={`${cell.locale} translation`}
         className={cn(
-          'textarea textarea-sm min-h-full! h-16 flex-1 resize-none border-none bg-transparent py-2.5 opacity-60 hover:opacity-100 focus:opacity-100 focus:ring-0 focus:outline-0',
-          isExpanded ? 'min-h-40 overflow-auto' : 'max-h-20 overflow-hidden'
+          'textarea textarea-sm min-h-full! h-16 max-h-20 flex-1 resize-none border-none bg-transparent py-2.5 opacity-60 hover:opacity-100 focus:opacity-100 focus:ring-0 focus:outline-0',
+          isFocused ? 'overflow-auto' : 'overflow-hidden'
         )}
         disabled={!canEdit || isSaving || drafts.isSavingAll}
         onChange={(event) => setValue(event.target.value)}

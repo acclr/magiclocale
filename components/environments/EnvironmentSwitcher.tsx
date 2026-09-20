@@ -18,7 +18,7 @@ const EnvironmentSwitcher = ({
     environments.find((environment) => environment.isProduction) ??
     environments[0];
 
-  if (!environments.length) {
+  if (!environments.length || environments.length === 1) {
     return null;
   }
 

@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
 import { useTranslate } from '@keykithq/sdk/react';
-import { Logo } from '@/components/shared/logo';
+import { Logo, LogoWhite } from '@/components/shared/logo';
 
 type LandingShellProps = {
   children: ReactNode;
@@ -49,7 +49,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
             href="/"
             className="font-heading text-lg font-semibold tracking-tight text-foreground"
           >
-            <Logo className="h-[30px]" />
+            <LogoWhite className="h-[30px]" />
           </Link>
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {navLinks.map((item) => (

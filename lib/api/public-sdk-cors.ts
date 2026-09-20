@@ -1,4 +1,4 @@
-const DEFAULT_ALLOWED_ORIGIN = 'http://localhost:3001';
+const DEFAULT_ALLOWED_ORIGIN = 'http://localhost:4002';
 
 export type PublicSdkCorsPolicy = {
   allowedOrigins: string[];

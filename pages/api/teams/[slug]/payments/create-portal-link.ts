@@ -3,7 +3,11 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { getSession } from '@/lib/session';
 import { throwIfNoTeamAccess } from 'models/team';
 import { throwIfNotAllowed } from 'models/user';
-import { stripe, getStripeCustomerId } from '@/lib/stripe';
+import {
+  stripe,
+  getStripeCustomerId,
+  getProjectStripeCustomerId,
+} from '@/lib/stripe';
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
 import { getProjectService } from '@/lib/translations';
@@ -49,13 +53,11 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
     if (project.billingScope !== 'project') {
       throw new ApiError(422, 'This project is billed on the team retainer.');
     }
-    if (!project.billingId) {
-      throw new ApiError(
-        422,
-        'Subscribe to a project plan before opening the billing portal.'
-      );
-    }
-    customerId = project.billingId;
+    customerId = await getProjectStripeCustomerId(
+      project,
+      teamMember.team,
+      session ?? undefined
+    );
     returnPath = `/teams/${teamMember.team.slug}/projects/${project.id}/settings`;
   } else {
     customerId = await getStripeCustomerId(teamMember, session);

@@ -6,6 +6,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { cn } from 'cn';
 
 export interface MenuItem {
   name: string;
@@ -40,7 +41,7 @@ const NavigationItems = ({
   tone = 'default',
 }: NavigationItemsProps) => {
   return (
-    <ul role="list" className="flex flex-1 flex-col gap-1">
+    <ul role="list" className="flex flex-1 flex-col gap-px">
       {menus.map((menu) => (
         <li key={menu.name}>
           <NavigationItem collapsed={collapsed} menu={menu} tone={tone} />
@@ -48,11 +49,7 @@ const NavigationItems = ({
             <ul className="mt-1 flex flex-col gap-1">
               {menu.items.map((subitem) => (
                 <li key={subitem.name}>
-                  <NavigationItem
-                    className="pl-9"
-                    menu={subitem}
-                    tone={tone}
-                  />
+                  <NavigationItem className="pl-9" menu={subitem} tone={tone} />
                 </li>
               ))}
             </ul>
@@ -69,34 +66,37 @@ const NavigationItem = ({
   collapsed = false,
   tone = 'default',
 }: NavigationItemProps) => {
-  const surface =
-    tone === 'muted'
-      ? 'hover:bg-sidebar hover:text-sidebar-foreground'
-      : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground';
-  const activeSurface =
-    tone === 'muted' ? 'bg-sidebar' : 'bg-sidebar-accent';
+  const surface = 'hover:bg-foreground/5 active:bg-foreground/10';
+  const activeSurface = 'bg-foreground/5 active:bg-foreground/10';
+  const activeText = 'text-foreground';
 
   const link = (
     <Link
       href={menu.href}
       className={classNames(
-        'group flex items-center rounded-lg text-sm text-sidebar-foreground',
+        'group flex items-center rounded-3xl text-sm text-sidebar-foreground -mx-1.5',
         surface,
         collapsed ? 'justify-center p-2' : 'gap-2 p-2 px-2',
-        menu.active && `${activeSurface} font-semibold text-sidebar-primary`,
+        menu.active && `${activeSurface}`,
         className
       )}
     >
       {menu.icon && (
         <menu.icon
           className={classNames(
-            'h-5 w-5 shrink-0 group-hover:text-sidebar-accent-foreground',
-            { 'text-sidebar-primary': menu.active }
+            'h-3.5 w-3.5 shrink-0',
+            menu.active ? 'text-foreground' : 'text-foreground/50'
           )}
           aria-hidden="true"
         />
       )}
-      {collapsed ? <span className="sr-only">{menu.name}</span> : menu.name}
+      <span
+        className={cn('text-foreground/70 group-hover:text-foreground', {
+          [activeText]: menu.active,
+        })}
+      >
+        {collapsed ? <span className="sr-only">{menu.name}</span> : menu.name}
+      </span>
     </Link>
   );
 

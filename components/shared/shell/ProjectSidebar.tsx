@@ -115,17 +115,16 @@ const ProjectSidebar = ({
           href={`/teams/${slug}/products`}
           className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground"
         >
-          <ArrowLeftIcon className="h-4 w-4" />
-          {t('back-to-projects')}
+          <ArrowLeftIcon className="h-3 w-3" />
+          <span className="text-[14px]">{t('back-to-projects')}</span>
         </Link>
+
         <div>
-          <p className="text-xs font-semibold uppercase tracking-wide text-primary">
-            {t('project')}
-          </p>
-          <h2 className="mt-1 truncate text-lg font-semibold">
+          <h2 className="mt-1 truncate text-base font-semibold">
             {project?.name || t('translation-workspace')}
           </h2>
         </div>
+
         {environments.length > 0 && (
           <EnvironmentSwitcher
             currentSlug={environment}
@@ -133,11 +132,13 @@ const ProjectSidebar = ({
             onChange={setEnvironment}
           />
         )}
+
+        <Separator />
+
+        <nav className="flex flex-1 flex-col -mt-1.5">
+          <NavigationItems menus={menus} tone="muted" />
+        </nav>
       </div>
-      <Separator />
-      <nav className="flex flex-1 flex-col">
-        <NavigationItems menus={menus} tone="muted" />
-      </nav>
     </div>
   );
 };

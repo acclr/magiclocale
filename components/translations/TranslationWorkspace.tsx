@@ -255,6 +255,16 @@ const TranslationWorkspace = ({
               />
             </div>
           </div>
+
+          <div className="min-w-64 ml-auto">
+            <input
+              className="input input-bordered input-sm"
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder={t('search-translations')}
+              type="search"
+              value={search}
+            />
+          </div>
           <button
             className="btn btn-ghost btn-sm"
             disabled={workspace.isRefreshing}
@@ -403,15 +413,6 @@ const TranslationWorkspace = ({
               </button>
             ))}
           </nav>
-          <div className="min-w-96">
-            <input
-              className="input input-bordered input-sm"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t('search-translations')}
-              type="search"
-              value={search}
-            />
-          </div>
         </section>
 
         <div className="rounded-[8px] overflow-hidden relative border border-[#dddddd22] bg-card">

@@ -53,7 +53,9 @@ export function createSelfHostedSdkConfig(input: {
     ingestToken,
     sourceLocale,
     refreshIntervalMs: SELF_HOSTED_REFRESH_INTERVAL_MS,
-    sourceCatalog: input.sourceCatalog,
+    ...(input.sourceCatalog !== undefined
+      ? { sourceCatalog: input.sourceCatalog }
+      : {}),
   };
 }
 

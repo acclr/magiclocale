@@ -32,7 +32,8 @@
     "delete-team": "node --env-file .env delete-team.js",
     "sdk:build": "npm run build --workspace @keykithq/sdk",
     "sdk:test": "npm run test --workspace @keykithq/sdk",
-    "sdk:check-types": "npm run check-types --workspace @keykithq/sdk"
+    "sdk:check-types": "npm run check-types --workspace @keykithq/sdk",
+    "keykit:check-landing-env": "node scripts/check-landing-key.mjs"
   },
   "dependencies": {
     "@boxyhq/metrics": "0.2.12",
