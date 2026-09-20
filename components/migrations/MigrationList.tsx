@@ -86,7 +86,12 @@ const MigrationList = ({
       </div>
 
       {canEdit ? (
-        <form className="space-y-3 rounded-md bg-card p-4" onSubmit={(event) => void create(event).catch((error) => toast.error(error.message))}>
+        <form
+          className="space-y-3 rounded-md bg-card p-4"
+          onSubmit={(event) =>
+            void create(event).catch((error) => toast.error(error.message))
+          }
+        >
           <h2 className="font-medium">{t('create-migration')}</h2>
           <input
             className="input input-bordered input-sm w-full"
@@ -124,13 +129,17 @@ const MigrationList = ({
               <div>
                 <p className="font-medium">{migration.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {migration.status} · {migration.operations.length} ops
+                  {migration.status} · {migration.operations.length} {'ops'}
                 </p>
               </div>
               {canEdit && migration.status !== 'applied' ? (
                 <button
                   className="btn btn-sm"
-                  onClick={() => void apply(migration.id).catch((error) => toast.error(error.message))}
+                  onClick={() =>
+                    void apply(migration.id).catch((error) =>
+                      toast.error(error.message)
+                    )
+                  }
                   type="button"
                 >
                   {t('apply')}
@@ -151,7 +160,9 @@ const MigrationList = ({
                 2
               )}
             </pre>
-            <p className="mt-2 text-xs text-muted-foreground">{t('cli-apply-help')}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              {t('cli-apply-help')}
+            </p>
           </li>
         ))}
       </ul>
@@ -168,7 +179,9 @@ const MigrationList = ({
           />
           <button
             className="btn btn-sm"
-            onClick={() => void importJson().catch((error) => toast.error(error.message))}
+            onClick={() =>
+              void importJson().catch((error) => toast.error(error.message))
+            }
             type="button"
           >
             {t('import')}

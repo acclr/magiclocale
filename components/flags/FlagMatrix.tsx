@@ -1,5 +1,4 @@
 import { useTranslation } from '@/hooks/useTranslation';
-import { useState } from 'react';
 import useSWR from 'swr';
 import fetcher from '@/lib/fetcher';
 import type { ApiResponse } from 'types';
@@ -10,7 +9,10 @@ import toast from 'react-hot-toast';
 
 type MatrixPayload = {
   environments: Environment[];
-  flags: Array<{ flag: FeatureFlag; configs: Record<string, FlagEnvironmentConfig> }>;
+  flags: Array<{
+    flag: FeatureFlag;
+    configs: Record<string, FlagEnvironmentConfig>;
+  }>;
 };
 
 const FlagMatrix = ({
@@ -27,11 +29,7 @@ const FlagMatrix = ({
   const { data, mutate } = useSWR<ApiResponse<MatrixPayload>>(url, fetcher);
   const payload = data?.data;
 
-  const promote = async (
-    flagId: string,
-    source: string,
-    target: string
-  ) => {
+  const promote = async (flagId: string, source: string, target: string) => {
     const reason = window.prompt(t('production-change-reason')) ?? '';
     const response = await fetch(
       `/api/teams/${slug}/projects/${projectId}/flags/${flagId}/promote`,
@@ -57,7 +55,9 @@ const FlagMatrix = ({
     <div className="space-y-4">
       <div>
         <h2 className="text-lg font-semibold">{t('environment-matrix')}</h2>
-        <p className="text-sm text-muted-foreground">{t('environment-matrix-help')}</p>
+        <p className="text-sm text-muted-foreground">
+          {t('environment-matrix-help')}
+        </p>
       </div>
       <div className="overflow-x-auto rounded-md bg-card">
         <table className="table table-sm">
@@ -80,23 +80,31 @@ const FlagMatrix = ({
                       <div className="flex flex-col gap-1">
                         <span>
                           {config?.enabled ? 'ON' : 'OFF'}
-                          {config?.inherited ? ` · ${t('inherited')}` : ` · ${t('override')}`}
+                          {config?.inherited
+                            ? ` · ${t('inherited')}`
+                            : ` · ${t('override')}`}
                         </span>
                         {canEdit && environment.parentEnvironmentId ? (
                           <button
                             className="btn btn-ghost btn-xs"
                             onClick={() => {
                               const parent = payload?.environments.find(
-                                (item) => item.id === environment.parentEnvironmentId
+                                (item) =>
+                                  item.id === environment.parentEnvironmentId
                               );
                               if (!parent) {
                                 return;
                               }
-                              void promote(flag.id, parent.slug, environment.slug).catch(
-                                (error) =>
-                                  toast.error(
-                                    error instanceof Error ? error.message : t('promote-failed')
-                                  )
+                              void promote(
+                                flag.id,
+                                parent.slug,
+                                environment.slug
+                              ).catch((error) =>
+                                toast.error(
+                                  error instanceof Error
+                                    ? error.message
+                                    : t('promote-failed')
+                                )
                               );
                             }}
                             type="button"
