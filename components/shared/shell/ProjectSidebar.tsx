@@ -5,7 +5,6 @@ import {
   FlagIcon,
   LanguageIcon,
   RectangleStackIcon,
-  Squares2X2Icon,
   ArrowsRightLeftIcon,
   SparklesIcon,
   ArrowsUpDownIcon,
@@ -48,12 +47,12 @@ const ProjectSidebar = ({
   const base = `/teams/${slug}/projects/${projectId}`;
 
   const menus: MenuItem[] = [
-    {
+    /*{
       name: t('keys'),
       href: `${base}/keys${envQuery}`,
       icon: Squares2X2Icon,
       active: pathname === `${base}/keys` || pathname.startsWith(`${base}/keys/`),
-    },
+    },*/
     {
       name: t('translation-workspace'),
       href: `${base}${envQuery}`,

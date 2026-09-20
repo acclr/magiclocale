@@ -52,7 +52,7 @@ export function scanSourceTree(root: string): ScannedSourceKey[] {
       }
     }
   }
-  return [...found.values()].sort((left, right) =>
+  return Array.from(found.values()).sort((left, right) =>
     left.key.localeCompare(right.key)
   );
 }
