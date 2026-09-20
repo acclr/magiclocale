@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 
-import { useLandingI18n } from './LandingLocaleProvider';
+import { useTranslate } from '@keykithq/sdk/react';
 
 const previewRows = [
   { key: 'landing.hero.title', en: 'Keykit', sv: 'Keykit' },
@@ -28,7 +28,7 @@ const previewRows = [
 ] as const;
 
 const HeroSection = () => {
-  const { translate } = useLandingI18n();
+  const { t } = useTranslate();
 
   return (
     <section className="relative overflow-hidden pb-8 pt-12 sm:pb-16 sm:pt-20">
@@ -36,22 +36,22 @@ const HeroSection = () => {
         <div className="text-center lg:text-left">
           <Badge variant="secondary" className="mb-6 gap-1.5 px-3 py-1">
             <SparklesIcon className="size-3.5" />
-            {translate(
+            {t(
               'landing.hero.badge',
               'Live on Keykit — change this page from the dashboard'
             )}
           </Badge>
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
-            {translate('landing.hero.title', 'Keykit')}
+            {t('landing.hero.title', 'Keykit')}
             <span className="block text-primary">
-              {translate(
+              {t(
                 'landing.hero.headline-accent',
                 'Product copy, localized'
               )}
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground lg:mx-0">
-            {translate(
+            {t(
               'landing.hero.subtitle',
               'Discover keys in your app, review translations with your team, and ship every locale from one dashboard.'
             )}
@@ -59,29 +59,29 @@ const HeroSection = () => {
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
             <Button asChild size="lg" className="min-w-[160px]">
               <Link href="/auth/join">
-                {translate('landing.hero.get-started', 'Get started')}
+                {t('landing.hero.get-started', 'Get started')}
                 <ArrowRightIcon className="size-4" />
               </Link>
             </Button>
             <Button asChild variant="outline" size="lg" className="min-w-[160px]">
               <a href="#features">
-                {translate('landing.hero.explore', 'See how it works')}
+                {t('landing.hero.explore', 'See how it works')}
               </a>
             </Button>
           </div>
           <dl className="mt-10 grid grid-cols-3 gap-4 border-t border-border/60 pt-8 text-left">
             {[
               {
-                label: translate('landing.hero.stat-languages', 'Languages'),
-                value: translate('landing.hero.stat-languages-value', '4+'),
+                label: t('landing.hero.stat-languages', 'Languages'),
+                value: t('landing.hero.stat-languages-value', '4+'),
               },
               {
-                label: translate('landing.hero.stat-keys', 'Key discovery'),
-                value: translate('landing.hero.stat-keys-value', 'Auto'),
+                label: t('landing.hero.stat-keys', 'Key discovery'),
+                value: t('landing.hero.stat-keys-value', 'Auto'),
               },
               {
-                label: translate('landing.hero.stat-review', 'Review'),
-                value: translate('landing.hero.stat-review-value', 'Built-in'),
+                label: t('landing.hero.stat-review', 'Review'),
+                value: t('landing.hero.stat-review-value', 'Built-in'),
               },
             ].map((stat) => (
               <div key={stat.label}>
@@ -100,7 +100,7 @@ const HeroSection = () => {
           <CardHeader className="border-b border-border/60 pb-4">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-sm">
-                {translate(
+                {t(
                   'landing.hero.preview-title',
                   'Translation workspace'
                 )}
@@ -110,7 +110,7 @@ const HeroSection = () => {
               </Badge>
             </div>
             <CardDescription>
-              {translate(
+              {t(
                 'landing.hero.preview-description',
                 'Keys ingested from your app appear here for review.'
               )}

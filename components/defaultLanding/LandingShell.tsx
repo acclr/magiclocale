@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
-import { useLandingI18n } from './LandingLocaleProvider';
+import { useTranslate } from '@keykithq/sdk/react';
 import { Logo } from '@/components/shared/logo';
 
 type LandingShellProps = {
@@ -19,7 +19,7 @@ const navLinks = [
 ] as const;
 
 const LandingShell = ({ children }: LandingShellProps) => {
-  const { translate } = useLandingI18n();
+  const { t } = useTranslate();
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -54,7 +54,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {navLinks.map((item) => (
               <Button key={item.href} asChild variant="ghost" size="sm">
-                <a href={item.href}>{translate(item.key, item.fallback)}</a>
+                <a href={item.href}>{t(item.key, item.fallback)}</a>
               </Button>
             ))}
           </nav>
@@ -67,12 +67,12 @@ const LandingShell = ({ children }: LandingShellProps) => {
               className="hidden sm:inline-flex"
             >
               <Link href="/auth/login">
-                {translate('landing.nav.sign-in', 'Sign in')}
+                {t('landing.nav.sign-in', 'Sign in')}
               </Link>
             </Button>
             <Button asChild size="sm">
               <Link href="/auth/join">
-                {translate('landing.nav.sign-up', 'Sign up')}
+                {t('landing.nav.sign-up', 'Sign up')}
               </Link>
             </Button>
           </div>
@@ -85,10 +85,10 @@ const LandingShell = ({ children }: LandingShellProps) => {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-heading text-sm font-semibold">
-              {translate('landing.nav.brand', 'Keykit')}
+              {t('landing.nav.brand', 'Keykit')}
             </p>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              {translate(
+              {t(
                 'landing.footer.tagline',
                 'Product copy, localized — with a dashboard your team actually uses.'
               )}
@@ -97,17 +97,17 @@ const LandingShell = ({ children }: LandingShellProps) => {
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline" size="sm">
               <Link href="/auth/join">
-                {translate('landing.hero.get-started', 'Get started')}
+                {t('landing.hero.get-started', 'Get started')}
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
-              <a href="#faq">{translate('landing.nav.faq', 'FAQ')}</a>
+              <a href="#faq">{t('landing.nav.faq', 'FAQ')}</a>
             </Button>
           </div>
         </div>
         <Separator />
         <p className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
-          {translate(
+          {t(
             'landing.footer.note',
             'This marketing site is powered by Keykit — edit any string from Translation Projects.'
           )}

@@ -1,5 +1,7 @@
 import type { IncomingMessage } from 'http';
 
+import common from '../locales/en/common.json';
+
 import type { DashboardLocalePageProps } from './dashboard-locale';
 import { emptySelfHostedLocalePageProps } from './self-hosted-locale';
 import { getSelfHostedLocalePageProps } from './self-hosted-locale-server';
@@ -17,5 +19,6 @@ export async function getDashboardLocalePageProps(context: {
     projectId: process.env.KEYKIT_DASHBOARD_PROJECT_ID,
     ingestToken: process.env.KEYKIT_DASHBOARD_API_KEY,
     sourceLocale: process.env.KEYKIT_DASHBOARD_SOURCE_LOCALE,
+    sourceCatalog: common as Record<string, string>,
   });
 }

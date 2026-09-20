@@ -7,17 +7,17 @@ import {
 
 import faqs from './data/faq.json';
 import LandingSection from './LandingSection';
-import { useLandingI18n } from './LandingLocaleProvider';
+import { useTranslate } from '@keykithq/sdk/react';
 
 const FAQSection = () => {
-  const { translate } = useLandingI18n();
+  const { t } = useTranslate();
 
   return (
     <LandingSection
       id="faq"
-      eyebrow={translate('landing.faq.eyebrow', 'FAQ')}
-      title={translate('landing.faq.title', 'Frequently asked questions')}
-      description={translate(
+      eyebrow={t('landing.faq.eyebrow', 'FAQ')}
+      title={t('landing.faq.title', 'Frequently asked questions')}
+      description={t(
         'landing.faq.subtitle',
         'This page is a Keykit project — edit these answers from Translation Projects.'
       )}
@@ -31,10 +31,10 @@ const FAQSection = () => {
         {faqs.map((faq) => (
           <AccordionItem key={faq.id} value={faq.id} className="px-4">
             <AccordionTrigger className="text-left text-base hover:no-underline">
-              {translate(`landing.faq.${faq.id}.question`, faq.question)}
+              {t(`landing.faq.${faq.id}.question`, faq.question)}
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground leading-relaxed">
-              {translate(`landing.faq.${faq.id}.answer`, faq.answer)}
+              {t(`landing.faq.${faq.id}.answer`, faq.answer)}
             </AccordionContent>
           </AccordionItem>
         ))}

@@ -102,6 +102,8 @@ export type KeykitConfig = {
   retryDelayMs?: number;
   fetch?: FetchLike;
   onError?: (error: Error) => void;
+  /** English (source locale) strings for `t('key')` when the second argument is omitted. */
+  sourceCatalog?: Record<string, string>;
 };
 
 export type ResolvedKeykitConfig = Required<
@@ -114,6 +116,7 @@ export type ResolvedKeykitConfig = Required<
     | 'environment'
     | 'version'
     | 'context'
+    | 'sourceCatalog'
   >
 > & {
   fetch: FetchLike;
@@ -123,4 +126,5 @@ export type ResolvedKeykitConfig = Required<
   context: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
   initialFlags?: FlagPayload;
+  sourceCatalog?: Record<string, string>;
 };

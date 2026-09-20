@@ -24,12 +24,14 @@ export async function getSelfHostedLocalePageProps(input: {
   projectId?: string;
   ingestToken?: string;
   sourceLocale?: string;
+  sourceCatalog?: Record<string, string>;
 }): Promise<SelfHostedLocalePageProps> {
   const config = createSelfHostedSdkConfig({
     appUrl: input.appUrl,
     projectId: input.projectId,
     ingestToken: input.ingestToken,
     sourceLocale: input.sourceLocale,
+    sourceCatalog: input.sourceCatalog,
   });
 
   if (!config) {

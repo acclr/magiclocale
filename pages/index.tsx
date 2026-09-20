@@ -7,10 +7,8 @@ import HeroSection from '@/components/defaultLanding/HeroSection';
 import FeatureSection from '@/components/defaultLanding/FeatureSection';
 import PricingSection from '@/components/defaultLanding/PricingSection';
 import LandingShell from '@/components/defaultLanding/LandingShell';
-import {
-  LandingLocaleProvider,
-  useLandingI18n,
-} from '@/components/defaultLanding/LandingLocaleProvider';
+import { LandingLocaleProvider } from '@/components/defaultLanding/LandingLocaleProvider';
+import { useTranslate } from '@keykithq/sdk/react';
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
 import { getLandingLocalePageProps } from '@/lib/landing-locale-server';
 import env from '@/lib/env';
@@ -21,20 +19,17 @@ type HomeProps = {
 };
 
 const HomeContent = () => {
-  const { translate } = useLandingI18n();
+  const { t } = useTranslate();
 
   return (
     <>
       <Head>
         <title>
-          {translate(
-            'landing.meta.title',
-            'Keykit — product copy, localized'
-          )}
+          {t('landing.meta.title', 'Keykit — product copy, localized')}
         </title>
         <meta
           name="description"
-          content={translate(
+          content={t(
             'landing.meta.description',
             'Discover translation keys, review copy with your team, and ship every locale from one dashboard.'
           )}

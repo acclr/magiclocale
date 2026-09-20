@@ -431,6 +431,30 @@ describe('TranslationService', () => {
     ]);
   });
 
+  it('translateSelection only touches the requested keys and locales', async () => {
+    const { service, repository, translator } = setup();
+    translator.calls.length = 0;
+
+    await expect(
+      service.translateSelection(PROJECT_ID, ENV_ID, {
+        keyIds: [KEY_CANCEL],
+        locales: ['de'],
+        mode: 'fill-missing',
+      })
+    ).resolves.toEqual({
+      filled: 1,
+      skipped: 0,
+      failed: 0,
+    });
+    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
+      value: 'AI(de): Cancel',
+      source: 'ai',
+    });
+    expect(translator.calls).toEqual([
+      { text: 'Cancel', sourceLocale: 'en', targetLocale: 'de' },
+    ]);
+  });
+
   it('can rewrite the source column when the source strings are another language', async () => {
     const { service, repository, translator } = setup();
     translator.calls.length = 0;

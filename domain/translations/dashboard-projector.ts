@@ -190,13 +190,13 @@ export function projectTranslationDashboard(
   };
 }
 
-export function paginateTranslationDashboard(
-  dashboard: TranslationDashboard,
+export function filterDashboardRows(
+  rows: DashboardRow[],
   queryInput: Partial<DashboardQuery> = {}
-): TranslationDashboard {
+): DashboardRow[] {
   const query = normalizeDashboardQuery(queryInput);
   const parsed = parseSearchQuery(query.search);
-  const filtered = dashboard.rows.filter((row) => {
+  return rows.filter((row) => {
     if (query.filter === 'unused') {
       if (row.lifecycle !== 'unused' && row.usageCount !== 0) {
         return false;
@@ -252,6 +252,14 @@ export function paginateTranslationDashboard(
     }
     return !parsed.text || haystack.includes(parsed.text);
   });
+}
+
+export function paginateTranslationDashboard(
+  dashboard: TranslationDashboard,
+  queryInput: Partial<DashboardQuery> = {}
+): TranslationDashboard {
+  const query = normalizeDashboardQuery(queryInput);
+  const filtered = filterDashboardRows(dashboard.rows, queryInput);
   const totalKeys = filtered.length;
   const totalPages = Math.max(1, Math.ceil(totalKeys / query.pageSize));
   const page = Math.min(query.page, totalPages);

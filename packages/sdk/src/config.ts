@@ -45,6 +45,7 @@ export function resolveConfig(
       ((error) => {
         console.warn('[Keykit]', error.message);
       }),
+    sourceCatalog: config.sourceCatalog,
   };
 }
 

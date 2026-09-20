@@ -78,6 +78,8 @@ const TranslationWorkspace = ({
   const [fillLocale, setFillLocale] = useState('');
   const [fromLocale, setFromLocale] = useState('');
   const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
+  const [selectedKeyIds, setSelectedKeyIds] = useState<string[]>([]);
+  const [selectAllMatching, setSelectAllMatching] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const dashboard = workspace.dashboard;
   const rows = dashboard?.rows ?? [];
@@ -95,6 +97,11 @@ const TranslationWorkspace = ({
   }, [debouncedSearch, filter, pageSize]);
 
   useEffect(() => {
+    setSelectedKeyIds([]);
+    setSelectAllMatching(false);
+  }, [debouncedSearch, filter, pageSize, projectId, environment]);
+
+  useEffect(() => {
     if (dashboard?.project.sourceLocale) {
       setFromLocale(dashboard.project.sourceLocale);
     }
@@ -103,6 +110,85 @@ const TranslationWorkspace = ({
   const selectedRow = selected
     ? dashboard?.rows.find((row) => row.keyId === selected.keyId)
     : undefined;
+
+  const pageKeyIds = rows.map((row) => row.keyId);
+  const allPageKeysSelected =
+    selectAllMatching ||
+    (pageKeyIds.length > 0 &&
+      pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId)));
+  const somePageKeysSelected =
+    !selectAllMatching &&
+    pageKeyIds.some((keyId) => selectedKeyIds.includes(keyId)) &&
+    !pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId));
+  const keySelectionCount = selectAllMatching
+    ? pagination?.totalKeys ?? 0
+    : selectedKeyIds.length;
+  const hasKeySelection = selectAllMatching || selectedKeyIds.length > 0;
+  const canQueue =
+    canEdit && hasKeySelection && selectedLocales.length > 0 && !isRunning;
+
+  const togglePageKeys = () => {
+    if (selectAllMatching) {
+      setSelectAllMatching(false);
+      setSelectedKeyIds([]);
+      return;
+    }
+    if (pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId))) {
+      setSelectedKeyIds((current) =>
+        current.filter((keyId) => !pageKeyIds.includes(keyId))
+      );
+      return;
+    }
+    setSelectedKeyIds((current) =>
+      Array.from(new Set([...current, ...pageKeyIds]))
+    );
+  };
+
+  const toggleKey = (keyId: string) => {
+    if (selectAllMatching) {
+      setSelectAllMatching(false);
+      setSelectedKeyIds(pageKeyIds.filter((id) => id !== keyId));
+      return;
+    }
+    setSelectedKeyIds((current) =>
+      current.includes(keyId)
+        ? current.filter((item) => item !== keyId)
+        : [...current, keyId]
+    );
+  };
+
+  const queueSelected = async (mode: 'fill-missing' | 'retranslate') => {
+    if (mode === 'retranslate') {
+      const confirmed = window.confirm(
+        t('confirm-queue-retranslate', {
+          keys: String(keySelectionCount),
+          locales: selectedLocales.join(', '),
+          from: fromLocale.trim(),
+        })
+      );
+      if (!confirmed) {
+        return;
+      }
+    }
+    await run(async () => {
+      const result = await workspace.queueTranslations({
+        scope: selectAllMatching ? 'all-matching' : 'selected-keys',
+        keyIds: selectAllMatching ? undefined : selectedKeyIds,
+        locales: selectedLocales,
+        mode,
+        sourceLocale: mode === 'retranslate' ? fromLocale.trim() : undefined,
+        filter,
+        search: debouncedSearch,
+      });
+      setSelectedKeyIds([]);
+      setSelectAllMatching(false);
+      return {
+        filled: result.filled,
+        skipped: result.skipped,
+        failed: result.failed,
+      };
+    }, t('translation-queue-complete', { queued: String(keySelectionCount) }));
+  };
 
   if (workspace.isLoading) {
     return <Loading />;
@@ -290,6 +376,12 @@ const TranslationWorkspace = ({
           </div>
         )}
 
+        {canEdit && (
+          <div className="rounded-md bg-card p-3 text-sm text-muted-foreground">
+            {t('translation-queue-help')}
+          </div>
+        )}
+
         <section className="flex flex-row items-center justify-between gap-4">
           <nav className="tabs tabs-bordered overflow-x-auto">
             {filters.map((item) => (
@@ -327,8 +419,40 @@ const TranslationWorkspace = ({
             <table className="table-pin-rows min-w-max table-pin-cols table [&_td]:border-l [&_td]:border-[#ffffff11] [&_th]:border-l [&_th]:border-[#ffffff11] [&_th:first-child]:border-l-0">
               <thead className="sticky top-0">
                 <tr>
+                  {canEdit && (
+                    <th className="w-10 bg-card px-2 py-2.5">
+                      <input
+                        aria-label={t('select-keys-on-page')}
+                        checked={allPageKeysSelected}
+                        className="checkbox checkbox-sm"
+                        onChange={togglePageKeys}
+                        ref={(element) => {
+                          if (element) {
+                            element.indeterminate = somePageKeysSelected;
+                          }
+                        }}
+                        type="checkbox"
+                      />
+                    </th>
+                  )}
                   <th className="min-w-64 bg-card px-3 py-2.5">
-                    {t('translation-key')}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span>{t('translation-key')}</span>
+                      {canEdit && pagination && pagination.totalKeys > 0 && (
+                        <button
+                          className="btn btn-ghost btn-xs"
+                          onClick={() => {
+                            setSelectedKeyIds([]);
+                            setSelectAllMatching(true);
+                          }}
+                          type="button"
+                        >
+                          {t('select-all-matching-keys', {
+                            count: pagination.totalKeys,
+                          })}
+                        </button>
+                      )}
+                    </div>
                   </th>
                   {dashboard.locales.map((projectLocale) => {
                     const color = localeColor(projectLocale);
@@ -383,6 +507,20 @@ const TranslationWorkspace = ({
               <tbody>
                 {rows.map((row: DashboardRow) => (
                   <tr key={row.keyId} className="odd:bg-foreground/5">
+                    {canEdit && (
+                      <td className="w-10 px-2 py-2.5 align-top">
+                        <input
+                          aria-label={t('select-key', { key: row.key })}
+                          checked={
+                            selectAllMatching ||
+                            selectedKeyIds.includes(row.keyId)
+                          }
+                          className="checkbox checkbox-sm"
+                          onChange={() => toggleKey(row.keyId)}
+                          type="checkbox"
+                        />
+                      </td>
+                    )}
                     <th className="max-w-72 px-3 py-2.5 align-top">
                       <p className="break-words font-mono text-xs font-normal">
                         {row.key}
@@ -436,7 +574,7 @@ const TranslationWorkspace = ({
                   <tr>
                     <td
                       className="py-12 text-center text-muted-foreground"
-                      colSpan={dashboard.locales.length + 1}
+                      colSpan={dashboard.locales.length + 1 + (canEdit ? 1 : 0)}
                     >
                       {t('no-matching-translations')}
                     </td>
@@ -519,6 +657,58 @@ const TranslationWorkspace = ({
             sourceLocale={dashboard.project.sourceLocale}
           />
         )}
+        {canEdit && hasKeySelection && (
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
+              <div className="text-sm">
+                <p className="font-medium">
+                  {t('translation-queue-selection', {
+                    keys: keySelectionCount,
+                    locales: selectedLocales.length
+                      ? selectedLocales.join(', ')
+                      : t('translation-queue-no-locales'),
+                  })}
+                </p>
+                {selectAllMatching && (
+                  <p className="text-muted-foreground">
+                    {t('translation-queue-all-matching')}
+                  </p>
+                )}
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  className="btn btn-ghost btn-sm"
+                  onClick={() => {
+                    setSelectedKeyIds([]);
+                    setSelectAllMatching(false);
+                  }}
+                  type="button"
+                >
+                  {t('clear-selection')}
+                </button>
+                <button
+                  className="btn btn-primary btn-sm"
+                  disabled={!canQueue}
+                  onClick={() => void queueSelected('fill-missing')}
+                  type="button"
+                >
+                  {t('queue-translations')}
+                </button>
+                {dashboard.locales.length > 1 && (
+                  <button
+                    className="btn btn-outline btn-sm"
+                    disabled={!canQueue || !fromLocale.trim()}
+                    onClick={() => void queueSelected('retranslate')}
+                    type="button"
+                  >
+                    {t('queue-retranslate')}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         <TranslationSaveBar onRefresh={workspace.refresh} />
       </div>
     </CellDraftsProvider>

@@ -439,6 +439,88 @@ export class TranslationService {
     return { filled, skipped };
   }
 
+  async translateSelection(
+    projectId: string,
+    environmentId: string,
+    input: {
+      keyIds: string[];
+      locales: string[];
+      mode: 'fill-missing' | 'retranslate';
+      sourceLocale?: string;
+    }
+  ): Promise<{ filled: number; skipped: number; failed: number }> {
+    const project = await this.requireProject(projectId);
+    const targets = this.uniqueLocales(input.locales);
+    if (!targets.length) {
+      throw new Error('Select at least one locale');
+    }
+    const keyIds = Array.from(
+      new Set(input.keyIds.map((id) => id.trim()).filter(Boolean))
+    );
+    if (!keyIds.length) {
+      throw new Error('Select at least one key');
+    }
+    for (const locale of targets) {
+      if (!project.locales.includes(locale)) {
+        throw new Error(`Locale not found in project: ${locale}`);
+      }
+    }
+
+    let filled = 0;
+    let skipped = 0;
+    let failed = 0;
+
+    for (const keyId of keyIds) {
+      const key = await this.repository.getKey(keyId);
+      if (!key || key.projectId !== projectId) {
+        skipped += targets.length;
+        continue;
+      }
+
+      for (const locale of targets) {
+        try {
+          if (input.mode === 'fill-missing') {
+            const result = await this.generateMissingTranslation(
+              key.id,
+              environmentId,
+              locale
+            );
+            if (result.outcome === 'written') {
+              filled += 1;
+            } else {
+              skipped += 1;
+            }
+            continue;
+          }
+
+          const sourceLocale = (input.sourceLocale ?? project.sourceLocale).trim();
+          if (!sourceLocale) {
+            throw new Error('Source locale is required');
+          }
+          const result = await this.retranslateCell(
+            project.sourceLocale,
+            key,
+            environmentId,
+            locale,
+            sourceLocale
+          );
+          if (result.outcome === 'written') {
+            filled += 1;
+          } else {
+            skipped += 1;
+          }
+        } catch (error) {
+          if (!(error instanceof TranslatorError)) {
+            throw error;
+          }
+          failed += 1;
+        }
+      }
+    }
+
+    return { filled, skipped, failed };
+  }
+
   /**
    * Rewrite selected locales from the project source text.
    * Human-owned cells are never replaced. `fromLocale` is the language the
@@ -468,35 +550,12 @@ export class TranslationService {
     }
 
     const keys = await this.repository.listKeys(projectId);
-    let filled = 0;
-    let skipped = 0;
-    let failed = 0;
-
-    for (const key of keys) {
-      for (const locale of targets) {
-        try {
-          const result = await this.retranslateCell(
-            project.sourceLocale,
-            key,
-            environmentId,
-            locale,
-            sourceLocale
-          );
-          if (result.outcome === 'written') {
-            filled += 1;
-          } else {
-            skipped += 1;
-          }
-        } catch (error) {
-          if (!(error instanceof TranslatorError)) {
-            throw error;
-          }
-          failed += 1;
-        }
-      }
-    }
-
-    return { filled, skipped, failed };
+    return this.translateSelection(projectId, environmentId, {
+      keyIds: keys.map((key) => key.id),
+      locales: targets,
+      mode: 'retranslate',
+      sourceLocale,
+    });
   }
 
   private async retranslateCell(

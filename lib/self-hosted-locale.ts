@@ -9,6 +9,7 @@ export type SelfHostedSdkConfig = {
   ingestToken: string;
   sourceLocale: string;
   refreshIntervalMs: number;
+  sourceCatalog?: Record<string, string>;
 };
 
 export type SelfHostedLocalePageProps = {
@@ -35,6 +36,7 @@ export function createSelfHostedSdkConfig(input: {
   projectId?: string;
   ingestToken?: string;
   sourceLocale?: string;
+  sourceCatalog?: Record<string, string>;
 }): SelfHostedSdkConfig | null {
   const projectId = input.projectId?.trim();
   const ingestToken = input.ingestToken?.trim();
@@ -51,6 +53,7 @@ export function createSelfHostedSdkConfig(input: {
     ingestToken,
     sourceLocale,
     refreshIntervalMs: SELF_HOSTED_REFRESH_INTERVAL_MS,
+    sourceCatalog: input.sourceCatalog,
   };
 }
 

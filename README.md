@@ -127,16 +127,21 @@ await flush();
 
 `translate(key, defaultText)` returns the current bundle value or the source
 text fallback, queues source-key ingestion, and batches sync requests. React
-consumers can import `KeykitProvider` and `useKeykit` from
-`@keykithq/sdk/react`. Next.js App Router consumers can use
-`createKeykitNext` from `@keykithq/sdk/next`.
+consumers wrap the tree in `KeykitProvider` and use `useTranslate()` for
+`const { t } = useTranslate(); t('settings.save', 'Save changes')`. Next.js
+App Router consumers can use `createKeykitNext` from `@keykithq/sdk/next`.
+
+Runtime discovery only sees keys executed in the browser (or during SSR for
+that request). Dead or unvisited files are not ingested until those code paths
+run. Use `npx @keykit/cli scan --root .` to statically list
+`translate(...)` / `t(...)` calls with source text before shipping.
 
 ## Localize the Keykit landing page and dashboard
 
-This app is a customer of itself. The public homepage uses
-`translate(key, defaultText)` from `@keykithq/sdk`. The signed-in dashboard
-keeps `next-i18next` `t('key')` calls and bridges them to a second dedicated
-project so those keys show up in the translation workspace.
+This app is a customer of itself. The public homepage uses `useTranslate()`
+from `@keykithq/sdk/react`. The signed-in dashboard keeps `next-i18next`
+`t('key')` calls and bridges them to a second dedicated project so those keys
+show up in the translation workspace.
 
 1. In **Translation Projects**, create a project such as `Landing page` and
    another such as `Dashboard`.

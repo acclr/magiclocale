@@ -163,6 +163,21 @@ const useTranslationWorkspace = (
         envUrl('/translations/retranslate'),
         { locales, sourceLocale }
       ),
+    queueTranslations: (body: {
+      scope: 'all-matching' | 'selected-keys';
+      keyIds?: string[];
+      locales: string[];
+      mode: 'fill-missing' | 'retranslate';
+      sourceLocale?: string;
+      filter?: TranslationFilter;
+      search?: string;
+    }) =>
+      mutateAndRefresh<{
+        queued: number;
+        filled: number;
+        skipped: number;
+        failed: number;
+      }>(envUrl('/translations/queue'), body),
     publish: (message?: string) =>
       mutateAndRefresh<{ pendingCount?: number }>(
         `${baseUrl}/versions/publish`,
@@ -180,6 +195,7 @@ export type TranslationWorkspaceActions = Pick<
   | 'addLocale'
   | 'fillMissing'
   | 'retranslate'
+  | 'queueTranslations'
 >;
 
 export default useTranslationWorkspace;

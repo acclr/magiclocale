@@ -3,6 +3,7 @@ import type { KeyMeta, SourceUsage } from '../keys/types';
 import type { EnvironmentService } from '../environments/environment-service';
 import type { Environment } from '../environments/types';
 import {
+  filterDashboardRows,
   paginateTranslationDashboard,
   projectTranslationDashboard,
   type DashboardQuery,
@@ -11,7 +12,12 @@ import {
 import type { TranslationRepository } from './repository';
 import type { ProjectService } from './project-service';
 import type { TranslationService } from './translation-service';
-import type { Project, Translation, TranslationKey } from './types';
+import type {
+  Project,
+  Translation,
+  TranslationFilter,
+  TranslationKey,
+} from './types';
 
 /**
  * Team-scoped facade over the translation domain. Every mutating call
@@ -248,6 +254,97 @@ export class TeamTranslationService {
       locales,
       sourceLocale
     );
+  }
+
+  async queueTranslations(
+    teamId: string,
+    projectId: string,
+    environmentRef: string | null | undefined,
+    input: {
+      scope: 'all-matching' | 'selected-keys';
+      keyIds?: string[];
+      locales: string[];
+      mode: 'fill-missing' | 'retranslate';
+      sourceLocale?: string;
+      filter?: TranslationFilter;
+      search?: string;
+    }
+  ): Promise<{ queued: number; filled: number; skipped: number; failed: number }> {
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
+    for (const locale of input.locales) {
+      this.requireProjectLocale(project, locale);
+    }
+
+    let keyIds = input.keyIds ?? [];
+    if (input.scope === 'all-matching') {
+      const [keys, translations] = await Promise.all([
+        this.repository.listKeys(project.id),
+        this.repository.listTranslations(project.id, environment.id),
+      ]);
+      let catalog: KeyMeta[] = [];
+      let usages: SourceUsage[] = [];
+      try {
+        if (this.keys) {
+          [catalog, usages] = await Promise.all([
+            this.keys.listAll(project.id),
+            this.keys.listUsagesForProject(project.id),
+          ]);
+        }
+      } catch (error) {
+        console.error('Unable to load key catalog for translation queue.', error);
+      }
+      const catalogByKey = Object.fromEntries(
+        catalog.map((item) => [item.key, item])
+      );
+      const catalogById = Object.fromEntries(catalog.map((item) => [item.id, item]));
+      const usageFilesByKey: Record<string, string[]> = {};
+      for (const usage of usages) {
+        const meta = catalogById[usage.keyMetaId];
+        if (!meta) {
+          continue;
+        }
+        const files = usageFilesByKey[meta.key] ?? [];
+        if (files.indexOf(usage.file) === -1) {
+          files.push(usage.file);
+        }
+        usageFilesByKey[meta.key] = files;
+      }
+      const fullDashboard = projectTranslationDashboard(
+        project,
+        environment,
+        keys,
+        translations,
+        catalogByKey,
+        usageFilesByKey
+      );
+      const filtered = filterDashboardRows(fullDashboard.rows, {
+        filter: input.filter ?? 'all',
+        search: input.search ?? '',
+      });
+      keyIds = filtered.map((row) => row.keyId);
+    }
+
+    const uniqueKeyIds = Array.from(new Set(keyIds));
+    const queued = uniqueKeyIds.length * input.locales.length;
+    if (!uniqueKeyIds.length) {
+      return { queued: 0, filled: 0, skipped: 0, failed: 0 };
+    }
+
+    const result = await this.translationService.translateSelection(
+      project.id,
+      environment.id,
+      {
+        keyIds: uniqueKeyIds,
+        locales: input.locales,
+        mode: input.mode,
+        sourceLocale: input.sourceLocale,
+      }
+    );
+    return { queued, ...result };
   }
 
   private async requireScope(

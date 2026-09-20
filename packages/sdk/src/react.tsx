@@ -25,6 +25,7 @@ export type KeykitContextValue = {
     fallback?: import('./types').FlagValue
   ) => import('./types').FlagValue;
   identify: (context: import('./types').FlagEvaluationContext) => void;
+  sourceCatalog?: Record<string, string>;
 };
 
 export const KeykitContext = createContext<KeykitContextValue | null>(
@@ -133,8 +134,10 @@ export function KeykitProvider({
       isEnabled,
       getValue,
       identify,
+      sourceCatalog: config.sourceCatalog,
     }),
     [
+      config.sourceCatalog,
       getValue,
       identify,
       isEnabled,
@@ -159,6 +162,37 @@ export function useKeykit(): KeykitContextValue {
     throw new Error('useKeykit must be used inside KeykitProvider.');
   }
   return context;
+}
+
+export function useTranslate() {
+  const {
+    translate,
+    locale,
+    isLoading,
+    setLocale,
+    refresh,
+    sourceCatalog,
+  } = useKeykit();
+
+  const t = useCallback(
+    (key: string, defaultText?: string) => {
+      const sourceText =
+        (defaultText !== undefined && defaultText !== ''
+          ? defaultText
+          : sourceCatalog?.[key]) ?? key;
+      return translate(key, sourceText);
+    },
+    [sourceCatalog, translate]
+  );
+
+  return {
+    t,
+    translate,
+    locale,
+    isLoading,
+    setLocale,
+    refresh,
+  };
 }
 
 export function useFlag(

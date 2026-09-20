@@ -96,6 +96,36 @@ export const retranslateLocalesSchema = z.object({
   sourceLocale: locale.optional(),
 });
 
+export const queueTranslationsSchema = z
+  .object({
+    scope: z.enum(['all-matching', 'selected-keys']),
+    keyIds: z.array(keyId).max(10_000).optional(),
+    locales: z.array(locale).min(1).max(50),
+    mode: z.enum(['fill-missing', 'retranslate']).default('fill-missing'),
+    sourceLocale: locale.optional(),
+    filter: z
+      .enum([
+        'all',
+        'ai',
+        'manual',
+        'needs-review',
+        'missing',
+        'unused',
+        'deprecated',
+      ])
+      .optional(),
+    search: z.string().trim().max(200).optional(),
+  })
+  .superRefine((value, ctx) => {
+    if (value.scope === 'selected-keys' && !value.keyIds?.length) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Select at least one key',
+        path: ['keyIds'],
+      });
+    }
+  });
+
 export const translationDashboardQuerySchema = z.object({
   projectId,
   environment: environmentRef.optional(),

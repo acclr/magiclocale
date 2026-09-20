@@ -2,6 +2,7 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { rewriteSourceTree, type RewritePlan } from './rewrite';
+import { scanSourceTree } from './scan';
 
 function flatten(value: unknown, prefix = '', out: Array<{ key: string; sourceText: string }> = []) {
   if (typeof value === 'string') {
@@ -35,6 +36,13 @@ function main() {
     return;
   }
 
+  if (command === 'scan') {
+    const root = argValue(args, '--root') ?? process.cwd();
+    const keys = scanSourceTree(resolve(root));
+    console.log(JSON.stringify(keys, null, 2));
+    return;
+  }
+
   if (command === 'flatten-json') {
     const file = argValue(args, '--file');
     if (!file) {
@@ -46,6 +54,7 @@ function main() {
   }
 
   console.log(`Keykit CLI
+  scan --root .
   rewrite --file migration.json --root .
   flatten-json --file messages.json
 
