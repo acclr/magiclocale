@@ -55,6 +55,8 @@ const Home: NextPageWithLayout<HomeProps> = ({ landing }) => {
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
+  context.res.setHeader('Cache-Control', 'private, no-store, must-revalidate');
+
   return {
     props: {
       landing: await getLandingLocalePageProps(context),

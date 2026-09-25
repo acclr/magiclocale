@@ -5,7 +5,11 @@ import type { NextRequest } from 'next/server';
 
 import { isPublicSdkApiPath } from './lib/api/public-sdk-paths';
 import env from './lib/env';
-import { isGlobMatch } from './lib/path-glob';
+import {
+  isGlobMatch,
+  isPublicHomePath,
+  stripI18nLocalePrefix,
+} from './lib/path-glob';
 
 // Constants for security headers
 const SECURITY_HEADERS = {
@@ -78,12 +82,18 @@ const unAuthenticatedRoutes = [
 ];
 
 export default async function middleware(req: NextRequest) {
-  const { pathname } = req.nextUrl;
+  const { pathname, locale } = req.nextUrl;
+  const routePath =
+    locale && (pathname === `/${locale}` || pathname.startsWith(`/${locale}/`))
+      ? pathname.slice(locale.length + 1) || '/'
+      : stripI18nLocalePrefix(pathname);
 
-  // Public SDK endpoints authenticate bearer API keys in their handlers.
+  // Marketing home and public SDK routes never require a session.
+  // Next.js i18n can present `/` as `/en` — treat both as the landing page.
   if (
-    isPublicSdkApiPath(pathname) ||
-    isGlobMatch(pathname, unAuthenticatedRoutes)
+    isPublicHomePath(routePath) ||
+    isPublicSdkApiPath(routePath) ||
+    isGlobMatch(routePath, unAuthenticatedRoutes)
   ) {
     return NextResponse.next();
   }
@@ -142,5 +152,7 @@ export default async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth/session).*)'],
+  // `.+` (not `.*`) so the bare homepage `/` never enters auth middleware.
+  // Locale-only paths such as `/en` still match and are allowed above.
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|api/auth/session).+)'],
 };

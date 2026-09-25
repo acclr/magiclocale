@@ -16,7 +16,7 @@ import { Themer } from '@boxyhq/react-ui/shared';
 import { AccountLayout } from '@/components/layouts';
 import { TooltipProvider } from '@/components/ui/tooltip';
 
-function MyApp({ Component, pageProps }: AppPropsWithLayout) {
+function MyApp({ Component, pageProps, router }: AppPropsWithLayout) {
   const { session, ...props } = pageProps;
 
   // Add mixpanel
@@ -31,7 +31,10 @@ function MyApp({ Component, pageProps }: AppPropsWithLayout) {
   }, []);
 
   const getLayout =
-    Component.getLayout || ((page) => <AccountLayout>{page}</AccountLayout>);
+    Component.getLayout ||
+    (router.pathname === '/'
+      ? (page) => page
+      : (page) => <AccountLayout>{page}</AccountLayout>);
 
   return (
     <>

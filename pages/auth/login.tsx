@@ -15,6 +15,7 @@ import { getCsrfToken, signIn, useSession } from 'next-auth/react';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 
 import env from '@/lib/env';
+import { safeCallbackPath } from '@/lib/safe-callback-url';
 import type { NextPageWithLayout } from 'types';
 import { AuthLayout } from '@/components/layouts';
 import GithubButton from '@/components/auth/GithubButton';
@@ -68,7 +69,8 @@ const Login: NextPageWithLayout<
 
   const redirectUrl = token
     ? `/invitations/${token}`
-    : env.redirectIfAuthenticated;
+    : (safeCallbackPath(router.query.callbackUrl) ??
+      env.redirectIfAuthenticated);
 
   const formik = useFormik({
     initialValues: {
@@ -103,12 +105,13 @@ const Login: NextPageWithLayout<
     },
   });
 
-  if (status === 'loading') {
+  if (status === 'loading' || !router.isReady) {
     return <Loading />;
   }
 
   if (status === 'authenticated') {
-    router.push(redirectUrl);
+    void router.replace(redirectUrl);
+    return <Loading />;
   }
 
   const params = token ? `?token=${token}` : '';
