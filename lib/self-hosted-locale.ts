@@ -1,4 +1,8 @@
-import type { TranslationBundle } from '@keykithq/sdk';
+import type {
+  KeykitDelivery,
+  LocaleCatalogs,
+  TranslationBundle,
+} from '@keykithq/sdk';
 
 export const KEYKIT_LOCALE_COOKIE = 'keykit-locale';
 export const SELF_HOSTED_REFRESH_INTERVAL_MS = 30_000;
@@ -9,6 +13,8 @@ export type SelfHostedSdkConfig = {
   ingestToken: string;
   sourceLocale: string;
   refreshIntervalMs: number;
+  delivery?: KeykitDelivery;
+  catalogs?: LocaleCatalogs;
   sourceCatalog?: Record<string, string>;
 };
 

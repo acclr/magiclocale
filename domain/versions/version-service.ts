@@ -176,12 +176,22 @@ export class VersionService {
   async resolveLocaleBundle(
     environmentId: string,
     locale: string,
-    versionNumber?: number | null
+    versionNumber?: number | null,
+    options?: { workingCopy?: boolean }
   ): Promise<{
     bundle: LocaleBundleSnapshot | null;
     version: Version | null;
   }> {
     const environment = await this.requireEnvironment(environmentId);
+
+    if (options?.workingCopy) {
+      const working = await this.buildWorkingSnapshot(environment);
+      return {
+        bundle:
+          working.locales.find((bundle) => bundle.locale === locale) ?? null,
+        version: null,
+      };
+    }
 
     if (versionNumber !== undefined && versionNumber !== null) {
       const versions = await this.repository.listVersions(environmentId);

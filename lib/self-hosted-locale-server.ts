@@ -7,7 +7,10 @@ import {
   parseSelfHostedLocale,
   type SelfHostedLocalePageProps,
 } from './self-hosted-locale';
-import { buildTranslationBundle } from './translations/translation-bundle';
+import {
+  buildTranslationBundle,
+  buildTranslationCatalog,
+} from './translations/translation-bundle';
 import {
   getEnvironmentService,
   getTranslationRepository,
@@ -49,19 +52,32 @@ export async function getSelfHostedLocalePageProps(input: {
     locales,
     sourceLocale
   );
-  const result = await buildTranslationBundle(
-    {
-      repository: getTranslationRepository(),
-      environmentService: getEnvironmentService(),
-      versionService: getVersionService(),
-    },
-    { projectId: config.projectId, locale }
-  );
+  const dependencies = {
+    repository: getTranslationRepository(),
+    environmentService: getEnvironmentService(),
+    versionService: getVersionService(),
+  };
+  const catalog = await buildTranslationCatalog(dependencies, {
+    projectId: config.projectId,
+    workingCopy: true,
+  });
+  const catalogs = catalog.success ? catalog.catalog.locales : {};
+  const result = await buildTranslationBundle(dependencies, {
+    projectId: config.projectId,
+    locale,
+    workingCopy: true,
+  });
 
   return {
     locale,
     locales,
-    config: { ...config, sourceLocale },
+    config: {
+      ...config,
+      sourceLocale,
+      delivery: 'static',
+      catalogs,
+      refreshIntervalMs: 0,
+    },
     initialBundle: result.success ? result.bundle : null,
   };
 }

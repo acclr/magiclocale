@@ -41,6 +41,8 @@ export type TranslationBundleQuery = {
   environment?: string | null;
   /** Pin a specific published version instead of the environment's live one. */
   version?: number | null;
+  /** Read the dashboard working copy instead of the published snapshot. */
+  workingCopy?: boolean;
 };
 
 /**
@@ -79,7 +81,8 @@ export async function buildTranslationBundle(
   const resolved = await dependencies.versionService.resolveLocaleBundle(
     environmentId,
     query.locale,
-    query.version
+    query.version,
+    { workingCopy: query.workingCopy }
   );
 
   if (
@@ -156,7 +159,8 @@ export async function buildTranslationCatalog(
     const resolved = await dependencies.versionService.resolveLocaleBundle(
       environmentId,
       locale,
-      query.version
+      query.version,
+      { workingCopy: query.workingCopy }
     );
     if (
       query.version !== undefined &&

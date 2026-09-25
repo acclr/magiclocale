@@ -10,7 +10,7 @@ function persistLandingLocale(locale: string): void {
 }
 
 const LandingLocaleSwitcher = () => {
-  const { locale, locales, isLoading } = useLandingI18n();
+  const { locale, locales, isLoading, setLocale } = useLandingI18n();
 
   if (locales.length < 2) {
     return null;
@@ -36,7 +36,7 @@ const LandingLocaleSwitcher = () => {
               return;
             }
             persistLandingLocale(code);
-            window.location.reload();
+            void setLocale(code);
           }}
         >
           {code.toUpperCase()}

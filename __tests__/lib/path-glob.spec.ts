@@ -23,10 +23,12 @@ describe('path glob matcher', () => {
   });
 
   it('treats a list of patterns as a match if any pattern hits', () => {
-    const routes = ['/api/hello', '/auth/**', '/invitations/*'];
+    const routes = ['/', '/api/hello', '/auth/**', '/invitations/*'];
+    expect(isGlobMatch('/', routes)).toBe(true);
     expect(isGlobMatch('/api/hello', routes)).toBe(true);
     expect(isGlobMatch('/auth/join', routes)).toBe(true);
     expect(isGlobMatch('/invitations/token', routes)).toBe(true);
     expect(isGlobMatch('/teams/acme', routes)).toBe(false);
+    expect(isGlobMatch('/dashboard', routes)).toBe(false);
   });
 });

@@ -59,6 +59,7 @@ const generateCSP = (): string => {
 
 // Add routes that don't require authentication
 const unAuthenticatedRoutes = [
+  '/',
   '/api/hello',
   '/api/health',
   '/api/dashboard-locale',

@@ -1,7 +1,6 @@
 import { type ReactElement } from 'react';
 import type { NextPageWithLayout } from 'types';
 import { GetServerSidePropsContext } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import FAQSection from '@/components/defaultLanding/FAQSection';
 import HeroSection from '@/components/defaultLanding/HeroSection';
 import FeatureSection from '@/components/defaultLanding/FeatureSection';
@@ -11,7 +10,6 @@ import { LandingLocaleProvider } from '@/components/defaultLanding/LandingLocale
 import { useTranslate } from '@keykithq/sdk/react';
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
 import { getLandingLocalePageProps } from '@/lib/landing-locale-server';
-import env from '@/lib/env';
 import Head from 'next/head';
 
 type HomeProps = {
@@ -57,21 +55,9 @@ const Home: NextPageWithLayout<HomeProps> = ({ landing }) => {
 export const getServerSideProps = async (
   context: GetServerSidePropsContext
 ) => {
-  if (env.hideLandingPage) {
-    return {
-      redirect: {
-        destination: '/auth/login',
-        permanent: true,
-      },
-    };
-  }
-
-  const { locale } = context;
-
   return {
     props: {
       landing: await getLandingLocalePageProps(context),
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
     },
   };
 };
