@@ -36,6 +36,11 @@ export type KeykitProviderProps = {
   initialBundle?: TranslationBundle;
   cookieName?: string;
   onServerRefresh?: () => void;
+  /**
+   * Replaces the default locale change (cookie + in-memory bundle reload).
+   * Path-based apps use this to navigate to `/sv` instead of swapping in place.
+   */
+  onSetLocale?: (locale: string) => Promise<void> | void;
   children: ReactNode;
 };
 
@@ -45,6 +50,7 @@ export function KeykitProvider({
   initialBundle,
   cookieName = 'keykit-locale',
   onServerRefresh,
+  onSetLocale,
   children,
 }: KeykitProviderProps) {
   const clientRef = useRef<KeykitClient | null>(null);
@@ -83,6 +89,15 @@ export function KeykitProvider({
       if (nextLocale === client.getLocale()) {
         return;
       }
+      if (onSetLocale) {
+        setIsLoading(true);
+        try {
+          await onSetLocale(nextLocale);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
       const previousLocale = client.getLocale();
       setIsLoading(true);
       persistLocale(cookieName, nextLocale);
@@ -95,7 +110,7 @@ export function KeykitProvider({
         setIsLoading(false);
       }
     },
-    [client, cookieName]
+    [client, cookieName, onSetLocale]
   );
   const refresh = useCallback(async () => {
     setIsLoading(true);

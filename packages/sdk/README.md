@@ -8,6 +8,50 @@ Official Keykit client for ingesting source keys and loading translation bundles
 npm install @keykithq/sdk
 ```
 
+Add the project id and API key to `.env`:
+
+```bash
+KEYKIT_API_KEY=
+KEYKIT_PROJECT_ID=
+KEYKIT_BASE_URL=https://www.keykit.dev
+```
+
+## Pages Router
+
+```tsx
+import { createKeykit, KeykitProvider } from '@keykithq/sdk/pages';
+import { useKeykit } from '@keykithq/sdk/react';
+
+const { getServerSideProps } = createKeykit({
+  routing: 'path',
+  defaultLocale: 'en',
+  locales: ['en', 'sv', 'dk'],
+});
+
+export { getServerSideProps };
+
+export default function Page({ keykit }) {
+  return (
+    <KeykitProvider keykit={keykit}>
+      <SaveButton />
+    </KeykitProvider>
+  );
+}
+
+function SaveButton() {
+  const { translate, locale, setLocale } = useKeykit();
+  return (
+    <button onClick={() => setLocale(locale === 'en' ? 'sv' : 'en')}>
+      {translate('settings.save', 'Save changes')}
+    </button>
+  );
+}
+```
+
+With `routing: 'path'`, `/` and `/en` are English, `/sv` is Swedish, and `/dk` is Danish. `setLocale` navigates to that path. Put the page at `pages/[[...landing]].tsx` so those URLs share one file. Add further pages with `pages: ['pricing']` (`/pricing`, `/sv/pricing`).
+
+`KEYKIT_API_KEY` stays on the server. `NEXT_PUBLIC_KEYKIT_API_KEY` is only needed if the browser should call Keykit directly.
+
 ## Delivery modes
 
 ### 1. Live fetch

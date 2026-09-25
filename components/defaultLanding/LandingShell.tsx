@@ -1,12 +1,14 @@
+import { hrefForLocaleSlug } from '@keykithq/sdk/routing';
+import { useKeykit } from '@keykithq/sdk/react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 
+import { LogoWhite } from '@/components/shared/logo';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { landingRouting } from '@/content/landing/site';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
-import { useTranslate } from '@keykithq/sdk/react';
-import { LogoWhite } from '@/components/shared/logo';
 
 type LandingShellProps = {
   children: ReactNode;
@@ -19,7 +21,8 @@ const navLinks = [
 ] as const;
 
 const LandingShell = ({ children }: LandingShellProps) => {
-  const { t } = useTranslate();
+  const { translate, locale } = useKeykit();
+  const homeHref = hrefForLocaleSlug(locale, '', landingRouting);
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
@@ -27,18 +30,18 @@ const LandingShell = ({ children }: LandingShellProps) => {
         aria-hidden
         className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
       >
-        <div className="absolute -top-[40%] left-1/2 h-[720px] w-[1200px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_center,color-mix(in_oklch,var(--primary)_22%,transparent)_0%,transparent_65%)] opacity-80" />
-        <div className="absolute top-[20%] -right-[10%] h-[480px] w-[480px] rounded-full bg-[radial-gradient(circle,color-mix(in_oklch,var(--secondary)_18%,transparent)_0%,transparent_70%)]" />
+        <div className="absolute -top-[40%] left-1/2 h-[720px] w-[1200px] -translate-x-1/2 rounded-full bg-[radial-gradientranslate(ellipse_at_center,color-mix(in_oklch,var(--primary)_22%,transparent)_0%,transparent_65%)] opacity-80" />
+        <div className="absolute top-[20%] -right-[10%] h-[480px] w-[480px] rounded-full bg-[radial-gradientranslate(circle,color-mix(in_oklch,var(--secondary)_18%,transparent)_0%,transparent_70%)]" />
         <div
           className="absolute inset-0 opacity-[0.35]"
           style={{
             backgroundImage: `
-              linear-gradient(to right, color-mix(in oklch, var(--border) 40%, transparent) 1px, transparent 1px),
-              linear-gradient(to bottom, color-mix(in oklch, var(--border) 40%, transparent) 1px, transparent 1px)
+              linear-gradientranslate(to right, color-mix(in oklch, var(--border) 40%, transparent) 1px, transparent 1px),
+              linear-gradientranslate(to bottom, color-mix(in oklch, var(--border) 40%, transparent) 1px, transparent 1px)
             `,
             backgroundSize: '64px 64px',
             maskImage:
-              'linear-gradient(to bottom, black 0%, black 45%, transparent 100%)',
+              'linear-gradientranslate(to bottom, black 0%, black 45%, transparent 100%)',
           }}
         />
       </div>
@@ -46,7 +49,8 @@ const LandingShell = ({ children }: LandingShellProps) => {
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/85 backdrop-blur-md supports-backdrop-filter:bg-background/70">
         <div className="mx-auto flex h-16 max-w-6xl items-center gap-4 px-4 sm:px-6">
           <Link
-            href="/"
+            href={homeHref}
+            locale={false}
             className="font-heading text-lg font-semibold tracking-tight text-foreground"
           >
             <LogoWhite className="h-[30px]" />
@@ -54,7 +58,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
           <nav className="hidden flex-1 items-center justify-center gap-1 md:flex">
             {navLinks.map((item) => (
               <Button key={item.href} asChild variant="ghost" size="sm">
-                <a href={item.href}>{t(item.key, item.fallback)}</a>
+                <a href={item.href}>{translate(item.key, item.fallback)}</a>
               </Button>
             ))}
           </nav>
@@ -67,12 +71,12 @@ const LandingShell = ({ children }: LandingShellProps) => {
               className="hidden sm:inline-flex"
             >
               <Link href="/auth/login">
-                {t('landing.nav.sign-in', 'Sign in')}
+                {translate('landing.nav.sign-in', 'Sign in')}
               </Link>
             </Button>
             <Button asChild size="sm">
               <Link href="/auth/join">
-                {t('landing.nav.sign-up', 'Sign up')}
+                {translate('landing.nav.sign-up', 'Sign up')}
               </Link>
             </Button>
           </div>
@@ -85,10 +89,10 @@ const LandingShell = ({ children }: LandingShellProps) => {
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-12 sm:px-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="font-heading text-sm font-semibold">
-              {t('landing.nav.brand', 'Keykit')}
+              {translate('landing.nav.brand', 'Keykit')}
             </p>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              {t(
+              {translate(
                 'landing.footer.tagline',
                 'Product copy, localized — with a dashboard your team actually uses.'
               )}
@@ -97,17 +101,17 @@ const LandingShell = ({ children }: LandingShellProps) => {
           <div className="flex flex-wrap gap-3">
             <Button asChild variant="outline" size="sm">
               <Link href="/auth/join">
-                {t('landing.hero.get-started', 'Get started')}
+                {translate('landing.hero.get-started', 'Get started')}
               </Link>
             </Button>
             <Button asChild variant="ghost" size="sm">
-              <a href="#faq">{t('landing.nav.faq', 'FAQ')}</a>
+              <a href="#faq">{translate('landing.nav.faq', 'FAQ')}</a>
             </Button>
           </div>
         </div>
         <Separator />
         <p className="mx-auto max-w-6xl px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
-          {t(
+          {translate(
             'landing.footer.note',
             'This marketing site is powered by Keykit — edit any string from Translation Projects.'
           )}

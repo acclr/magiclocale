@@ -1,16 +1,10 @@
 import { Button } from '@/components/ui/button';
-import { KEYKIT_LOCALE_COOKIE } from '@/lib/self-hosted-locale';
-
-import { useLandingI18n } from './LandingLocaleProvider';
-
-function persistLandingLocale(locale: string): void {
-  document.cookie =
-    `${encodeURIComponent(KEYKIT_LOCALE_COOKIE)}=${encodeURIComponent(locale)}; ` +
-    'Path=/; Max-Age=31536000; SameSite=Lax';
-}
+import { landingSite } from '@/content/landing/site';
+import { useKeykit } from '@keykithq/sdk/react';
 
 const LandingLocaleSwitcher = () => {
-  const { locale, locales, isLoading, setLocale } = useLandingI18n();
+  const { locale, isLoading, setLocale } = useKeykit();
+  const locales = landingSite.locales;
 
   if (locales.length < 2) {
     return null;
@@ -32,10 +26,6 @@ const LandingLocaleSwitcher = () => {
           aria-pressed={locale === code}
           disabled={isLoading}
           onClick={() => {
-            if (code === locale) {
-              return;
-            }
-            persistLandingLocale(code);
             void setLocale(code);
           }}
         >

@@ -60,7 +60,15 @@ function requireClient(): KeykitClient {
 }
 
 export { KeykitClient } from './client';
+export { createKeykit } from './create-keykit';
+export type { CreatedKeykit, CreateKeykitOptions } from './create-keykit';
 export { catalogsFromFile } from './config';
+export {
+  hrefForLocale,
+  hrefForLocaleSlug,
+  matchLocalePath,
+} from './locale-path';
+export type { LocaleMatch, LocaleRouting } from './locale-path';
 export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
 export type {

@@ -15,17 +15,17 @@ import { cn } from 'cn';
 
 import plans from './data/pricing.json';
 import LandingSection from './LandingSection';
-import { useTranslate } from '@keykithq/sdk/react';
+import { useKeykit } from '@keykithq/sdk/react';
 
 const PricingSection = () => {
-  const { t } = useTranslate();
+  const { translate } = useKeykit();
 
   return (
     <LandingSection
       id="pricing"
-      eyebrow={t('landing.pricing.eyebrow', 'Plans')}
-      title={t('landing.pricing.title', 'Simple monthly pricing')}
-      description={t(
+      eyebrow={translate('landing.pricing.eyebrow', 'Plans')}
+      title={translate('landing.pricing.title', 'Simple monthly pricing')}
+      description={translate(
         'landing.pricing.subtitle',
         'Start free with a teammate. Upgrade to Premium or Enterprise as you grow.'
       )}
@@ -42,23 +42,30 @@ const PricingSection = () => {
           >
             {plan.highlight ? (
               <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                {t('landing.pricing.popular', 'Popular')}
+                {translate('landing.pricing.popular', 'Popular')}
               </Badge>
             ) : null}
             <CardHeader className="gap-2 pb-2">
               <CardTitle className="font-heading text-lg capitalize">
-                {t(`landing.pricing.${plan.id}.name`, plan.id)}
+                {translate(`landing.pricing.${plan.id}.name`, plan.id)}
               </CardTitle>
               <div className="flex items-baseline gap-1">
                 <span className="font-heading text-4xl font-semibold tracking-tight">
                   ${plan.amount}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  / {t(`landing.pricing.${plan.id}.duration`, plan.duration)}
+                  /{' '}
+                  {translate(
+                    `landing.pricing.${plan.id}.duration`,
+                    plan.duration
+                  )}
                 </span>
               </div>
               <CardDescription className="text-sm leading-relaxed">
-                {t(`landing.pricing.${plan.id}.description`, plan.description)}
+                {translate(
+                  `landing.pricing.${plan.id}.description`,
+                  plan.description
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1">
@@ -70,7 +77,7 @@ const PricingSection = () => {
                       aria-hidden
                     />
                     <span className="text-muted-foreground">
-                      {t(
+                      {translate(
                         `landing.pricing.${plan.id}.benefit.${benefit.id}`,
                         benefit.text
                       )}
@@ -86,7 +93,7 @@ const PricingSection = () => {
                 variant={plan.highlight ? 'default' : 'outline'}
               >
                 <Link href="/auth/join">
-                  {t('landing.pricing.get-started', 'Get started')}
+                  {translate('landing.pricing.get-started', 'Get started')}
                 </Link>
               </Button>
             </CardFooter>

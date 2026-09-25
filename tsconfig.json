@@ -24,6 +24,8 @@
       "@/domain/*": ["domain/*"],
       "@keykithq/sdk": ["packages/sdk/dist/index"],
       "@keykithq/sdk/react": ["packages/sdk/dist/react"],
+      "@keykithq/sdk/pages": ["packages/sdk/dist/pages"],
+      "@keykithq/sdk/routing": ["packages/sdk/dist/locale-path"],
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],

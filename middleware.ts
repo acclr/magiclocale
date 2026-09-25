@@ -5,6 +5,7 @@ import type { NextRequest } from 'next/server';
 
 import { isPublicSdkApiPath } from './lib/api/public-sdk-paths';
 import env from './lib/env';
+import { isPublicLandingPath } from './lib/landing/public-path';
 import {
   isGlobMatch,
   isPublicHomePath,
@@ -91,6 +92,7 @@ export default async function middleware(req: NextRequest) {
   // Marketing home and public SDK routes never require a session.
   // Next.js i18n can present `/` as `/en` — treat both as the landing page.
   if (
+    isPublicLandingPath(pathname) ||
     isPublicHomePath(routePath) ||
     isPublicSdkApiPath(routePath) ||
     isGlobMatch(routePath, unAuthenticatedRoutes)

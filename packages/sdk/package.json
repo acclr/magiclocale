@@ -20,6 +20,15 @@
     "./next": {
       "types": "./dist/next.d.ts",
       "import": "./dist/next.js"
+    },
+    "./pages": {
+      "types": "./dist/pages.d.ts",
+      "import": "./dist/pages.js"
+    },
+    "./routing": {
+      "types": "./dist/locale-path.d.ts",
+      "import": "./dist/locale-path.js",
+      "require": "./dist/locale-path.cjs"
     }
   },
   "files": [

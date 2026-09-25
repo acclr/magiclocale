@@ -18,7 +18,7 @@ import { cn } from 'cn';
 
 import features from './data/features.json';
 import LandingSection from './LandingSection';
-import { useTranslate } from '@keykithq/sdk/react';
+import { useKeykit } from '@keykithq/sdk/react';
 
 const featureIcons: Record<string, LucideIcon> = {
   discovery: SparklesIcon,
@@ -30,14 +30,14 @@ const featureIcons: Record<string, LucideIcon> = {
 };
 
 const FeatureSection = () => {
-  const { t } = useTranslate();
+  const { translate } = useKeykit();
 
   return (
     <LandingSection
       id="features"
-      eyebrow={t('landing.features.eyebrow', 'Platform')}
-      title={t('landing.features.title', 'Built for product teams')}
-      description={t(
+      eyebrow={translate('landing.features.eyebrow', 'Platform')}
+      title={translate('landing.features.title', 'Built for product teams')}
+      description={translate(
         'landing.features.subtitle',
         'Everything you need to localize application copy — including this marketing site.'
       )}
@@ -60,10 +60,13 @@ const FeatureSection = () => {
                   <Icon className="size-5" aria-hidden />
                 </div>
                 <CardTitle className="text-base">
-                  {t(`landing.features.${feature.id}.name`, feature.name)}
+                  {translate(
+                    `landing.features.${feature.id}.name`,
+                    feature.name
+                  )}
                 </CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
-                  {t(
+                  {translate(
                     `landing.features.${feature.id}.description`,
                     feature.description
                   )}

@@ -24,6 +24,8 @@ type CookieRequest = Pick<IncomingMessage, 'headers'> & {
 
 export async function getSelfHostedLocalePageProps(input: {
   req?: CookieRequest;
+  /** URL locale. When set, it wins over the locale cookie. */
+  locale?: string;
   appUrl: string;
   projectId?: string;
   ingestToken?: string;
@@ -51,11 +53,14 @@ export async function getSelfHostedLocalePageProps(input: {
       project?.locales.length && project.locales.length > 0
         ? project.locales
         : [sourceLocale];
-    const locale = parseSelfHostedLocale(
-      readCookie(input.req, KEYKIT_LOCALE_COOKIE),
-      locales,
-      sourceLocale
-    );
+    const requestedLocale = input.locale?.trim();
+    const locale = requestedLocale
+      ? requestedLocale
+      : parseSelfHostedLocale(
+          readCookie(input.req, KEYKIT_LOCALE_COOKIE),
+          locales,
+          sourceLocale
+        );
     const dependencies = {
       repository: getTranslationRepository(),
       environmentService: getEnvironmentService(),

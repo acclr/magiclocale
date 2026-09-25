@@ -323,17 +323,33 @@ const ProjectSettingsForm = ({
                 {t('delivery-live-description')}
               </p>
               <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
-                {`import { KeykitProvider } from '@keykithq/sdk/react';
+                {`# .env
+KEYKIT_API_KEY=
+KEYKIT_PROJECT_ID=${project.id}
+KEYKIT_BASE_URL=https://www.keykit.dev
 
-<KeykitProvider
-  config={{
-    delivery: 'live',
-    baseUrl: 'https://www.keykit.dev',
-    projectId: '${project.id}',
-    ingestToken: process.env.NEXT_PUBLIC_KEYKIT_API_KEY!,
-    sourceLocale: '${project.sourceLocale}',
-  }}
->`}
+import { createKeykit, KeykitProvider } from '@keykithq/sdk/pages';
+import { useKeykit } from '@keykithq/sdk/react';
+
+const { getServerSideProps } = createKeykit();
+export { getServerSideProps };
+
+export default function Page({ keykit }) {
+  return (
+    <KeykitProvider keykit={keykit}>
+      <App />
+    </KeykitProvider>
+  );
+}
+
+function App() {
+  const { translate, locale, setLocale } = useKeykit();
+  return (
+    <button onClick={() => setLocale(locale === 'en' ? 'sv' : 'en')}>
+      {translate('settings.save', 'Save changes')}
+    </button>
+  );
+}`}
               </pre>
             </div>
             <div>
