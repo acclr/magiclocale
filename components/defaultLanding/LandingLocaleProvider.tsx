@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { KeykitProvider, useKeykit } from '@keykithq/sdk/react';
 
 import type { LandingLocalePageProps } from '@/lib/landing-locale';
+import { ensureStaticCatalogs } from '@/lib/self-hosted-locale';
 
 export type LandingI18n = {
   locale: string;
@@ -12,37 +13,6 @@ export type LandingI18n = {
 };
 
 const LandingI18nContext = createContext<LandingI18n | null>(null);
-
-function identityTranslate(_key: string, defaultText: string): string {
-  return defaultText;
-}
-
-function FallbackLandingI18n({
-  locale,
-  locales,
-  children,
-}: {
-  locale: string;
-  locales: string[];
-  children: ReactNode;
-}) {
-  const value = useMemo<LandingI18n>(
-    () => ({
-      locale,
-      locales,
-      isLoading: false,
-      translate: identityTranslate,
-      setLocale: async () => undefined,
-    }),
-    [locale, locales]
-  );
-
-  return (
-    <LandingI18nContext.Provider value={value}>
-      {children}
-    </LandingI18nContext.Provider>
-  );
-}
 
 function BridgedLandingI18n({
   locales,
@@ -77,23 +47,29 @@ export function LandingLocaleProvider({
   landing: LandingLocalePageProps;
   children: ReactNode;
 }) {
-  if (!landing.config) {
-    return (
-      <FallbackLandingI18n locale={landing.locale} locales={landing.locales}>
-        {children}
-      </FallbackLandingI18n>
-    );
-  }
+  const locale = landing.locale || 'en';
+  const locales = landing.locales?.length ? landing.locales : [locale];
+  const catalogs = ensureStaticCatalogs(landing.config?.catalogs, locale);
+  const config = {
+    baseUrl: landing.config?.baseUrl ?? '',
+    projectId: landing.config?.projectId ?? '',
+    ingestToken: landing.config?.ingestToken ?? '',
+    sourceLocale: landing.config?.sourceLocale ?? locale,
+    delivery: 'static' as const,
+    catalogs,
+    refreshIntervalMs: 0,
+    ...(landing.config?.sourceCatalog
+      ? { sourceCatalog: landing.config.sourceCatalog }
+      : {}),
+  };
 
   return (
     <KeykitProvider
-      config={landing.config}
-      initialLocale={landing.locale}
+      config={config}
+      initialLocale={locale}
       initialBundle={landing.initialBundle ?? undefined}
     >
-      <BridgedLandingI18n locales={landing.locales}>
-        {children}
-      </BridgedLandingI18n>
+      <BridgedLandingI18n locales={locales}>{children}</BridgedLandingI18n>
     </KeykitProvider>
   );
 }

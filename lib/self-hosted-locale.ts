@@ -71,3 +71,14 @@ export const emptySelfHostedLocalePageProps: SelfHostedLocalePageProps = {
   config: null,
   initialBundle: null,
 };
+
+/** Static SDK delivery throws if `catalogs` is empty — always keep one locale. */
+export function ensureStaticCatalogs(
+  catalogs: LocaleCatalogs | undefined,
+  locale: string
+): LocaleCatalogs {
+  if (catalogs && Object.keys(catalogs).length > 0) {
+    return catalogs;
+  }
+  return { [locale || 'en']: {} };
+}

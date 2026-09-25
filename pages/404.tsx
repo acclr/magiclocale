@@ -1,5 +1,4 @@
 import React, { ReactElement } from 'react';
-import { AccountLayout } from '@/components/layouts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -41,7 +40,7 @@ const Custom404 = () => {
 export default Custom404;
 
 Custom404.getLayout = function getLayout(page: ReactElement) {
-  return <AccountLayout>{page}</AccountLayout>;
+  return <>{page}</>;
 };
 
 export async function getStaticProps({ locale }: GetServerSidePropsContext) {

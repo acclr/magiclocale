@@ -2,6 +2,7 @@ import {
   createLandingSdkConfig,
   parseLandingLocale,
 } from '../../lib/landing-locale';
+import { ensureStaticCatalogs } from '../../lib/self-hosted-locale';
 
 describe('landing locale helpers', () => {
   it('uses the cookie only when it is a configured project locale', () => {
@@ -32,5 +33,13 @@ describe('landing locale helpers', () => {
         ingestToken: 'token_a',
       })
     ).toBeNull();
+  });
+
+  it('always provides at least one static catalog locale', () => {
+    expect(ensureStaticCatalogs(undefined, 'en')).toEqual({ en: {} });
+    expect(ensureStaticCatalogs({}, 'sv')).toEqual({ sv: {} });
+    expect(ensureStaticCatalogs({ en: { hello: 'Hi' } }, 'sv')).toEqual({
+      en: { hello: 'Hi' },
+    });
   });
 });

@@ -3,6 +3,7 @@ import type { IncomingMessage } from 'http';
 import {
   createSelfHostedSdkConfig,
   emptySelfHostedLocalePageProps,
+  ensureStaticCatalogs,
   KEYKIT_LOCALE_COOKIE,
   parseSelfHostedLocale,
   type SelfHostedLocalePageProps,
@@ -29,57 +30,67 @@ export async function getSelfHostedLocalePageProps(input: {
   sourceLocale?: string;
   sourceCatalog?: Record<string, string>;
 }): Promise<SelfHostedLocalePageProps> {
-  const config = createSelfHostedSdkConfig({
-    appUrl: input.appUrl,
-    projectId: input.projectId,
-    ingestToken: input.ingestToken,
-    sourceLocale: input.sourceLocale,
-    sourceCatalog: input.sourceCatalog,
-  });
+  try {
+    const config = createSelfHostedSdkConfig({
+      appUrl: input.appUrl,
+      projectId: input.projectId,
+      ingestToken: input.ingestToken,
+      sourceLocale: input.sourceLocale,
+      sourceCatalog: input.sourceCatalog,
+    });
 
-  if (!config) {
+    if (!config) {
+      return emptySelfHostedLocalePageProps;
+    }
+
+    const project = await getTranslationRepository().getProject(
+      config.projectId
+    );
+    const sourceLocale = project?.sourceLocale ?? config.sourceLocale;
+    const locales =
+      project?.locales.length && project.locales.length > 0
+        ? project.locales
+        : [sourceLocale];
+    const locale = parseSelfHostedLocale(
+      readCookie(input.req, KEYKIT_LOCALE_COOKIE),
+      locales,
+      sourceLocale
+    );
+    const dependencies = {
+      repository: getTranslationRepository(),
+      environmentService: getEnvironmentService(),
+      versionService: getVersionService(),
+    };
+    const catalog = await buildTranslationCatalog(dependencies, {
+      projectId: config.projectId,
+      workingCopy: true,
+    });
+    const catalogs = ensureStaticCatalogs(
+      catalog.success ? catalog.catalog.locales : {},
+      sourceLocale
+    );
+    const result = await buildTranslationBundle(dependencies, {
+      projectId: config.projectId,
+      locale,
+      workingCopy: true,
+    });
+
+    return {
+      locale,
+      locales,
+      config: {
+        ...config,
+        sourceLocale,
+        delivery: 'static',
+        catalogs,
+        refreshIntervalMs: 0,
+      },
+      initialBundle: result.success ? result.bundle : null,
+    };
+  } catch (error) {
+    console.error('[keykit] Failed to load self-hosted locale props', error);
     return emptySelfHostedLocalePageProps;
   }
-
-  const project = await getTranslationRepository().getProject(config.projectId);
-  const sourceLocale = project?.sourceLocale ?? config.sourceLocale;
-  const locales =
-    project?.locales.length && project.locales.length > 0
-      ? project.locales
-      : [sourceLocale];
-  const locale = parseSelfHostedLocale(
-    readCookie(input.req, KEYKIT_LOCALE_COOKIE),
-    locales,
-    sourceLocale
-  );
-  const dependencies = {
-    repository: getTranslationRepository(),
-    environmentService: getEnvironmentService(),
-    versionService: getVersionService(),
-  };
-  const catalog = await buildTranslationCatalog(dependencies, {
-    projectId: config.projectId,
-    workingCopy: true,
-  });
-  const catalogs = catalog.success ? catalog.catalog.locales : {};
-  const result = await buildTranslationBundle(dependencies, {
-    projectId: config.projectId,
-    locale,
-    workingCopy: true,
-  });
-
-  return {
-    locale,
-    locales,
-    config: {
-      ...config,
-      sourceLocale,
-      delivery: 'static',
-      catalogs,
-      refreshIntervalMs: 0,
-    },
-    initialBundle: result.success ? result.bundle : null,
-  };
 }
 
 function readCookie(

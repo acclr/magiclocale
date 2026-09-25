@@ -1,5 +1,4 @@
 import React, { ReactElement } from 'react';
-import { AccountLayout } from '@/components/layouts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { GetServerSidePropsContext } from 'next';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
@@ -40,7 +39,7 @@ const Custom500 = () => {
 export default Custom500;
 
 Custom500.getLayout = function getLayout(page: ReactElement) {
-  return <AccountLayout>{page}</AccountLayout>;
+  return <>{page}</>;
 };
 
 export async function getStaticProps({ locale }: GetServerSidePropsContext) {
