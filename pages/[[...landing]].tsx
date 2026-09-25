@@ -1,9 +1,12 @@
+import { Databuddy } from '@databuddy/sdk/react';
 import { KeykitProvider, type KeykitPageProps } from '@keykithq/sdk/pages';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';
 
 import { LandingView } from '@/content/landing/pages';
 import type { NextPageWithLayout } from 'types';
+
+const DATABUDDY_CLIENT_ID = '469dedda-b08b-42ab-b018-e20f70df7ca4';
 
 type LandingRouteProps = {
   keykit: KeykitPageProps;
@@ -12,6 +15,12 @@ type LandingRouteProps = {
 const LandingRoute: NextPageWithLayout<LandingRouteProps> = ({ keykit }) => {
   return (
     <KeykitProvider key={keykit.locale} keykit={keykit}>
+      <Databuddy
+        clientId={DATABUDDY_CLIENT_ID}
+        disabled={process.env.NODE_ENV !== 'production'}
+        trackErrors
+        trackWebVitals
+      />
       <LandingView slug={keykit.slug} />
     </KeykitProvider>
   );
