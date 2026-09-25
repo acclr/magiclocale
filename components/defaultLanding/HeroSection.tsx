@@ -44,10 +44,7 @@ const HeroSection = () => {
           <h1 className="font-heading text-4xl font-semibold tracking-tight text-foreground sm:text-5xl lg:text-[3.25rem] lg:leading-[1.1]">
             {t('landing.hero.title', 'Keykit')}
             <span className="block text-primary">
-              {t(
-                'landing.hero.headline-accent',
-                'Product copy, localized'
-              )}
+              {t('landing.hero.headline-accent', 'Product copy, localized')}
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground lg:mx-0">
@@ -63,7 +60,12 @@ const HeroSection = () => {
                 <ArrowRightIcon className="size-4" />
               </Link>
             </Button>
-            <Button asChild variant="outline" size="lg" className="min-w-[160px]">
+            <Button
+              asChild
+              variant="outline"
+              size="lg"
+              className="min-w-[160px]"
+            >
               <a href="#features">
                 {t('landing.hero.explore', 'See how it works')}
               </a>
@@ -100,10 +102,7 @@ const HeroSection = () => {
           <CardHeader className="border-b border-border/60 pb-4">
             <div className="flex items-center justify-between gap-2">
               <CardTitle className="text-sm">
-                {t(
-                  'landing.hero.preview-title',
-                  'Translation workspace'
-                )}
+                {t('landing.hero.preview-title', 'Translation workspace')}
               </CardTitle>
               <Badge variant="outline" className="font-mono text-[10px]">
                 en → sv

@@ -118,7 +118,5 @@ export function isUnsupportedTemperatureError(error: unknown): boolean {
   }
 
   const message = candidate.message ?? '';
-  return (
-    message.includes("'temperature'") && /does not support/i.test(message)
-  );
+  return message.includes("'temperature'") && /does not support/i.test(message);
 }

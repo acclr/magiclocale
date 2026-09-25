@@ -78,12 +78,14 @@ export class ArchitectureService {
     const definedFlagKeys = new Set(flags.map((flag) => flag.key));
     const productionEnabledSince: Record<string, Date | null> = {};
     const productionDisabledSince: Record<string, Date | null> = {};
-    const production = (await this.environmentService.listForProject(project.id)).find(
-      (environment) => environment.isProduction
-    );
+    const production = (
+      await this.environmentService.listForProject(project.id)
+    ).find((environment) => environment.isProduction);
     if (production) {
       const configs = await this.flags.listConfigsForEnvironment(production.id);
-      const flagsById = Object.fromEntries(flags.map((flag) => [flag.id, flag]));
+      const flagsById = Object.fromEntries(
+        flags.map((flag) => [flag.id, flag])
+      );
       for (const config of configs) {
         const flag = flagsById[config.flagId];
         if (!flag) {
@@ -127,7 +129,11 @@ export class ArchitectureService {
     return finding;
   }
 
-  async cleanupOperations(teamId: string, projectId: string, findingId: string) {
+  async cleanupOperations(
+    teamId: string,
+    projectId: string,
+    findingId: string
+  ) {
     const finding = await this.getFinding(teamId, projectId, findingId);
     if (!finding.keyMetaId) {
       throw new Error('This finding is not attached to a key');
@@ -143,7 +149,11 @@ export class ArchitectureService {
     return { finding, meta, operation };
   }
 
-  async listFindings(teamId: string, projectId: string, status?: FindingStatus) {
+  async listFindings(
+    teamId: string,
+    projectId: string,
+    status?: FindingStatus
+  ) {
     const project = await this.projectService.get(teamId, projectId);
     return this.repository.listFindings(project.id, status);
   }
@@ -176,7 +186,10 @@ export class ArchitectureService {
     };
   }
 
-  async explorer(teamId: string, projectId: string): Promise<ArchitectureNode[]> {
+  async explorer(
+    teamId: string,
+    projectId: string
+  ): Promise<ArchitectureNode[]> {
     const project = await this.projectService.get(teamId, projectId);
     const keys = await this.keys.listAll(project.id);
     return buildTree(keys);
@@ -218,7 +231,9 @@ function buildTree(keys: KeyMeta[]): ArchitectureNode[] {
       return created;
     }
     const parent = ensure(parts.slice(0, -1));
-    const existing = parent.children.find((child) => child.namespace === namespace);
+    const existing = parent.children.find(
+      (child) => child.namespace === namespace
+    );
     if (existing) {
       return existing;
     }

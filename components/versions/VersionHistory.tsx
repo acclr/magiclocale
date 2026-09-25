@@ -41,9 +41,7 @@ const VersionHistory = ({
       });
       setPlan(result.plan);
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('promote-failed')
-      );
+      toast.error(error instanceof Error ? error.message : t('promote-failed'));
     } finally {
       setBusy(false);
     }
@@ -62,9 +60,7 @@ const VersionHistory = ({
       setPlan(result.plan);
       toast.success(t('promoted-translations', { count: result.applied }));
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('promote-failed')
-      );
+      toast.error(error instanceof Error ? error.message : t('promote-failed'));
     } finally {
       setBusy(false);
     }
@@ -207,7 +203,9 @@ const VersionHistory = ({
             <p className="text-sm text-muted-foreground">{t('promote-help')}</p>
             <div className="flex flex-wrap items-end gap-3">
               <label className="form-control">
-                <span className="label-text text-xs">{t('promote-target')}</span>
+                <span className="label-text text-xs">
+                  {t('promote-target')}
+                </span>
                 <select
                   className="select select-bordered select-sm"
                   onChange={(event) => {

@@ -98,10 +98,7 @@ export default async function handler(
     // A pinned version is immutable, so it can be cached hard. The live
     // pointer can move at any publish, so it must always be revalidated.
     if (requestedVersion !== null && result.bundle.versionNumber !== null) {
-      res.setHeader(
-        'Cache-Control',
-        'public, max-age=31536000, immutable'
-      );
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     } else {
       res.setHeader('Cache-Control', 'no-cache');
     }
@@ -137,4 +134,3 @@ function parseVersion(
   }
   return parsed;
 }
-

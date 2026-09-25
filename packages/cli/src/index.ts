@@ -5,7 +5,11 @@ import { pullTranslationCatalog } from './pull';
 import { rewriteSourceTree, type RewritePlan } from './rewrite';
 import { scanSourceTree } from './scan';
 
-function flatten(value: unknown, prefix = '', out: Array<{ key: string; sourceText: string }> = []) {
+function flatten(
+  value: unknown,
+  prefix = '',
+  out: Array<{ key: string; sourceText: string }> = []
+) {
   if (typeof value === 'string') {
     if (prefix) {
       out.push({ key: prefix, sourceText: value });
@@ -44,7 +48,8 @@ async function main() {
       projectId: requiredEnvOrArg(args, '--project-id', 'KEYKIT_PROJECT_ID'),
       token: requiredEnvOrArg(args, '--token', 'KEYKIT_API_KEY'),
       outDir,
-      environment: argValue(args, '--environment') ?? process.env.KEYKIT_ENVIRONMENT,
+      environment:
+        argValue(args, '--environment') ?? process.env.KEYKIT_ENVIRONMENT,
       version: parseOptionalVersion(argValue(args, '--version')),
     });
     const locales = Object.keys(catalog.locales);

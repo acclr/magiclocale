@@ -98,7 +98,10 @@ export const renameTranslationProjectSchema = z.object({
 export const updateTranslationProjectSchema = z
   .object({
     name: z.string().trim().min(1).max(100).optional(),
-    allowedOrigins: z.array(allowedOriginSchema).max(MAX_ALLOWED_ORIGINS).optional(),
+    allowedOrigins: z
+      .array(allowedOriginSchema)
+      .max(MAX_ALLOWED_ORIGINS)
+      .optional(),
   })
   .refine(
     (value) => value.name !== undefined || value.allowedOrigins !== undefined,

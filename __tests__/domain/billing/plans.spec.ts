@@ -21,11 +21,7 @@ describe('resolveKeykitPlan', () => {
 
   it('resolves enterprise over premium for the billed customer', () => {
     expect(
-      resolveKeykitPlan(
-        ['price_premium', 'price_enterprise'],
-        catalog,
-        'team'
-      )
+      resolveKeykitPlan(['price_premium', 'price_enterprise'], catalog, 'team')
     ).toMatchObject({
       planId: 'enterprise',
       subscribed: true,
@@ -33,12 +29,12 @@ describe('resolveKeykitPlan', () => {
       maxEnvironments: KEYKIT_PLANS.enterprise.maxEnvironments,
       maxFlags: KEYKIT_PLANS.enterprise.maxFlags,
     });
-    expect(
-      resolveKeykitPlan(['price_premium'], catalog, 'team')
-    ).toMatchObject({
-      planId: 'premium',
-      subscribed: true,
-      maxLocales: KEYKIT_PLANS.premium.maxLocales,
-    });
+    expect(resolveKeykitPlan(['price_premium'], catalog, 'team')).toMatchObject(
+      {
+        planId: 'premium',
+        subscribed: true,
+        maxLocales: KEYKIT_PLANS.premium.maxLocales,
+      }
+    );
   });
 });

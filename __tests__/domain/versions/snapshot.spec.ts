@@ -1,4 +1,7 @@
-import { asAiTranslation, asManualTranslation } from '../../../domain/translations';
+import {
+  asAiTranslation,
+  asManualTranslation,
+} from '../../../domain/translations';
 import { cellId, planPromotion } from '../../../domain/versions/snapshot';
 
 describe('planPromotion', () => {
@@ -19,10 +22,7 @@ describe('planPromotion', () => {
         },
       ],
       currentCells: new Map([
-        [
-          cellId('sv', 'save'),
-          asManualTranslation('Spara manuellt'),
-        ],
+        [cellId('sv', 'save'), asManualTranslation('Spara manuellt')],
       ]),
       targetLocales: ['sv'],
       flagCount: 0,
@@ -54,10 +54,7 @@ describe('planPromotion', () => {
         },
       ],
       currentCells: new Map([
-        [
-          cellId('sv', 'save'),
-          asManualTranslation('Spara manuellt'),
-        ],
+        [cellId('sv', 'save'), asManualTranslation('Spara manuellt')],
       ]),
       targetLocales: ['sv'],
       flagCount: 1,
@@ -85,10 +82,7 @@ describe('planPromotion', () => {
         },
       ],
       currentCells: new Map([
-        [
-          cellId('sv', 'save'),
-          asAiTranslation('Gammal AI'),
-        ],
+        [cellId('sv', 'save'), asAiTranslation('Gammal AI')],
       ]),
       targetLocales: ['sv'],
       flagCount: 0,

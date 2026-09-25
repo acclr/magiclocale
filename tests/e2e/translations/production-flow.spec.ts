@@ -135,18 +135,13 @@ test('keeps staging edits off production until promote and publish', async ({
     where: { projectId: project.id, isProduction: true },
   });
 
-  const { PrismaEnvironmentRepository } = await import(
-    '../../../data/environments/prisma-environment-repository'
-  );
-  const { PrismaFlagRepository } = await import(
-    '../../../data/flags/prisma-flag-repository'
-  );
-  const { PrismaVersionRepository } = await import(
-    '../../../data/versions/prisma-version-repository'
-  );
-  const { EnvironmentService } = await import(
-    '../../../domain/environments'
-  );
+  const { PrismaEnvironmentRepository } =
+    await import('../../../data/environments/prisma-environment-repository');
+  const { PrismaFlagRepository } =
+    await import('../../../data/flags/prisma-flag-repository');
+  const { PrismaVersionRepository } =
+    await import('../../../data/versions/prisma-version-repository');
+  const { EnvironmentService } = await import('../../../domain/environments');
   const { FlagService } = await import('../../../domain/flags');
   const { ProjectService } = await import('../../../domain/translations');
   const { VersionService } = await import('../../../domain/versions');
@@ -167,7 +162,10 @@ test('keeps staging edits off production until promote and publish', async ({
     new PrismaVersionRepository(prisma),
     translationRepository,
     environmentRepository,
-    { buildSnapshot: (environmentId) => flagService.buildSnapshot(environmentId) }
+    {
+      buildSnapshot: (environmentId) =>
+        flagService.buildSnapshot(environmentId),
+    }
   );
   const translationService = new TranslationService(
     translationRepository,

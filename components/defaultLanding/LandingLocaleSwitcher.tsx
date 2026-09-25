@@ -1,9 +1,16 @@
 import { Button } from '@/components/ui/button';
+import { KEYKIT_LOCALE_COOKIE } from '@/lib/self-hosted-locale';
 
 import { useLandingI18n } from './LandingLocaleProvider';
 
+function persistLandingLocale(locale: string): void {
+  document.cookie =
+    `${encodeURIComponent(KEYKIT_LOCALE_COOKIE)}=${encodeURIComponent(locale)}; ` +
+    'Path=/; Max-Age=31536000; SameSite=Lax';
+}
+
 const LandingLocaleSwitcher = () => {
-  const { locale, locales, isLoading, setLocale } = useLandingI18n();
+  const { locale, locales, isLoading } = useLandingI18n();
 
   if (locales.length < 2) {
     return null;
@@ -24,7 +31,13 @@ const LandingLocaleSwitcher = () => {
           className="h-8 min-w-10 rounded-md px-2.5 font-mono text-xs"
           aria-pressed={locale === code}
           disabled={isLoading}
-          onClick={() => void setLocale(code)}
+          onClick={() => {
+            if (code === locale) {
+              return;
+            }
+            persistLandingLocale(code);
+            window.location.reload();
+          }}
         >
           {code.toUpperCase()}
         </Button>

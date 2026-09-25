@@ -1,9 +1,6 @@
 import * as React from 'react';
 
-import {
-  Alert as AlertUi,
-  AlertDescription,
-} from '@/components/ui/alert';
+import { Alert as AlertUi, AlertDescription } from '@/components/ui/alert';
 
 type AlertStatus = 'info' | 'success' | 'warning' | 'error';
 

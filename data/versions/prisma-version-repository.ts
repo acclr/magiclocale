@@ -60,9 +60,7 @@ function toVersion(version: PrismaVersion): Version {
   };
 }
 
-function toBundle(
-  bundle: PrismaVersionLocaleBundle
-): LocaleBundleSnapshot {
+function toBundle(bundle: PrismaVersionLocaleBundle): LocaleBundleSnapshot {
   return {
     locale: bundle.locale,
     translations: (bundle.translations ?? {}) as Record<string, string>,
@@ -86,7 +84,9 @@ function toChange(change: PrismaVersionChange): VersionChange {
   };
 }
 
-function asJson(value: unknown): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+function asJson(
+  value: unknown
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
   return value === null || value === undefined
     ? Prisma.JsonNull
     : (value as Prisma.InputJsonValue);
@@ -196,7 +196,8 @@ export class PrismaVersionRepository implements VersionRepository {
           message: input.message,
           publishedBy: input.publishedBy,
           publishedAt: new Date(),
-          flagsSnapshot: input.flagsSnapshot as unknown as Prisma.InputJsonValue,
+          flagsSnapshot:
+            input.flagsSnapshot as unknown as Prisma.InputJsonValue,
           ...(input.promotedFromId !== undefined
             ? { promotedFromId: input.promotedFromId }
             : {}),
@@ -244,9 +245,7 @@ export class PrismaVersionRepository implements VersionRepository {
     return bundle ? toBundle(bundle) : null;
   }
 
-  async listLocaleBundles(
-    versionId: string
-  ): Promise<LocaleBundleSnapshot[]> {
+  async listLocaleBundles(versionId: string): Promise<LocaleBundleSnapshot[]> {
     const bundles = await this.client.versionLocaleBundle.findMany({
       where: { versionId },
       orderBy: { locale: 'asc' },
@@ -254,9 +253,7 @@ export class PrismaVersionRepository implements VersionRepository {
     return bundles.map(toBundle);
   }
 
-  async getFlagsSnapshot(
-    versionId: string
-  ): Promise<FlagSetSnapshot | null> {
+  async getFlagsSnapshot(versionId: string): Promise<FlagSetSnapshot | null> {
     const version = await this.client.version.findUnique({
       where: { id: versionId },
       select: { flagsSnapshot: true },

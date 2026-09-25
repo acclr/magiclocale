@@ -23,10 +23,7 @@ const Navigation = ({ collapsed = false }: { collapsed?: boolean }) => {
           slug={slug}
         />
       ) : (
-        <UserNavigation
-          activePathname={activePathname}
-          collapsed={collapsed}
-        />
+        <UserNavigation activePathname={activePathname} collapsed={collapsed} />
       )}
     </nav>
   );

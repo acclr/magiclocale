@@ -28,9 +28,7 @@ export const createApiKey = async (params: CreateApiKeyParams) => {
       name,
       hashedKey,
       team: { connect: { id: teamId } },
-      ...(projectId
-        ? { projectId }
-        : {}),
+      ...(projectId ? { projectId } : {}),
       ...(environmentId
         ? { environment: { connect: { id: environmentId } } }
         : {}),

@@ -37,9 +37,7 @@ const PublishBar = ({
         })
       );
     } catch (error) {
-      toast.error(
-        error instanceof Error ? error.message : t('publish-failed')
-      );
+      toast.error(error instanceof Error ? error.message : t('publish-failed'));
     } finally {
       setIsPublishing(false);
     }
@@ -51,7 +49,10 @@ const PublishBar = ({
         <div className="flex flex-col">
           <div className="flex mb-1.5 items-center font-semibold text-background">
             <RefreshCcwIcon className="w-5 h-5" />
-            <span className="ml-1.5">{t('unpublished-changes-title', { count: pending })}</span>!
+            <span className="ml-1.5">
+              {t('unpublished-changes-title', { count: pending })}
+            </span>
+            !
           </div>
           <p className="text-sm text-background/80">
             {t('unpublished-changes-help', {
@@ -73,7 +74,6 @@ const PublishBar = ({
           </button>
         ) : null}
       </div>
-
     </div>
   );
 };

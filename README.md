@@ -168,7 +168,6 @@ show up in the translation workspace.
 2. Add each locale you want to manage (for example `sv` and `fr`).
 3. Create a team API key for each project.
 4. Set the matching values in `.env`, then restart the app:
-
    - `KEYKIT_LANDING_PROJECT_ID` and `KEYKIT_LANDING_API_KEY`
    - `KEYKIT_DASHBOARD_PROJECT_ID` and `KEYKIT_DASHBOARD_API_KEY`
 
@@ -285,6 +284,7 @@ npx playwright test tests/e2e/translations/production-flow.spec.ts
 
    This writes `.env.production.local` (gitignored), applies migrations, and
    prefers `POSTGRES_URL_NON_POOLING` for DDL.
+
 6. Build with `npm run build-ci` and start with `npm run start`.
 
 Run the app and migration commands from the same release so generated Prisma

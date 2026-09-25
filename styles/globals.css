@@ -107,7 +107,7 @@
   --sidebar-accent-foreground: #ececee;
   --sidebar-border: #2e2e32;
   --sidebar-ring: #ff700a;
-  --spacing: 0.30rem;
+  --spacing: 0.3rem;
 }
 
 @layer base {

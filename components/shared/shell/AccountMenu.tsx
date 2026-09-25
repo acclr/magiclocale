@@ -35,18 +35,12 @@ const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
             variant: 'outline',
             size: collapsed ? 'icon' : 'xl',
           }),
-          collapsed
-            ? 'h-10 w-10'
-            : 'w-full justify-start text-sm font-semibold'
+          collapsed ? 'h-10 w-10' : 'w-full justify-start text-sm font-semibold'
         )}
         aria-label={user.name || t('account')}
       >
         <UserCircleIcon className={collapsed ? 'h-5 w-5' : 'mr-0.5'} />
-        {collapsed ? (
-          <span className="sr-only">{user.name}</span>
-        ) : (
-          user.name
-        )}
+        {collapsed ? <span className="sr-only">{user.name}</span> : user.name}
       </DropdownMenuTrigger>
       <DropdownMenuContent align={collapsed ? 'start' : 'end'} className="w-40">
         <DropdownMenuItem asChild>

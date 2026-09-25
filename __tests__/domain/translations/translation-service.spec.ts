@@ -170,9 +170,9 @@ describe('TranslationService', () => {
     await expect(
       service.generateMissingTranslation(KEY_CANCEL, ENV_ID, 'de')
     ).resolves.toMatchObject({ outcome: 'skipped' });
-    expect((await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de'))?.value).toBe(
-      'Abbrechen, bitte'
-    );
+    expect(
+      (await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de'))?.value
+    ).toBe('Abbrechen, bitte');
   });
 
   it('never overwrites human content during fill, sync, or bulk jobs', async () => {
@@ -186,7 +186,9 @@ describe('TranslationService', () => {
       outcome: 'skipped',
       reason: 'already-exists',
     });
-    expect(await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'sv')).toEqual({
+    expect(
+      await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'sv')
+    ).toEqual({
       filled: 0,
       skipped: 2,
     });
@@ -288,7 +290,9 @@ describe('TranslationService', () => {
     expect(await repository.getTranslation(TR_DE_SAVE)).toMatchObject({
       value: 'Änderungen speichern',
     });
-    expect(await repository.findTranslation(KEY_SAVE, ENV_ID, 'fr')).toMatchObject({
+    expect(
+      await repository.findTranslation(KEY_SAVE, ENV_ID, 'fr')
+    ).toMatchObject({
       value: 'AI(fr): Save changes',
       source: 'ai',
       aiLocked: false,
@@ -323,14 +327,18 @@ describe('TranslationService', () => {
   it('fills missing rows without replacing existing AI rows', async () => {
     const { service, repository } = setup();
 
-    expect(await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'de')).toEqual({
+    expect(
+      await service.fillMissingForLocale(PROJECT_ID, ENV_ID, 'de')
+    ).toEqual({
       filled: 1,
       skipped: 1,
     });
     expect(await repository.getTranslation(TR_DE_SAVE)).toMatchObject({
       value: 'Änderungen speichern',
     });
-    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
+    expect(
+      await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')
+    ).toMatchObject({
       value: 'AI(de): Cancel',
       source: 'ai',
     });
@@ -351,7 +359,9 @@ describe('TranslationService', () => {
       fillFailed: 0,
     });
     const key = await repository.findKeyByName(PROJECT_ID, 'nav.home');
-    expect(await repository.findTranslation(key!.id, ENV_ID, 'en')).toMatchObject({
+    expect(
+      await repository.findTranslation(key!.id, ENV_ID, 'en')
+    ).toMatchObject({
       value: 'Home',
       source: 'code',
       aiLocked: false,
@@ -381,7 +391,9 @@ describe('TranslationService', () => {
     });
 
     const key = await repository.findKeyByName(PROJECT_ID, 'nav.home');
-    expect(await repository.findTranslation(key!.id, ENV_ID, 'en')).toMatchObject({
+    expect(
+      await repository.findTranslation(key!.id, ENV_ID, 'en')
+    ).toMatchObject({
       value: 'Home',
       source: 'code',
     });
@@ -421,7 +433,9 @@ describe('TranslationService', () => {
       value: 'AI(de): Save changes',
       source: 'ai',
     });
-    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
+    expect(
+      await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')
+    ).toMatchObject({
       value: 'AI(de): Cancel',
       source: 'ai',
     });
@@ -447,7 +461,9 @@ describe('TranslationService', () => {
       skipped: 0,
       failed: 0,
     });
-    expect(await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')).toMatchObject({
+    expect(
+      await repository.findTranslation(KEY_CANCEL, ENV_ID, 'de')
+    ).toMatchObject({
       value: 'AI(de): Cancel',
       source: 'ai',
     });

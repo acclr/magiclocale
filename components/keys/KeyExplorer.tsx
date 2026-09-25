@@ -6,7 +6,10 @@ import useSWR from 'swr';
 import { useProjectKeys } from '../../hooks/useProjectKeys';
 import fetcher from '@/lib/fetcher';
 import type { ApiResponse } from 'types';
-import type { ArchitectureHealth, FindingKind } from '../../domain/architecture';
+import type {
+  ArchitectureHealth,
+  FindingKind,
+} from '../../domain/architecture';
 
 type KeyExplorerProps = {
   slug: string;
@@ -57,7 +60,10 @@ const KeyExplorer = ({ slug, projectId }: KeyExplorerProps) => {
       </div>
       {health ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Link className="rounded-md bg-card p-4" href={`${base}/architecture`}>
+          <Link
+            className="rounded-md bg-card p-4"
+            href={`${base}/architecture`}
+          >
             <p className="text-xs uppercase text-muted-foreground">
               {t('open-findings')}
             </p>

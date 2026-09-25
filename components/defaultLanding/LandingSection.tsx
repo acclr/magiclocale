@@ -23,10 +23,7 @@ const LandingSection = ({
   contentClassName,
 }: LandingSectionProps) => {
   return (
-    <section
-      id={id}
-      className={cn('scroll-mt-24 py-16 sm:py-24', className)}
-    >
+    <section id={id} className={cn('scroll-mt-24 py-16 sm:py-24', className)}>
       <div className={cn('mx-auto max-w-6xl px-4 sm:px-6', contentClassName)}>
         <div className="mx-auto mb-12 max-w-2xl text-center">
           {eyebrow ? (

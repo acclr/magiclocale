@@ -4,11 +4,7 @@ import type { SVGProps } from 'react';
 import app from '@/lib/app';
 
 import Logogram from './Logogram';
-import {
-  LOGO_VIEWBOX,
-  LOGOTYPE_PATH,
-  LOGOTYPE_TRANSFORM,
-} from './paths';
+import { LOGO_VIEWBOX, LOGOTYPE_PATH, LOGOTYPE_TRANSFORM } from './paths';
 
 export type LogoWhiteProps = SVGProps<SVGSVGElement>;
 

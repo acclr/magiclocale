@@ -1,5 +1,8 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
-import { getKeyCatalogService, getTeamTranslationService } from '@/lib/translations';
+import {
+  getKeyCatalogService,
+  getTeamTranslationService,
+} from '@/lib/translations';
 import {
   translationProjectParamsSchema,
   updateKeyMetaSchema,

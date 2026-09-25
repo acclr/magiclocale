@@ -16,12 +16,7 @@ import {
 } from '@/components/ui/tooltip';
 import { cn } from 'cn';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 import { BotIcon, UserIcon } from 'lucide-react';
 
@@ -130,7 +125,6 @@ const TranslationCell = ({
     });
     return () => draftsRef.current.unregister(draftId);
   }, [draftId, isDirty]);
-
 
   const statusValue = cell.missing
     ? 'missing'

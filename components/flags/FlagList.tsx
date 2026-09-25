@@ -104,7 +104,11 @@ const FlagList = ({ slug, projectId, environment, canEdit }: FlagListProps) => {
               </option>
             </select>
           </label>
-          <button className="btn btn-primary btn-sm" disabled={busy} type="submit">
+          <button
+            className="btn btn-primary btn-sm"
+            disabled={busy}
+            type="submit"
+          >
             {busy ? t('creating-flag') : t('create-flag')}
           </button>
         </form>

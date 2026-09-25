@@ -130,9 +130,7 @@ export class MemoryRepository
     );
   }
 
-  async createEnvironment(
-    input: CreateEnvironmentInput
-  ): Promise<Environment> {
+  async createEnvironment(input: CreateEnvironmentInput): Promise<Environment> {
     const environment: Environment = {
       id: this.id('environment'),
       projectId: input.projectId,
@@ -150,9 +148,7 @@ export class MemoryRepository
     id: string,
     patch: UpdateEnvironmentInput
   ): Promise<Environment> {
-    const environment = this.state.environments.find(
-      (item) => item.id === id
-    );
+    const environment = this.state.environments.find((item) => item.id === id);
     if (!environment) {
       throw new Error(`Environment not found: ${id}`);
     }

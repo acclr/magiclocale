@@ -27,7 +27,6 @@ function getLanguageName(locale) {
   }).of(code);
 }
 
-
 type TranslationWorkspaceProps = {
   slug: string;
   projectId: string;
@@ -121,7 +120,7 @@ const TranslationWorkspace = ({
     pageKeyIds.some((keyId) => selectedKeyIds.includes(keyId)) &&
     !pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId));
   const keySelectionCount = selectAllMatching
-    ? pagination?.totalKeys ?? 0
+    ? (pagination?.totalKeys ?? 0)
     : selectedKeyIds.length;
   const hasKeySelection = selectAllMatching || selectedKeyIds.length > 0;
   const canQueue =
@@ -170,24 +169,27 @@ const TranslationWorkspace = ({
         return;
       }
     }
-    await run(async () => {
-      const result = await workspace.queueTranslations({
-        scope: selectAllMatching ? 'all-matching' : 'selected-keys',
-        keyIds: selectAllMatching ? undefined : selectedKeyIds,
-        locales: selectedLocales,
-        mode,
-        sourceLocale: mode === 'retranslate' ? fromLocale.trim() : undefined,
-        filter,
-        search: debouncedSearch,
-      });
-      setSelectedKeyIds([]);
-      setSelectAllMatching(false);
-      return {
-        filled: result.filled,
-        skipped: result.skipped,
-        failed: result.failed,
-      };
-    }, t('translation-queue-complete', { queued: String(keySelectionCount) }));
+    await run(
+      async () => {
+        const result = await workspace.queueTranslations({
+          scope: selectAllMatching ? 'all-matching' : 'selected-keys',
+          keyIds: selectAllMatching ? undefined : selectedKeyIds,
+          locales: selectedLocales,
+          mode,
+          sourceLocale: mode === 'retranslate' ? fromLocale.trim() : undefined,
+          filter,
+          search: debouncedSearch,
+        });
+        setSelectedKeyIds([]);
+        setSelectAllMatching(false);
+        return {
+          filled: result.filled,
+          skipped: result.skipped,
+          failed: result.failed,
+        };
+      },
+      t('translation-queue-complete', { queued: String(keySelectionCount) })
+    );
   };
 
   if (workspace.isLoading) {

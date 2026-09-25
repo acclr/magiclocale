@@ -28,9 +28,7 @@ export type KeykitContextValue = {
   sourceCatalog?: Record<string, string>;
 };
 
-export const KeykitContext = createContext<KeykitContextValue | null>(
-  null
-);
+export const KeykitContext = createContext<KeykitContextValue | null>(null);
 
 export type KeykitProviderProps = {
   config: KeykitConfig;
@@ -50,7 +48,7 @@ export function KeykitProvider({
   children,
 }: KeykitProviderProps) {
   const clientRef = useRef<KeykitClient | null>(null);
-  const [, setRevision] = useState(0);
+  const [revision, setRevision] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
   if (!clientRef.current) {
@@ -102,10 +100,7 @@ export function KeykitProvider({
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      await Promise.all([
-        client.refreshTranslations(),
-        client.refreshFlags(),
-      ]);
+      await Promise.all([client.refreshTranslations(), client.refreshFlags()]);
     } finally {
       setIsLoading(false);
     }
@@ -124,8 +119,9 @@ export function KeykitProvider({
       client.identify(context),
     [client]
   );
-  const value = useMemo<KeykitContextValue>(
-    () => ({
+  const value = useMemo<KeykitContextValue>(() => {
+    void revision;
+    return {
       locale,
       isLoading,
       translate,
@@ -135,24 +131,22 @@ export function KeykitProvider({
       getValue,
       identify,
       sourceCatalog: config.sourceCatalog,
-    }),
-    [
-      config.sourceCatalog,
-      getValue,
-      identify,
-      isEnabled,
-      isLoading,
-      locale,
-      refresh,
-      setLocale,
-      translate,
-    ]
-  );
+    };
+  }, [
+    config.sourceCatalog,
+    getValue,
+    identify,
+    isEnabled,
+    isLoading,
+    locale,
+    refresh,
+    revision,
+    setLocale,
+    translate,
+  ]);
 
   return (
-    <KeykitContext.Provider value={value}>
-      {children}
-    </KeykitContext.Provider>
+    <KeykitContext.Provider value={value}>{children}</KeykitContext.Provider>
   );
 }
 
@@ -165,14 +159,8 @@ export function useKeykit(): KeykitContextValue {
 }
 
 export function useTranslate() {
-  const {
-    translate,
-    locale,
-    isLoading,
-    setLocale,
-    refresh,
-    sourceCatalog,
-  } = useKeykit();
+  const { translate, locale, isLoading, setLocale, refresh, sourceCatalog } =
+    useKeykit();
 
   const t = useCallback(
     (key: string, defaultText?: string) => {

@@ -18,9 +18,9 @@ describe('parseAllowedOrigin', () => {
     expect(() => parseAllowedOrigin('https://app.example.com/app')).toThrow(
       AllowedOriginError
     );
-    expect(() => parseAllowedOrigin('https://user:pass@app.example.com')).toThrow(
-      AllowedOriginError
-    );
+    expect(() =>
+      parseAllowedOrigin('https://user:pass@app.example.com')
+    ).toThrow(AllowedOriginError);
     expect(() => parseAllowedOrigin('ftp://files.example.com')).toThrow(
       AllowedOriginError
     );

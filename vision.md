@@ -4,8 +4,8 @@
 
 Keykit is a developer-first platform for managing two closely related kinds of application configuration:
 
-* localization keys
-* feature flags
+- localization keys
+- feature flags
 
 Both are effectively **named keys referenced throughout source code**, and both tend to become difficult to maintain as applications grow.
 
@@ -29,14 +29,14 @@ feature flags
 
 Over time:
 
-* naming conventions drift
-* duplicate keys appear
-* obsolete keys remain
-* ownership becomes unclear
-* namespaces become inconsistent
-* developers stop knowing what can safely be removed
-* temporary feature flags become permanent
-* translation structures become increasingly difficult to refactor
+- naming conventions drift
+- duplicate keys appear
+- obsolete keys remain
+- ownership becomes unclear
+- namespaces become inconsistent
+- developers stop knowing what can safely be removed
+- temporary feature flags become permanent
+- translation structures become increasingly difficult to refactor
 
 Keykit should solve this by understanding **where keys exist in source code, how they are used, what they represent, and how they should evolve**.
 
@@ -69,24 +69,19 @@ What source code needs changing if I rename this key?
 Keykit should cover five main responsibilities:
 
 1. **Discover**
-
-   * Automatically detect translation and feature-flag usages in source code.
+   - Automatically detect translation and feature-flag usages in source code.
 
 2. **Manage**
-
-   * Manage translations, locales, flags, environments and configuration.
+   - Manage translations, locales, flags, environments and configuration.
 
 3. **Synchronize**
-
-   * Keep application source code and Keykit synchronized.
+   - Keep application source code and Keykit synchronized.
 
 4. **Migrate**
-
-   * Import existing translation and feature-flag systems.
+   - Import existing translation and feature-flag systems.
 
 5. **Improve**
-
-   * Help teams structure, clean up and refactor both translations and flags.
+   - Help teams structure, clean up and refactor both translations and flags.
 
 ---
 
@@ -132,17 +127,17 @@ Keykit Project
 
 Both key types share:
 
-* key name
-* namespace
-* description
-* ownership
-* source-code usages
-* creation date
-* last detected date
-* lifecycle status
-* tags
-* history
-* architecture findings
+- key name
+- namespace
+- description
+- ownership
+- source-code usages
+- creation date
+- last detected date
+- lifecycle status
+- tags
+- history
+- architecture findings
 
 They then have type-specific configuration.
 
@@ -198,13 +193,13 @@ Keykit provides an npm package/SDK that scans the application's source code.
 Translation example:
 
 ```ts
-t("billing.invoice.download")
+t('billing.invoice.download');
 ```
 
 Feature flag example:
 
 ```ts
-flags.isEnabled("billing.newCheckout")
+flags.isEnabled('billing.newCheckout');
 ```
 
 or:
@@ -252,13 +247,13 @@ This source information is fundamental to Keykit.
 
 It enables:
 
-* usage inspection
-* dead-key detection
-* architecture analysis
-* safe renaming
-* source-code refactoring
-* ownership inference
-* feature grouping
+- usage inspection
+- dead-key detection
+- architecture analysis
+- safe renaming
+- source-code refactoring
+- ownership inference
+- feature grouping
 
 ---
 
@@ -303,9 +298,9 @@ This is particularly important for feature flags.
 
 An unused feature flag may indicate that:
 
-* the feature has been fully rolled out
-* the fallback code has been removed
-* the flag can potentially be deleted
+- the feature has been fully rolled out
+- the fallback code has been removed
+- the flag can potentially be deleted
 
 ---
 
@@ -373,14 +368,14 @@ The Translation Explorer is the main interface for localization content.
 
 Users must be able to search across:
 
-* translation key
-* source-language text
-* translated values
-* namespace
-* description
-* source files
-* tags
-* ownership
+- translation key
+- source-language text
+- translated values
+- namespace
+- description
+- source files
+- tags
+- ownership
 
 Example search:
 
@@ -434,22 +429,22 @@ namespace:billing locale:de status:missing
 
 Useful filters include:
 
-* namespace
-* locale
-* translation status
-* missing translation
-* machine translated
-* manually translated
-* reviewed
-* recently added
-* recently changed
-* unused
-* deprecated
-* duplicate source text
-* key usage count
-* feature
-* owner
-* source directory
+- namespace
+- locale
+- translation status
+- missing translation
+- machine translated
+- manually translated
+- reviewed
+- recently added
+- recently changed
+- unused
+- deprecated
+- duplicate source text
+- key usage count
+- feature
+- owner
+- source directory
 
 ---
 
@@ -2084,25 +2079,25 @@ Keykit should eventually be able to apply architecture migrations back into sour
 Translation:
 
 ```ts
-t("billing.save")
+t('billing.save');
 ```
 
 becomes:
 
 ```ts
-t("common.save")
+t('common.save');
 ```
 
 Feature flag:
 
 ```ts
-flags.isEnabled("newCheckout")
+flags.isEnabled('newCheckout');
 ```
 
 becomes:
 
 ```ts
-flags.isEnabled("billing.checkout.redesign")
+flags.isEnabled('billing.checkout.redesign');
 ```
 
 ---

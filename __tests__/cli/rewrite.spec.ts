@@ -16,7 +16,11 @@ describe('keykit local rewrite CLI', () => {
       const changed = rewriteSourceTree(root, {
         operations: [
           { type: 'rename-key', fromKey: 'billing.save', toKey: 'common.save' },
-          { type: 'move-key', fromKey: 'newCheckout', toKey: 'checkout.enabled' },
+          {
+            type: 'move-key',
+            fromKey: 'newCheckout',
+            toKey: 'checkout.enabled',
+          },
         ],
       });
       expect(changed).toBe(1);

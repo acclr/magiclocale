@@ -1,8 +1,5 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
-import {
-  getEnvironmentService,
-  getVersionService,
-} from '@/lib/translations';
+import { getEnvironmentService, getVersionService } from '@/lib/translations';
 import { notifyVersionPublished } from '@/lib/versions/notify';
 import { publishVersionSchema, validateWithSchema } from '@/lib/zod';
 import { translationProjectParamsSchema } from '@/lib/zod';

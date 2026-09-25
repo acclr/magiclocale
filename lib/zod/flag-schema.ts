@@ -98,9 +98,7 @@ export const flagListQuerySchema = z.object({
 export const flagEvaluationContextSchema = z.object({
   key: z.string().trim().max(200).nullable().optional(),
   attributes: z
-    .record(
-      z.union([z.string(), z.number(), z.boolean(), z.null()])
-    )
+    .record(z.union([z.string(), z.number(), z.boolean(), z.null()]))
     .optional(),
 });
 

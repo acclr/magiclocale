@@ -117,9 +117,8 @@ describe('public SDK API authentication', () => {
   });
 
   it('lets a bound key win over a requested environment', async () => {
-    const { resolveEnvironmentRef } = await import(
-      '../../lib/api/public-sdk-auth'
-    );
+    const { resolveEnvironmentRef } =
+      await import('../../lib/api/public-sdk-auth');
     expect(
       resolveEnvironmentRef({ environmentId: 'env_staging' }, 'production')
     ).toBe('env_staging');

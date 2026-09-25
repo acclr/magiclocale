@@ -98,9 +98,10 @@ export function useProjectVersions(
 
 export function useProjectEnvironments(slug: string, projectId: string) {
   const url = `/api/teams/${slug}/projects/${projectId}/environments`;
-  const { data, error, isLoading, mutate } = useSWR<
-    ApiResponse<Environment[]>
-  >(slug && projectId ? url : null, fetcher);
+  const { data, error, isLoading, mutate } = useSWR<ApiResponse<Environment[]>>(
+    slug && projectId ? url : null,
+    fetcher
+  );
 
   return {
     environments: data?.data ?? [],

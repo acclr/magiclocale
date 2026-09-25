@@ -130,4 +130,3 @@ function getSingleQueryValue(
 ): string | null {
   return typeof value === 'string' && value ? value : null;
 }
-

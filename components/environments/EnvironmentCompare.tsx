@@ -77,7 +77,9 @@ const EnvironmentCompare = ({
                   <td>{t('feature-flags')}</td>
                   <td className="font-mono text-xs">{row.key}</td>
                   <td>{row.left ? (row.left.enabled ? 'ON' : 'OFF') : '—'}</td>
-                  <td>{row.right ? (row.right.enabled ? 'ON' : 'OFF') : '—'}</td>
+                  <td>
+                    {row.right ? (row.right.enabled ? 'ON' : 'OFF') : '—'}
+                  </td>
                 </tr>
               ))}
               {comparison.translations.map((row) => (

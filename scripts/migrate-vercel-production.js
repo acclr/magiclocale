@@ -108,11 +108,7 @@ if (!fs.existsSync(envFile)) {
 }
 
 console.log('\nApplying migrations to the linked production database…\n');
-runNode([
-  '--env-file',
-  envFile,
-  path.join(__dirname, 'migrate-production.js'),
-]);
+runNode(['--env-file', envFile, path.join(__dirname, 'migrate-production.js')]);
 
 console.log(
   `\nFinished. ${path.basename(envFile)} is on disk (gitignored) — delete it if you do not need it locally.`

@@ -44,8 +44,9 @@ export default async function handler(
       projectId,
       environmentRef
     );
-    const { flags, version } =
-      await getVersionService().resolveFlags(environment.id);
+    const { flags, version } = await getVersionService().resolveFlags(
+      environment.id
+    );
 
     const context: FlagEvaluationContext = {
       key: payload.context?.key ?? null,
@@ -84,9 +85,7 @@ export default async function handler(
     }
 
     console.error('Unable to evaluate feature flags.', error);
-    return res
-      .status(500)
-      .json({ error: 'Unable to evaluate feature flags.' });
+    return res.status(500).json({ error: 'Unable to evaluate feature flags.' });
   }
 }
 

@@ -77,20 +77,18 @@ export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
 }
 
 function parseType(value: unknown): KeyType {
-  if (
-    value === 'feature-flag' ||
-    value === 'flag' ||
-    value === 'featureFlag'
-  ) {
+  if (value === 'feature-flag' || value === 'flag' || value === 'featureFlag') {
     return 'feature-flag';
   }
   return 'translation';
 }
 
-function parseUsage(
-  value: unknown
-): IncomingSourceKey['usage'] {
-  if (!isRecord(value) || typeof value.file !== 'string' || !value.file.trim()) {
+function parseUsage(value: unknown): IncomingSourceKey['usage'] {
+  if (
+    !isRecord(value) ||
+    typeof value.file !== 'string' ||
+    !value.file.trim()
+  ) {
     return null;
   }
   if (value.file.length > MAX_FILE_LENGTH) {
@@ -110,8 +108,7 @@ function parseUsage(
     file: value.file.trim(),
     line,
     column: Number.isInteger(column) ? column : null,
-    repository:
-      typeof value.repository === 'string' ? value.repository : null,
+    repository: typeof value.repository === 'string' ? value.repository : null,
     branch: typeof value.branch === 'string' ? value.branch : null,
   };
 }

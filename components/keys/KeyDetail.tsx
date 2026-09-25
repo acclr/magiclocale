@@ -68,19 +68,26 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
 
   return (
     <div className="space-y-6">
-      <button className="btn btn-ghost btn-sm" onClick={() => router.back()} type="button">
+      <button
+        className="btn btn-ghost btn-sm"
+        onClick={() => router.back()}
+        type="button"
+      >
         {t('back')}
       </button>
       <div>
         <p className="text-xs uppercase text-muted-foreground">{meta.type}</p>
         <h1 className="font-mono text-2xl font-semibold">{meta.key}</h1>
         <p className="text-sm text-muted-foreground">
-          {t('namespace')}: {meta.namespace ?? '—'} · {t('lifecycle')}: {meta.lifecycle} ·{' '}
-          {t('usages')}: {meta.usageCount}
+          {t('namespace')}: {meta.namespace ?? '—'} · {t('lifecycle')}:{' '}
+          {meta.lifecycle} · {t('usages')}: {meta.usageCount}
         </p>
         {meta.type === 'feature-flag' ? (
           <p className="mt-2 text-sm">
-            <Link className="link" href={`/teams/${slug}/projects/${projectId}/flags`}>
+            <Link
+              className="link"
+              href={`/teams/${slug}/projects/${projectId}/flags`}
+            >
               {t('environment-matrix')}
             </Link>
           </p>
@@ -115,7 +122,8 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
         </label>
         {variables.length ? (
           <p className="text-xs text-muted-foreground">
-            {t('variables')}: {variables.map((name) => `{{${name}}}`).join(', ')}
+            {t('variables')}:{' '}
+            {variables.map((name) => `{{${name}}}`).join(', ')}
           </p>
         ) : null}
         {canEdit ? (
@@ -126,7 +134,9 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
                 await detail.update({ owner, description });
                 toast.success(t('saved'));
               } catch (error) {
-                toast.error(error instanceof Error ? error.message : t('save-failed'));
+                toast.error(
+                  error instanceof Error ? error.message : t('save-failed')
+                );
               }
             }}
             type="button"
@@ -160,12 +170,17 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
             {(history?.data ?? []).map((change) => (
               <li key={change.id} className="rounded border border-border p-2">
                 <p className="text-xs text-muted-foreground">
-                  {new Date(change.createdAt).toLocaleString()} · {change.actor ?? 'system'}
+                  {new Date(change.createdAt).toLocaleString()} ·{' '}
+                  {change.actor ?? 'system'}
                   {change.reason ? ` · ${change.reason}` : ''}
                   {change.locale ? ` · ${change.locale}` : ''}
                 </p>
                 <pre className="mt-1 overflow-x-auto text-xs">
-                  {JSON.stringify({ before: change.before, after: change.after }, null, 2)}
+                  {JSON.stringify(
+                    { before: change.before, after: change.after },
+                    null,
+                    2
+                  )}
                 </pre>
                 {canEdit ? (
                   <button
@@ -173,7 +188,9 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
                     onClick={() =>
                       void restore(change.id).catch((error) =>
                         toast.error(
-                          error instanceof Error ? error.message : t('restore-failed')
+                          error instanceof Error
+                            ? error.message
+                            : t('restore-failed')
                         )
                       )
                     }

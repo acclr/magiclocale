@@ -49,8 +49,7 @@ export class KeykitClient {
       resolved.catalogs
     );
     this.flags = new FlagCache(resolved.context, resolved.initialFlags);
-    this.transport =
-      transport ?? createTransport(resolved);
+    this.transport = transport ?? createTransport(resolved);
     this.registry = new SourceKeyRegistry(this.transport, resolved);
 
     if (typeof window !== 'undefined') {

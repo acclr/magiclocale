@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
 import { useTranslate } from '@keykithq/sdk/react';
-import { Logo, LogoWhite } from '@/components/shared/logo';
+import { LogoWhite } from '@/components/shared/logo';
 
 type LandingShellProps = {
   children: ReactNode;

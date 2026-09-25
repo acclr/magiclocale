@@ -63,7 +63,9 @@ export class TeamTranslationService {
     const catalogByKey = Object.fromEntries(
       catalog.map((item) => [item.key, item])
     );
-    const catalogById = Object.fromEntries(catalog.map((item) => [item.id, item]));
+    const catalogById = Object.fromEntries(
+      catalog.map((item) => [item.id, item])
+    );
     const usageFilesByKey: Record<string, string[]> = {};
     for (const usage of usages) {
       const meta = catalogById[usage.keyMetaId];
@@ -269,7 +271,12 @@ export class TeamTranslationService {
       filter?: TranslationFilter;
       search?: string;
     }
-  ): Promise<{ queued: number; filled: number; skipped: number; failed: number }> {
+  ): Promise<{
+    queued: number;
+    filled: number;
+    skipped: number;
+    failed: number;
+  }> {
     const { project, environment } = await this.requireScope(
       teamId,
       projectId,
@@ -295,12 +302,17 @@ export class TeamTranslationService {
           ]);
         }
       } catch (error) {
-        console.error('Unable to load key catalog for translation queue.', error);
+        console.error(
+          'Unable to load key catalog for translation queue.',
+          error
+        );
       }
       const catalogByKey = Object.fromEntries(
         catalog.map((item) => [item.key, item])
       );
-      const catalogById = Object.fromEntries(catalog.map((item) => [item.id, item]));
+      const catalogById = Object.fromEntries(
+        catalog.map((item) => [item.id, item])
+      );
       const usageFilesByKey: Record<string, string[]> = {};
       for (const usage of usages) {
         const meta = catalogById[usage.keyMetaId];

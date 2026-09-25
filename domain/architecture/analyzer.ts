@@ -1,4 +1,8 @@
-import { namespaceDepth, namespaceFromKey, rootNamespace } from '../keys/namespace';
+import {
+  namespaceDepth,
+  namespaceFromKey,
+  rootNamespace,
+} from '../keys/namespace';
 import type { KeyMeta, SourceUsage } from '../keys/types';
 import {
   DEFAULT_ARCHITECTURE_RULES,
@@ -130,10 +134,7 @@ export function analyzeArchitecture(input: AnalyzerInput): DraftFinding[] {
       );
     }
 
-    if (
-      key.type === 'feature-flag' &&
-      !input.definedFlagKeys.has(key.key)
-    ) {
+    if (key.type === 'feature-flag' && !input.definedFlagKeys.has(key.key)) {
       findings.push(
         finding(
           projectId,
@@ -146,11 +147,7 @@ export function analyzeArchitecture(input: AnalyzerInput): DraftFinding[] {
       );
     }
 
-    if (
-      key.type === 'feature-flag' &&
-      key.reviewAt &&
-      key.reviewAt < now
-    ) {
+    if (key.type === 'feature-flag' && key.reviewAt && key.reviewAt < now) {
       findings.push(
         finding(
           projectId,

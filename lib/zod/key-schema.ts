@@ -50,12 +50,18 @@ export const promoteFlagSchema = z.object({
 });
 
 export const architectureRuleSchema = z.object({
-  allowedRootNamespaces: z.array(z.string().trim().min(1).max(40)).max(50).optional(),
+  allowedRootNamespaces: z
+    .array(z.string().trim().min(1).max(40))
+    .max(50)
+    .optional(),
   maxDepth: z.number().int().min(1).max(10).optional(),
   minDepth: z.number().int().min(0).max(5).optional(),
   requiredOwner: z.boolean().optional(),
   requiredDescription: z.boolean().optional(),
-  forbiddenPrefixes: z.array(z.string().trim().min(1).max(40)).max(20).optional(),
+  forbiddenPrefixes: z
+    .array(z.string().trim().min(1).max(40))
+    .max(20)
+    .optional(),
   temporaryFlagReviewRequired: z.boolean().optional(),
   staleEnabledDays: z.number().int().min(1).max(730).optional(),
 });

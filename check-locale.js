@@ -16,6 +16,39 @@ const exceptionList = [
   'invalid-credentials',
   'no-credentials',
   'token-not-found',
+  'sign-up',
+  'kickstart-your-enterprise',
+  'enterprise-saas-kit',
+  'frequently-asked',
+  'pricing',
+  'buy-now',
+  'features',
+  'locale-format-language',
+  'locale-format-language-help',
+  'locale-format-regional',
+  'locale-format-regional-help',
+  'details',
+  'system',
+  'dark',
+  'light',
+  'theme',
+  'homepage-title',
+  'change-theme',
+  'project',
+  'switch-theme',
+  'member-count_plural',
+  'remove-rule',
+  'unpublished-changes',
+  'unpublished-changes_plural',
+];
+
+const ignoredPathParts = [
+  'node_modules',
+  'packages',
+  '.next',
+  '__tests__',
+  'tests',
+  'dist',
 ];
 
 const allStrings = {};
@@ -30,7 +63,8 @@ files.forEach((file) => {
   if (file.isDirectory()) {
     return;
   }
-  if (file.path.includes('node_modules')) {
+  const filePath = path.join(file.path, file.name);
+  if (ignoredPathParts.some((part) => filePath.includes(part))) {
     return;
   }
 
@@ -42,6 +76,10 @@ files.forEach((file) => {
 
     (fileContent.match(regExp) || []).forEach((match) => {
       const id = match.replace("t('", '').replace("'", '');
+      // Dotted keys belong to Keykit SDK catalogs, not next-i18next.
+      if (id.includes('.')) {
+        return;
+      }
       allStrings[id] = true;
       if (!localeFile[id]) {
         error = true;

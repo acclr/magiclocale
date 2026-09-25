@@ -103,32 +103,32 @@ const EnvironmentSettings = ({
                       ))}
                   </select>
                   <button
-                  className="btn btn-ghost btn-xs text-error"
-                  onClick={async () => {
-                    if (
-                      !window.confirm(
-                        t('confirm-delete-environment', {
-                          name: environment.name,
-                        })
-                      )
-                    ) {
-                      return;
-                    }
-                    try {
-                      await environments.remove(environment.id);
-                      toast.success(t('environment-deleted'));
-                    } catch (error) {
-                      toast.error(
-                        error instanceof Error
-                          ? error.message
-                          : t('could-not-delete-environment')
-                      );
-                    }
-                  }}
-                  type="button"
-                >
-                  {t('delete')}
-                </button>
+                    className="btn btn-ghost btn-xs text-error"
+                    onClick={async () => {
+                      if (
+                        !window.confirm(
+                          t('confirm-delete-environment', {
+                            name: environment.name,
+                          })
+                        )
+                      ) {
+                        return;
+                      }
+                      try {
+                        await environments.remove(environment.id);
+                        toast.success(t('environment-deleted'));
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error
+                            ? error.message
+                            : t('could-not-delete-environment')
+                        );
+                      }
+                    }}
+                    type="button"
+                  >
+                    {t('delete')}
+                  </button>
                 </div>
               ) : null}
             </li>
@@ -137,7 +137,9 @@ const EnvironmentSettings = ({
         {canEdit && environments.environments.length < 3 ? (
           <form className="flex flex-wrap items-end gap-3" onSubmit={create}>
             <label className="form-control">
-              <span className="label-text text-xs">{t('environment-slug')}</span>
+              <span className="label-text text-xs">
+                {t('environment-slug')}
+              </span>
               <input
                 className="input input-bordered input-sm"
                 onChange={(event) => setSlugValue(event.target.value)}
@@ -147,7 +149,9 @@ const EnvironmentSettings = ({
               />
             </label>
             <label className="form-control">
-              <span className="label-text text-xs">{t('environment-name')}</span>
+              <span className="label-text text-xs">
+                {t('environment-name')}
+              </span>
               <input
                 className="input input-bordered input-sm"
                 onChange={(event) => setName(event.target.value)}
@@ -156,7 +160,9 @@ const EnvironmentSettings = ({
               />
             </label>
             <label className="form-control">
-              <span className="label-text text-xs">{t('parent-environment')}</span>
+              <span className="label-text text-xs">
+                {t('parent-environment')}
+              </span>
               <select
                 className="select select-bordered select-sm"
                 onChange={(event) => setParentId(event.target.value)}
@@ -170,7 +176,11 @@ const EnvironmentSettings = ({
                 ))}
               </select>
             </label>
-            <button className="btn btn-primary btn-sm" disabled={busy} type="submit">
+            <button
+              className="btn btn-primary btn-sm"
+              disabled={busy}
+              type="submit"
+            >
               {busy ? t('adding-environment') : t('add-environment')}
             </button>
           </form>

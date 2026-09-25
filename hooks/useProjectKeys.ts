@@ -33,7 +33,11 @@ export function useKeyDetail(
 ) {
   const url = `/api/teams/${slug}/projects/${projectId}/keys/${keyMetaId}`;
   const { data, error, isLoading, mutate } = useSWR<
-    ApiResponse<{ meta: KeyMeta; usages: SourceUsage[]; sourceText?: string | null }>
+    ApiResponse<{
+      meta: KeyMeta;
+      usages: SourceUsage[];
+      sourceText?: string | null;
+    }>
   >(slug && projectId && keyMetaId ? url : null, fetcher);
 
   return {

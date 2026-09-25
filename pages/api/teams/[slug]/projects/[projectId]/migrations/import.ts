@@ -29,15 +29,15 @@ export default createTeamProjectApiHandler({
       const keys = flattenTranslationJson(req.body?.translations ?? req.body);
       if (!keys.length) {
         return res.status(422).json({
-          error: { code: 422, message: 'No translation keys found in JSON.', values: {} },
+          error: {
+            code: 422,
+            message: 'No translation keys found in JSON.',
+            values: {},
+          },
         });
       }
       const env = await getEnvironmentService().resolve(projectId, environment);
-      await getEnvironmentService().get(
-        teamMember.team.id,
-        projectId,
-        env.id
-      );
+      await getEnvironmentService().get(teamMember.team.id, projectId, env.id);
       const project = await getProjectService().get(
         teamMember.team.id,
         projectId

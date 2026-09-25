@@ -33,8 +33,7 @@ const ProjectSidebar = ({
   const { asPath, query } = useRouter();
   const { setMobileView } = useSidebarLayout();
   const slug = typeof query.slug === 'string' ? query.slug : '';
-  const projectId =
-    typeof query.projectId === 'string' ? query.projectId : '';
+  const projectId = typeof query.projectId === 'string' ? query.projectId : '';
   const { projects } = useTeamProjects(slug);
   const { environment, setEnvironment } = useProjectEnvironment();
   const { environments } = useProjectEnvironments(slug, projectId);

@@ -34,8 +34,7 @@ async function ensurePlan(stripe, input) {
   let product = products.data.find(
     (item) =>
       item.metadata?.keykit_plan === input.planId ||
-      (input.planId === 'premium' &&
-        item.metadata?.keykit_plan === 'starter')
+      (input.planId === 'premium' && item.metadata?.keykit_plan === 'starter')
   );
   if (!product) {
     product = await stripe.products.create({

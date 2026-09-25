@@ -2,7 +2,10 @@ import { Card, InputWithLabel } from '@/components/shared';
 import type { Project } from '../../domain/translations';
 import { useFormik } from 'formik';
 import { useTranslation } from '@/hooks/useTranslation';
-import { AllowedOriginError, parseAllowedOrigin } from '@/lib/api/allowed-origin';
+import {
+  AllowedOriginError,
+  parseAllowedOrigin,
+} from '@/lib/api/allowed-origin';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Button } from '@/components/shared';

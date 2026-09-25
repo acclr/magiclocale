@@ -78,7 +78,10 @@ export default createTeamProjectApiHandler({
         translationProjectParamsSchema,
         req.query
       );
-      const { flagId, ...patch } = validateWithSchema(updateFlagSchema, req.body);
+      const { flagId, ...patch } = validateWithSchema(
+        updateFlagSchema,
+        req.body
+      );
       const flag = await getFlagService().update(
         teamMember.team.id,
         projectId,

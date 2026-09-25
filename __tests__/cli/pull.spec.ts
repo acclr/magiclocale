@@ -40,9 +40,9 @@ describe('keykit pull', () => {
         headers: { Authorization: 'Bearer secret' },
       })
     );
-    expect(JSON.parse(readFileSync(join(outDir, 'catalog.json'), 'utf8'))).toEqual(
-      catalog
-    );
+    expect(
+      JSON.parse(readFileSync(join(outDir, 'catalog.json'), 'utf8'))
+    ).toEqual(catalog);
     expect(JSON.parse(readFileSync(join(outDir, 'sv.json'), 'utf8'))).toEqual({
       'settings.save': 'Spara',
     });

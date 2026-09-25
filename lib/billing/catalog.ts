@@ -27,12 +27,9 @@ export async function getBillingCatalog(
     plans: CATALOG_PLAN_ORDER.map((id) => ({
       ...KEYKIT_PLANS[id],
       priceId:
-        id === 'free'
-          ? null
-          : priceIds[id as 'premium' | 'enterprise'] || null,
+        id === 'free' ? null : priceIds[id as 'premium' | 'enterprise'] || null,
       current:
-        entitlement.planId === id &&
-        (id === 'free' || entitlement.subscribed),
+        entitlement.planId === id && (id === 'free' || entitlement.subscribed),
     })),
     subscriptions: subscriptions
       .filter((subscription) => subscription.active)

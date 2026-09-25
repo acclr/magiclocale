@@ -38,18 +38,17 @@ interface NavigationItemProps {
 const NavigationItems = ({
   menus,
   collapsed = false,
-  tone = 'default',
 }: NavigationItemsProps) => {
   return (
     <ul role="list" className="flex flex-1 flex-col gap-px">
       {menus.map((menu) => (
         <li key={menu.name}>
-          <NavigationItem collapsed={collapsed} menu={menu} tone={tone} />
+          <NavigationItem collapsed={collapsed} menu={menu} />
           {menu.items && !collapsed && (
             <ul className="mt-1 flex flex-col gap-1">
               {menu.items.map((subitem) => (
                 <li key={subitem.name}>
-                  <NavigationItem className="pl-9" menu={subitem} tone={tone} />
+                  <NavigationItem className="pl-9" menu={subitem} />
                 </li>
               ))}
             </ul>
@@ -64,7 +63,6 @@ const NavigationItem = ({
   menu,
   className,
   collapsed = false,
-  tone = 'default',
 }: NavigationItemProps) => {
   const surface = 'hover:bg-foreground/5 active:bg-foreground/10';
   const activeSurface = 'bg-foreground/5 active:bg-foreground/10';

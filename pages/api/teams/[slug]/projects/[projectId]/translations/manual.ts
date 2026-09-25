@@ -36,9 +36,7 @@ export default createTeamProjectApiHandler({
         { page: 1, pageSize: 1, search: '' }
       );
       const row = dashboard.rows.find((item) => item.keyId === keyId);
-      const issues = row
-        ? validateVariables(row.sourceText, value)
-        : [];
+      const issues = row ? validateVariables(row.sourceText, value) : [];
       res.status(200).json({ data: translation, issues });
     },
   },

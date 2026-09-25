@@ -45,8 +45,7 @@ export class EnvironmentService {
   }
 
   async ensureProduction(projectId: string): Promise<Environment> {
-    const existing =
-      await this.repository.findProductionEnvironment(projectId);
+    const existing = await this.repository.findProductionEnvironment(projectId);
     if (existing) {
       return existing;
     }

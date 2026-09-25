@@ -96,7 +96,9 @@ export function useSidebarLayout() {
   const context = useContext(SidebarContext);
 
   if (!context) {
-    throw new Error('useSidebarLayout must be used within SidebarLayoutProvider');
+    throw new Error(
+      'useSidebarLayout must be used within SidebarLayoutProvider'
+    );
   }
 
   return context;

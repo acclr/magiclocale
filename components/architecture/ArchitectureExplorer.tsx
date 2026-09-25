@@ -150,7 +150,9 @@ const ArchitectureExplorer = ({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-2xl font-semibold">{t('architecture')}</h1>
-          <p className="text-sm text-muted-foreground">{t('architecture-help')}</p>
+          <p className="text-sm text-muted-foreground">
+            {t('architecture-help')}
+          </p>
         </div>
         {canEdit ? (
           <button
@@ -245,7 +247,9 @@ const ArchitectureExplorer = ({
             className="btn btn-sm"
             onClick={() =>
               void saveRules().catch((error) =>
-                toast.error(error instanceof Error ? error.message : t('save-failed'))
+                toast.error(
+                  error instanceof Error ? error.message : t('save-failed')
+                )
               )
             }
             type="button"
@@ -323,13 +327,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-function Tree({
-  nodes,
-  base,
-}: {
-  nodes: ArchitectureNode[];
-  base: string;
-}) {
+function Tree({ nodes, base }: { nodes: ArchitectureNode[]; base: string }) {
   const { t } = useTranslation('common');
 
   return (
@@ -340,14 +338,20 @@ function Tree({
           <ul className="ml-4 mt-1 space-y-1 text-xs">
             {node.translations.map((item) => (
               <li key={item.id}>
-                <Link className="link link-hover" href={`${base}/keys/${item.id}`}>
+                <Link
+                  className="link link-hover"
+                  href={`${base}/keys/${item.id}`}
+                >
                   {t('architecture-translation-key', { key: item.key })}
                 </Link>
               </li>
             ))}
             {node.flags.map((item) => (
               <li key={item.id}>
-                <Link className="link link-hover" href={`${base}/keys/${item.id}`}>
+                <Link
+                  className="link link-hover"
+                  href={`${base}/keys/${item.id}`}
+                >
                   {t('architecture-flag-key', { key: item.key })}
                 </Link>
               </li>

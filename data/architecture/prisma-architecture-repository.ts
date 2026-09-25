@@ -27,11 +27,7 @@ type PrismaFindingKindValue =
   | 'UNKNOWN_FLAG'
   | 'TEMPORARY_FLAG_OVERDUE';
 
-type PrismaFindingStatusValue =
-  | 'OPEN'
-  | 'REVIEWED'
-  | 'IGNORED'
-  | 'INTENTIONAL';
+type PrismaFindingStatusValue = 'OPEN' | 'REVIEWED' | 'IGNORED' | 'INTENTIONAL';
 
 type PrismaKeyTypeValue = 'TRANSLATION' | 'FEATURE_FLAG';
 

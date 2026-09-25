@@ -4,20 +4,12 @@ import { useTranslation } from '@/hooks/useTranslation';
 import PrimarySidebar from './PrimarySidebar';
 import ProjectSidebar from './ProjectSidebar';
 import { useSidebarLayout } from './SidebarContext';
-import {
-  getPrimarySidebarWidth,
-  PROJECT_SIDEBAR_WIDTH,
-} from './sidebar';
+import { getPrimarySidebarWidth, PROJECT_SIDEBAR_WIDTH } from './sidebar';
 
 const Drawer = () => {
   const { t } = useTranslation('common');
-  const {
-    collapsed,
-    isProjectRoute,
-    mobileOpen,
-    mobileView,
-    setMobileOpen,
-  } = useSidebarLayout();
+  const { collapsed, isProjectRoute, mobileOpen, mobileView, setMobileOpen } =
+    useSidebarLayout();
   const primaryWidth = getPrimarySidebarWidth(collapsed);
 
   return (

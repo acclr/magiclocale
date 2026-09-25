@@ -46,9 +46,7 @@ const lifecycleFromPrisma: Record<PrismaKeyLifecycleValue, KeyLifecycle> = {
   ARCHIVED: 'archived',
 };
 
-function toMeta(
-  row: PrismaKeyMeta & { _count?: { usages: number } }
-): KeyMeta {
+function toMeta(row: PrismaKeyMeta & { _count?: { usages: number } }): KeyMeta {
   return {
     id: row.id,
     projectId: row.projectId,
@@ -82,6 +80,12 @@ function toUsage(row: PrismaSourceUsage): SourceUsage {
   };
 }
 
+function isPrismaErrorWithCode(error: unknown, code: string): boolean {
+  return (
+    error instanceof Prisma.PrismaClientKnownRequestError && error.code === code
+  );
+}
+
 export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
   constructor(private readonly client: PrismaClient = prisma) {}
 
@@ -111,7 +115,10 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
     return row ? toMeta(row) : null;
   }
 
-  async list(projectId: string, query: CatalogQuery = {}): Promise<CatalogList> {
+  async list(
+    projectId: string,
+    query: CatalogQuery = {}
+  ): Promise<CatalogList> {
     const pageSize = Math.min(100, Math.max(1, query.pageSize ?? 50));
     const page = Math.max(1, query.page ?? 1);
     const where: Prisma.KeyMetaWhereInput = { projectId };
@@ -135,7 +142,10 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
       if (query.file) {
         some.file = { contains: query.file, mode: 'insensitive' };
       }
-      if (query.file || (query.usage !== undefined && !Number.isNaN(query.usage))) {
+      if (
+        query.file ||
+        (query.usage !== undefined && !Number.isNaN(query.usage))
+      ) {
         where.usages = { some };
       }
     }
@@ -185,36 +195,61 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
     lifecycle?: KeyLifecycle;
   }): Promise<KeyMeta> {
     const namespace = namespaceFromKey(input.key);
-    const row = await this.client.keyMeta.upsert({
-      where: {
-        projectId_type_key: {
-          projectId: input.projectId,
-          type: typeToPrisma[input.type],
-          key: input.key,
-        },
-      },
-      create: {
+    const where = {
+      projectId_type_key: {
         projectId: input.projectId,
         type: typeToPrisma[input.type],
         key: input.key,
-        namespace,
-        description: input.description ?? null,
-        lifecycle: input.lifecycle
-          ? lifecycleToPrisma[input.lifecycle]
-          : 'ACTIVE',
       },
-      update: {
-        namespace,
-        ...(input.description !== undefined
-          ? { description: input.description }
-          : {}),
-        ...(input.lifecycle
-          ? { lifecycle: lifecycleToPrisma[input.lifecycle] }
-          : {}),
-      },
-      include: { _count: { select: { usages: true } } },
-    });
-    return toMeta(row);
+    };
+    const create = {
+      projectId: input.projectId,
+      type: typeToPrisma[input.type],
+      key: input.key,
+      namespace,
+      description: input.description ?? null,
+      lifecycle: input.lifecycle
+        ? lifecycleToPrisma[input.lifecycle]
+        : 'ACTIVE',
+    };
+    const update = {
+      namespace,
+      ...(input.description !== undefined
+        ? { description: input.description }
+        : {}),
+      ...(input.lifecycle
+        ? { lifecycle: lifecycleToPrisma[input.lifecycle] }
+        : {}),
+    };
+
+    try {
+      const row = await this.client.keyMeta.upsert({
+        where,
+        create,
+        update,
+        include: { _count: { select: { usages: true } } },
+      });
+      return toMeta(row);
+    } catch (error) {
+      // Two landing-page syncs can create the same key at once. Prisma
+      // upsert is not atomic under that race and raises P2002.
+      if (!isPrismaErrorWithCode(error, 'P2002')) {
+        throw error;
+      }
+      const existing = await this.client.keyMeta.findUnique({
+        where,
+        include: { _count: { select: { usages: true } } },
+      });
+      if (!existing) {
+        throw error;
+      }
+      const row = await this.client.keyMeta.update({
+        where: { id: existing.id },
+        data: update,
+        include: { _count: { select: { usages: true } } },
+      });
+      return toMeta(row);
+    }
   }
 
   async update(id: string, patch: KeyMetaPatch): Promise<KeyMeta> {

@@ -10,7 +10,9 @@ import {
 export async function loadProjectAllowedOrigins(
   projectId: string
 ): Promise<string[]> {
-  const rows = await prisma.$queryRaw<Array<{ allowedOrigins: string[] | null }>>`
+  const rows = await prisma.$queryRaw<
+    Array<{ allowedOrigins: string[] | null }>
+  >`
     SELECT "allowedOrigins" FROM "TranslationProject" WHERE id = ${projectId}
     LIMIT 1
   `;

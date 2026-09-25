@@ -11,7 +11,14 @@ export type RewritePlan = {
   operations: RewriteOperation[];
 };
 
-const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs']);
+const SOURCE_EXTENSIONS = new Set([
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.mjs',
+  '.cjs',
+]);
 
 export function rewriteSourceTree(root: string, plan: RewritePlan): number {
   const renames = plan.operations.filter(

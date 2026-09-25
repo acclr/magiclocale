@@ -45,10 +45,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
     <section className="py-3">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {plans.map((plan) => (
-          <div
-            className="relative rounded-md bg-card"
-            key={plan.id}
-          >
+          <div className="relative rounded-md bg-card" key={plan.id}>
             <div className="p-8">
               <h3 className="font-display text-2xl font-bold text-foreground">
                 {plan.name}

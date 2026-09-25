@@ -1,9 +1,6 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getMigrationService } from '@/lib/translations';
-import {
-  translationProjectParamsSchema,
-  validateWithSchema,
-} from '@/lib/zod';
+import { translationProjectParamsSchema, validateWithSchema } from '@/lib/zod';
 import { z } from 'zod';
 
 const params = translationProjectParamsSchema.extend({

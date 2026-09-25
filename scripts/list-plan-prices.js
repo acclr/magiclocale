@@ -2,9 +2,9 @@ const fs = require('fs');
 const Stripe = require('stripe');
 
 const envText = fs.readFileSync('.env', 'utf8');
-const line = envText.split(/\r?\n/).find((item) =>
-  item.startsWith('STRIPE_SECRET_KEY=')
-);
+const line = envText
+  .split(/\r?\n/)
+  .find((item) => item.startsWith('STRIPE_SECRET_KEY='));
 const secret = (line ? line.slice('STRIPE_SECRET_KEY='.length) : '')
   .trim()
   .replace(/^["']|["']$/g, '');

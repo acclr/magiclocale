@@ -38,9 +38,7 @@ console.log(
       projectFound: Boolean(project),
       teamMatch: key && project ? key.teamId === project.teamId : null,
       projectScopeOk:
-        key && project
-          ? !key.projectId || key.projectId === project.id
-          : null,
+        key && project ? !key.projectId || key.projectId === project.id : null,
     },
     null,
     2

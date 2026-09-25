@@ -25,10 +25,7 @@ import {
   type TranslationRepository,
   type Translator,
 } from '../../domain/translations';
-import {
-  VersionService,
-  type VersionRepository,
-} from '../../domain/versions';
+import { VersionService, type VersionRepository } from '../../domain/versions';
 import { getOpenAITranslationEnv } from '../env';
 import { prisma } from '../prisma';
 
@@ -89,8 +86,7 @@ export function createTranslationServices(
   const flagRepository =
     dependencies.flagRepository ?? new PrismaFlagRepository(prisma);
   const keyCatalogRepository =
-    dependencies.keyCatalogRepository ??
-    new PrismaKeyCatalogRepository(prisma);
+    dependencies.keyCatalogRepository ?? new PrismaKeyCatalogRepository(prisma);
   const translator = dependencies.translator ?? createEnvironmentTranslator();
 
   const projectService = new ProjectService(repository);
@@ -103,11 +99,11 @@ export function createTranslationServices(
     projectService
   );
   const catalogWriter = {
-    recordDetection: (input: Parameters<KeyCatalogRepository['recordDetection']>[0]) =>
-      keyCatalogRepository.recordDetection(input),
-    upsertDefinition: (
-      input: Parameters<KeyCatalogRepository['upsert']>[0]
-    ) => keyCatalogRepository.upsert(input),
+    recordDetection: (
+      input: Parameters<KeyCatalogRepository['recordDetection']>[0]
+    ) => keyCatalogRepository.recordDetection(input),
+    upsertDefinition: (input: Parameters<KeyCatalogRepository['upsert']>[0]) =>
+      keyCatalogRepository.upsert(input),
   };
 
   const flagService = new FlagService(

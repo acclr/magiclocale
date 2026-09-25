@@ -3,9 +3,7 @@ import type { KeykitConfig } from './types';
 
 let defaultClient: KeykitClient | null = null;
 
-export function configureKeykit(
-  config: KeykitConfig
-): KeykitClient {
+export function configureKeykit(config: KeykitConfig): KeykitClient {
   defaultClient?.dispose();
   defaultClient = new KeykitClient(config);
   return defaultClient;
@@ -40,10 +38,7 @@ export function isEnabled(key: string, fallback = false): boolean {
   return requireClient().isEnabled(key, fallback);
 }
 
-export function getValue(
-  key: string,
-  fallback?: import('./types').FlagValue
-) {
+export function getValue(key: string, fallback?: import('./types').FlagValue) {
   return requireClient().getValue(key, fallback);
 }
 
@@ -59,9 +54,7 @@ export function subscribe(listener: () => void): () => void {
 
 function requireClient(): KeykitClient {
   if (!defaultClient) {
-    throw new Error(
-      'Keykit is not configured. Call configureKeykit() first.'
-    );
+    throw new Error('Keykit is not configured. Call configureKeykit() first.');
   }
   return defaultClient;
 }

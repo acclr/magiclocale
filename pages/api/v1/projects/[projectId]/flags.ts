@@ -43,8 +43,9 @@ export default async function handler(
       projectId,
       environmentRef
     );
-    const { flags, version } =
-      await getVersionService().resolveFlags(environment.id);
+    const { flags, version } = await getVersionService().resolveFlags(
+      environment.id
+    );
     const payload = toPublicFlagPayload(flags);
 
     res.setHeader('Cache-Control', 'no-cache');
@@ -72,4 +73,3 @@ export default async function handler(
 function getSingleQueryValue(value: string | string[] | undefined) {
   return typeof value === 'string' && value ? value : null;
 }
-

@@ -1,8 +1,6 @@
 import { mkdtempSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { describe, expect, it } from 'vitest';
-
 import { scanSourceTree } from '../../packages/cli/src/scan';
 
 describe('keykit scan', () => {

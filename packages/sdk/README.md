@@ -59,7 +59,7 @@ import { KeykitProvider, useTranslate } from '@keykithq/sdk/react';
   }}
 >
   <App />
-</KeykitProvider>
+</KeykitProvider>;
 ```
 
 `useTranslate()` reads the local maps. Publish in the dashboard, then run

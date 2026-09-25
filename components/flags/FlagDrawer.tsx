@@ -15,7 +15,9 @@ type FlagDrawerProps = {
   item: FlagWithConfig;
   canEdit: boolean;
   onClose: () => void;
-  onSaveConfig: (patch: UpsertFlagConfigInput & { reason?: string }) => Promise<unknown>;
+  onSaveConfig: (
+    patch: UpsertFlagConfigInput & { reason?: string }
+  ) => Promise<unknown>;
   onSaveRules: (rules: FlagRuleInput[], reason?: string) => Promise<unknown>;
   onUpdate: (patch: {
     name?: string;
@@ -40,7 +42,9 @@ const FlagDrawer = ({
   const [defaultValue, setDefaultValue] = useState(
     JSON.stringify(item.config.defaultValue)
   );
-  const [offValue, setOffValue] = useState(JSON.stringify(item.config.offValue));
+  const [offValue, setOffValue] = useState(
+    JSON.stringify(item.config.offValue)
+  );
   const [rollout, setRollout] = useState(item.config.rolloutPercentage ?? 100);
   const [useRollout, setUseRollout] = useState(
     item.config.rolloutPercentage !== null
@@ -114,7 +118,11 @@ const FlagDrawer = ({
             <h3 className="font-semibold">{item.flag.key}</h3>
             <p className="text-sm text-muted-foreground">{item.flag.name}</p>
           </div>
-          <button className="btn btn-ghost btn-sm" onClick={onClose} type="button">
+          <button
+            className="btn btn-ghost btn-sm"
+            onClick={onClose}
+            type="button"
+          >
             {t('close')}
           </button>
         </div>
@@ -389,9 +397,7 @@ const FlagDrawer = ({
             <div className="flex gap-2">
               <button
                 className="btn btn-ghost btn-sm"
-                onClick={() =>
-                  void onUpdate({ archived: !item.flag.archived })
-                }
+                onClick={() => void onUpdate({ archived: !item.flag.archived })}
                 type="button"
               >
                 {item.flag.archived ? t('unarchive') : t('archive')}

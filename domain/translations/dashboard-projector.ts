@@ -145,7 +145,9 @@ export function projectTranslationDashboard(
 
     const catalog = catalogByKey[key.key];
     const cellValues = project.locales
-      .map((locale) => translationsByCell.get(`${key.id}:${locale}`)?.value ?? '')
+      .map(
+        (locale) => translationsByCell.get(`${key.id}:${locale}`)?.value ?? ''
+      )
       .join(' ');
 
     return {
@@ -208,10 +210,16 @@ export function filterDashboardRows(
     } else if (query.filter !== 'all' && !row.statuses.includes(query.filter)) {
       return false;
     }
-    if (parsed.fields.namespace && !row.key.startsWith(parsed.fields.namespace)) {
+    if (
+      parsed.fields.namespace &&
+      !row.key.startsWith(parsed.fields.namespace)
+    ) {
       return false;
     }
-    if (parsed.fields.owner && (row.owner ?? '').toLowerCase() !== parsed.fields.owner.toLowerCase()) {
+    if (
+      parsed.fields.owner &&
+      (row.owner ?? '').toLowerCase() !== parsed.fields.owner.toLowerCase()
+    ) {
       return false;
     }
     if (parsed.fields.file) {
@@ -237,14 +245,22 @@ export function filterDashboardRows(
       ) {
         return false;
       }
-    } else if (parsed.fields.status === 'missing' && !row.missingLocales.length) {
+    } else if (
+      parsed.fields.status === 'missing' &&
+      !row.missingLocales.length
+    ) {
       return false;
     }
     if (parsed.fields.usage === '0' && row.usageCount !== 0) {
       return false;
     }
     const haystack = row.searchText;
-    if (parsed.fields.source && !row.sourceText.toLocaleLowerCase().includes(parsed.fields.source.toLocaleLowerCase())) {
+    if (
+      parsed.fields.source &&
+      !row.sourceText
+        .toLocaleLowerCase()
+        .includes(parsed.fields.source.toLocaleLowerCase())
+    ) {
       return false;
     }
     if (locale) {

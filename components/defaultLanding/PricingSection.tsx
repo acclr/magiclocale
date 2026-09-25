@@ -54,18 +54,11 @@ const PricingSection = () => {
                   ${plan.amount}
                 </span>
                 <span className="text-sm text-muted-foreground">
-                  /{' '}
-                  {t(
-                    `landing.pricing.${plan.id}.duration`,
-                    plan.duration
-                  )}
+                  / {t(`landing.pricing.${plan.id}.duration`, plan.duration)}
                 </span>
               </div>
               <CardDescription className="text-sm leading-relaxed">
-                {t(
-                  `landing.pricing.${plan.id}.description`,
-                  plan.description
-                )}
+                {t(`landing.pricing.${plan.id}.description`, plan.description)}
               </CardDescription>
             </CardHeader>
             <CardContent className="flex-1">

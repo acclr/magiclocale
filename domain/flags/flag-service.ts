@@ -1,9 +1,6 @@
 import type { EnvironmentService } from '../environments/environment-service';
 import type { Environment } from '../environments/types';
-import {
-  noopKeyCatalogWriter,
-  type KeyCatalogWriter,
-} from '../keys/ports';
+import { noopKeyCatalogWriter, type KeyCatalogWriter } from '../keys/ports';
 import type { ProjectService } from '../translations/project-service';
 import type { FlagChangeRecorder } from './change-recorder';
 import { noopFlagChangeRecorder } from './change-recorder';
@@ -506,11 +503,7 @@ export class FlagService {
   }
 
   private requirePercentage(percentage: number): void {
-    if (
-      !Number.isInteger(percentage) ||
-      percentage < 0 ||
-      percentage > 100
-    ) {
+    if (!Number.isInteger(percentage) || percentage < 0 || percentage > 100) {
       throw new Error('A rollout percentage must be between 0 and 100');
     }
   }

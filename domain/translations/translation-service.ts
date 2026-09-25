@@ -1,7 +1,4 @@
-import {
-  noopKeyCatalogWriter,
-  type KeyCatalogWriter,
-} from '../keys/ports';
+import { noopKeyCatalogWriter, type KeyCatalogWriter } from '../keys/ports';
 import {
   noopTranslationChangeRecorder,
   toCellSnapshot,
@@ -493,7 +490,9 @@ export class TranslationService {
             continue;
           }
 
-          const sourceLocale = (input.sourceLocale ?? project.sourceLocale).trim();
+          const sourceLocale = (
+            input.sourceLocale ?? project.sourceLocale
+          ).trim();
           if (!sourceLocale) {
             throw new Error('Source locale is required');
           }

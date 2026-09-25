@@ -22,9 +22,7 @@ function flatten(
   }
 }
 
-export function flattenTranslationJson(
-  input: unknown
-): ImportedTranslation[] {
+export function flattenTranslationJson(input: unknown): ImportedTranslation[] {
   const out: ImportedTranslation[] = [];
   flatten(input, '', out);
   return out;

@@ -103,8 +103,7 @@ function sha1Bytes(message: Uint8Array): Uint8Array {
         f = b ^ c ^ d;
         k = 0xca62c1d6;
       }
-      const temp =
-        (((a << 5) | (a >>> 27)) + f + e + k + words[t]) >>> 0;
+      const temp = (((a << 5) | (a >>> 27)) + f + e + k + words[t]) >>> 0;
       e = d;
       d = c;
       c = ((b << 30) | (b >>> 2)) >>> 0;

@@ -7,9 +7,7 @@ import type { FlagSetSnapshot, FlagSnapshot } from '@/domain/flags';
  * addresses, so shipping its ruleset to the client would leak them. Clients
  * see nothing about these flags and use the evaluate endpoint instead.
  */
-export function toPublicFlagPayload(
-  snapshot: FlagSetSnapshot
-): FlagSnapshot[] {
+export function toPublicFlagPayload(snapshot: FlagSetSnapshot): FlagSnapshot[] {
   return snapshot.flags.filter((flag) => flag.visibility === 'public');
 }
 

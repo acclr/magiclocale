@@ -23,7 +23,7 @@
       "@/components/*": ["components/*"],
       "@/domain/*": ["domain/*"],
       "@keykithq/sdk": ["packages/sdk/dist/index"],
-      "@keykithq/sdk/react": ["packages/sdk/dist/react"]
+      "@keykithq/sdk/react": ["packages/sdk/dist/react"],
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],

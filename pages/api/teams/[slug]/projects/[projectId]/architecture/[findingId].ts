@@ -36,7 +36,10 @@ export default createTeamProjectApiHandler({
     action: 'update',
     async handle({ req, res, teamMember }) {
       const { projectId, findingId } = validateWithSchema(params, req.query);
-      validateWithSchema(findingActionSchema, req.body ?? { action: 'cleanup' });
+      validateWithSchema(
+        findingActionSchema,
+        req.body ?? { action: 'cleanup' }
+      );
       const { finding, meta, operation } =
         await getArchitectureService().cleanupOperations(
           teamMember.team.id,

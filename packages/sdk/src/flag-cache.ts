@@ -13,10 +13,7 @@ export class FlagCache {
   private listeners = new Set<FlagChangeListener>();
   private context: FlagEvaluationContext;
 
-  constructor(
-    context: FlagEvaluationContext = {},
-    initial?: FlagPayload
-  ) {
+  constructor(context: FlagEvaluationContext = {}, initial?: FlagPayload) {
     this.context = context;
     if (initial) {
       this.update(initial);

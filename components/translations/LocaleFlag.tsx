@@ -11,11 +11,7 @@ const sizes = {
   md: { width: '1.3rem', height: '0.95rem' },
 };
 
-const LocaleFlag = ({
-  countryCode,
-  title,
-  size = 'md',
-}: LocaleFlagProps) => {
+const LocaleFlag = ({ countryCode, title, size = 'md' }: LocaleFlagProps) => {
   if (!countryCode) {
     return null;
   }

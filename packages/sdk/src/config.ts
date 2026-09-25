@@ -17,8 +17,8 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
 
   const canIngest = Boolean(
     config.baseUrl?.trim() &&
-      config.projectId?.trim() &&
-      config.ingestToken?.trim()
+    config.projectId?.trim() &&
+    config.ingestToken?.trim()
   );
   const canPull = delivery === 'live';
 
@@ -35,9 +35,7 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
   const fetchImplementation =
     config.fetch ?? globalThis.fetch?.bind(globalThis);
   if ((canIngest || canPull) && !fetchImplementation) {
-    throw new Error(
-      'Keykit requires a fetch implementation in this runtime.'
-    );
+    throw new Error('Keykit requires a fetch implementation in this runtime.');
   }
 
   return {
@@ -62,9 +60,11 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
     batchSize: positiveInteger(config.batchSize, 100, 'batchSize'),
     maxRetries: nonNegativeInteger(config.maxRetries, 2, 'maxRetries'),
     retryDelayMs: positiveInteger(config.retryDelayMs, 250, 'retryDelayMs'),
-    fetch: fetchImplementation ?? (async () => {
-      throw new Error('Keykit fetch is not available in this runtime.');
-    }),
+    fetch:
+      fetchImplementation ??
+      (async () => {
+        throw new Error('Keykit fetch is not available in this runtime.');
+      }),
     onError:
       config.onError ??
       ((error) => {

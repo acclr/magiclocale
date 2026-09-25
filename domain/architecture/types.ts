@@ -12,11 +12,7 @@ export type FindingKind =
   | 'unknown-flag'
   | 'temporary-flag-overdue';
 
-export type FindingStatus =
-  | 'open'
-  | 'reviewed'
-  | 'ignored'
-  | 'intentional';
+export type FindingStatus = 'open' | 'reviewed' | 'ignored' | 'intentional';
 
 export type ArchitectureRuleConfig = {
   allowedRootNamespaces?: string[];

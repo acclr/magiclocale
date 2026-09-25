@@ -1,5 +1,12 @@
-import { extractVariables, validateVariables } from '../../../domain/keys/variables';
-import { namespaceFromKey, namespaceDepth, rootNamespace } from '../../../domain/keys/namespace';
+import {
+  extractVariables,
+  validateVariables,
+} from '../../../domain/keys/variables';
+import {
+  namespaceFromKey,
+  namespaceDepth,
+  rootNamespace,
+} from '../../../domain/keys/namespace';
 import { parseSearchQuery } from '../../../domain/keys/search';
 import { analyzeArchitecture } from '../../../domain/architecture/analyzer';
 import { cleanupOperationsForFinding } from '../../../domain/architecture/cleanup';
@@ -7,7 +14,9 @@ import { flattenTranslationJson } from '../../../domain/migrations/import-json';
 import { compareEnvironments } from '../../../domain/environments/compare';
 import type { KeyMeta } from '../../../domain/keys/types';
 
-function meta(partial: Partial<KeyMeta> & Pick<KeyMeta, 'key' | 'type'>): KeyMeta {
+function meta(
+  partial: Partial<KeyMeta> & Pick<KeyMeta, 'key' | 'type'>
+): KeyMeta {
   return {
     id: partial.id ?? partial.key,
     projectId: 'project',
@@ -29,7 +38,9 @@ function meta(partial: Partial<KeyMeta> & Pick<KeyMeta, 'key' | 'type'>): KeyMet
 
 describe('key catalog helpers', () => {
   it('derives namespaces from dotted keys', () => {
-    expect(namespaceFromKey('billing.invoice.download')).toBe('billing.invoice');
+    expect(namespaceFromKey('billing.invoice.download')).toBe(
+      'billing.invoice'
+    );
     expect(namespaceFromKey('save')).toBeNull();
     expect(namespaceDepth('billing.invoice')).toBe(2);
     expect(rootNamespace('billing.invoice.download')).toBe('billing');
@@ -47,7 +58,9 @@ describe('key catalog helpers', () => {
   });
 
   it('parses fielded search', () => {
-    expect(parseSearchQuery('namespace:billing locale:de status:missing')).toEqual({
+    expect(
+      parseSearchQuery('namespace:billing locale:de status:missing')
+    ).toEqual({
       text: '',
       fields: {
         namespace: 'billing',
@@ -55,10 +68,12 @@ describe('key catalog helpers', () => {
         status: 'missing',
       },
     });
-    expect(parseSearchQuery('Delete account namespace:settings')).toMatchObject({
-      text: 'delete account',
-      fields: { namespace: 'settings' },
-    });
+    expect(parseSearchQuery('Delete account namespace:settings')).toMatchObject(
+      {
+        text: 'delete account',
+        fields: { namespace: 'settings' },
+      }
+    );
   });
 });
 
@@ -158,7 +173,10 @@ describe('architecture analyzer', () => {
 describe('import and compare', () => {
   it('flattens nested translation JSON', () => {
     expect(
-      flattenTranslationJson({ common: { save: 'Save' }, billing: { title: 'Invoice' } })
+      flattenTranslationJson({
+        common: { save: 'Save' },
+        billing: { title: 'Invoice' },
+      })
     ).toEqual([
       { key: 'common.save', sourceText: 'Save' },
       { key: 'billing.title', sourceText: 'Invoice' },
@@ -175,7 +193,13 @@ describe('import and compare', () => {
       liveVersionId: null,
       parentEnvironmentId: null,
     };
-    const staging = { ...environment, id: 'stg', slug: 'staging', name: 'Staging', isProduction: false };
+    const staging = {
+      ...environment,
+      id: 'stg',
+      slug: 'staging',
+      name: 'Staging',
+      isProduction: false,
+    };
     const result = compareEnvironments({
       left: staging,
       right: environment,

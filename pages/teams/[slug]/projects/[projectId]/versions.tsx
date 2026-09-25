@@ -33,9 +33,7 @@ const ProjectVersionsPage: NextPageWithLayout = () => {
     <div className="space-y-4">
       <div>
         <h1 className="text-2xl font-semibold">{t('versions')}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t('versions-help')}
-        </p>
+        <p className="text-sm text-muted-foreground">{t('versions-help')}</p>
       </div>
       <VersionHistory
         canPublish={canAccess('team_version', ['publish'])}

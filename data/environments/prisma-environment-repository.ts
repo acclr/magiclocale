@@ -62,9 +62,7 @@ export class PrismaEnvironmentRepository implements EnvironmentRepository {
     return environment ? toEnvironment(environment) : null;
   }
 
-  async createEnvironment(
-    input: CreateEnvironmentInput
-  ): Promise<Environment> {
+  async createEnvironment(input: CreateEnvironmentInput): Promise<Environment> {
     try {
       const environment = await this.client.environment.create({
         data: {

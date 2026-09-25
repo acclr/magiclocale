@@ -32,10 +32,7 @@ const DashboardHome = () => {
             <Link className="btn btn-ghost btn-sm" href="/teams">
               {t('manage-teams')}
             </Link>
-            <Button
-              color="primary"
-              onClick={() => setCreateTeamVisible(true)}
-            >
+            <Button color="primary" onClick={() => setCreateTeamVisible(true)}>
               {t('create-team')}
             </Button>
           </div>

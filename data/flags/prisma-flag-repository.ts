@@ -126,7 +126,9 @@ function toConfig(
   };
 }
 
-function asJson(value: FlagValue): Prisma.InputJsonValue | typeof Prisma.JsonNull {
+function asJson(
+  value: FlagValue
+): Prisma.InputJsonValue | typeof Prisma.JsonNull {
   return value === null ? Prisma.JsonNull : (value as Prisma.InputJsonValue);
 }
 
@@ -250,10 +252,7 @@ export class PrismaFlagRepository implements FlagRepository {
       ) {
         throw error;
       }
-      const existing = await this.getConfig(
-        input.flagId,
-        input.environmentId
-      );
+      const existing = await this.getConfig(input.flagId, input.environmentId);
       if (!existing) {
         throw error;
       }
@@ -278,7 +277,9 @@ export class PrismaFlagRepository implements FlagRepository {
         ...(patch.rolloutPercentage !== undefined
           ? { rolloutPercentage: patch.rolloutPercentage }
           : {}),
-        ...(patch.inherited !== undefined ? { inherited: patch.inherited } : {}),
+        ...(patch.inherited !== undefined
+          ? { inherited: patch.inherited }
+          : {}),
       },
       include: { rules: true },
     });
@@ -343,7 +344,9 @@ export class PrismaFlagRepository implements FlagRepository {
           inherited,
         },
       });
-      await transaction.flagRule.deleteMany({ where: { configId: targetConfigId } });
+      await transaction.flagRule.deleteMany({
+        where: { configId: targetConfigId },
+      });
       for (const rule of source.rules) {
         await transaction.flagRule.create({
           data: {

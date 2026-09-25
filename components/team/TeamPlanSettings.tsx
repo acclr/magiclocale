@@ -20,9 +20,7 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
       <Card.Body>
         <Card.Header>
           <Card.Title>{t('keykit-plan')}</Card.Title>
-          <Card.Description>
-            {t('keykit-plan-description')}
-          </Card.Description>
+          <Card.Description>{t('keykit-plan-description')}</Card.Description>
         </Card.Header>
         {entitlement ? (
           <div className="space-y-2 text-sm">
@@ -45,7 +43,9 @@ const TeamPlanSettings = ({ slug }: { slug: string }) => {
                 ? t('plan-language-limit', { count: entitlement.maxLocales })
                 : t('plan-language-unlimited')}
             </p>
-            <p className="text-muted-foreground">{t('team-retainer-settings-help')}</p>
+            <p className="text-muted-foreground">
+              {t('team-retainer-settings-help')}
+            </p>
             <Link
               className="btn btn-outline btn-sm mt-2"
               href={`/teams/${slug}/billing`}

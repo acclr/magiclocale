@@ -22,9 +22,7 @@ export default createTeamProjectApiHandler({
         ),
         getEnvironmentService().list(teamMember.team.id, projectId),
       ]);
-      const status = await getVersionService().status(
-        dashboard.environment.id
-      );
+      const status = await getVersionService().status(dashboard.environment.id);
       res.status(200).json({
         data: {
           ...dashboard,

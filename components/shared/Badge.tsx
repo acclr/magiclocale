@@ -7,7 +7,13 @@ type BadgeProps = ComponentProps<typeof BadgeUi> & {
   color?: string;
 };
 
-const Badge = ({ children, className, color, variant, ...props }: BadgeProps) => {
+const Badge = ({
+  children,
+  className,
+  color,
+  variant,
+  ...props
+}: BadgeProps) => {
   const mappedVariant =
     variant ??
     (color === 'error' || color === 'warning'

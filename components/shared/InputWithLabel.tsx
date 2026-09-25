@@ -14,18 +14,12 @@ const InputWithLabel = (props: InputWithLabelProps) => {
 
   return (
     <div className="grid w-full gap-1.5">
-      {typeof label === 'string' ? (
-        <Label>{label}</Label>
-      ) : (
-        label
-      )}
-      <Input
-        aria-invalid={Boolean(error)}
-        className={className}
-        {...rest}
-      />
+      {typeof label === 'string' ? <Label>{label}</Label> : label}
+      <Input aria-invalid={Boolean(error)} className={className} {...rest} />
       {(error || descriptionText) && (
-        <p className={`text-xs ${error ? 'text-destructive' : 'text-muted-foreground'}`}>
+        <p
+          className={`text-xs ${error ? 'text-destructive' : 'text-muted-foreground'}`}
+        >
           {error || descriptionText}
         </p>
       )}

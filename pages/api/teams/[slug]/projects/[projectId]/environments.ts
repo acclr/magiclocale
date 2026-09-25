@@ -1,7 +1,4 @@
-import {
-  canAddEnvironment,
-  environmentLimitMessage,
-} from '@/domain/billing';
+import { canAddEnvironment, environmentLimitMessage } from '@/domain/billing';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import { ApiError } from '@/lib/errors';

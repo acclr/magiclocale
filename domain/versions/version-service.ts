@@ -126,7 +126,10 @@ export class VersionService {
     for (const version of versions) {
       const items = await this.repository.listChanges(version.id);
       for (const change of items) {
-        if (change.entityType === entityType && change.entityKey === entityKey) {
+        if (
+          change.entityType === entityType &&
+          change.entityKey === entityKey
+        ) {
           changes.push(change);
         }
       }
@@ -204,9 +207,7 @@ export class VersionService {
       };
     }
 
-    const version = await this.repository.getVersion(
-      environment.liveVersionId
-    );
+    const version = await this.repository.getVersion(environment.liveVersionId);
     return {
       bundle: await this.repository.getLocaleBundle(
         environment.liveVersionId,
@@ -287,10 +288,7 @@ export class VersionService {
     };
   }
 
-  async rollback(
-    environmentId: string,
-    versionId: string
-  ): Promise<Version> {
+  async rollback(environmentId: string, versionId: string): Promise<Version> {
     const environment = await this.requireEnvironment(environmentId);
     const version = await this.repository.getVersion(versionId);
     if (!version || version.environmentId !== environment.id) {

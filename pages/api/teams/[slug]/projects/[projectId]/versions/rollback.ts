@@ -1,8 +1,5 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
-import {
-  getEnvironmentService,
-  getVersionService,
-} from '@/lib/translations';
+import { getEnvironmentService, getVersionService } from '@/lib/translations';
 import { notifyVersionRolledBack } from '@/lib/versions/notify';
 import {
   rollbackVersionSchema,

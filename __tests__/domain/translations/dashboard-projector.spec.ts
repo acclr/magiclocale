@@ -158,8 +158,18 @@ describe('projectTranslationDashboard', () => {
       allowedOrigins: [],
     };
     const keys: TranslationKey[] = [
-      { id: 'one', projectId: project.id, key: 'billing.save', sourceText: 'Save' },
-      { id: 'two', projectId: project.id, key: 'nav.close', sourceText: 'Close' },
+      {
+        id: 'one',
+        projectId: project.id,
+        key: 'billing.save',
+        sourceText: 'Save',
+      },
+      {
+        id: 'two',
+        projectId: project.id,
+        key: 'nav.close',
+        sourceText: 'Close',
+      },
     ];
     const translations: Translation[] = [
       {

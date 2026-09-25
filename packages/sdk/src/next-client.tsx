@@ -8,11 +8,7 @@ export type KeykitNextClientProviderProps = Omit<
   'onServerRefresh'
 >;
 
-export function KeykitNextClientProvider(
-  props: KeykitNextClientProviderProps
-) {
+export function KeykitNextClientProvider(props: KeykitNextClientProviderProps) {
   const router = useRouter();
-  return (
-    <KeykitProvider {...props} onServerRefresh={() => router.refresh()} />
-  );
+  return <KeykitProvider {...props} onServerRefresh={() => router.refresh()} />;
 }

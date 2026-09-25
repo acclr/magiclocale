@@ -60,10 +60,7 @@ const FeatureSection = () => {
                   <Icon className="size-5" aria-hidden />
                 </div>
                 <CardTitle className="text-base">
-                  {t(
-                    `landing.features.${feature.id}.name`,
-                    feature.name
-                  )}
+                  {t(`landing.features.${feature.id}.name`, feature.name)}
                 </CardTitle>
                 <CardDescription className="text-sm leading-relaxed">
                   {t(

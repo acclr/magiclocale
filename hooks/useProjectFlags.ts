@@ -71,7 +71,11 @@ export function useProjectFlags(
         archived?: boolean;
       }
     ) => {
-      const flag = await send<FeatureFlag>(`${baseUrl}/${flagId}`, 'PATCH', patch);
+      const flag = await send<FeatureFlag>(
+        `${baseUrl}/${flagId}`,
+        'PATCH',
+        patch
+      );
       await refresh();
       return flag;
     },

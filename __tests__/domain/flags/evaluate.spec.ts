@@ -109,7 +109,9 @@ describe('evaluateFlag', () => {
       reason: 'rollout-excluded',
     });
     expect(
-      evaluateFlag(flag({ ...snapshot, rolloutPercentage: 100 }), { key: 'user' })
+      evaluateFlag(flag({ ...snapshot, rolloutPercentage: 100 }), {
+        key: 'user',
+      })
     ).toMatchObject({
       value: true,
       reason: 'rollout-included',
