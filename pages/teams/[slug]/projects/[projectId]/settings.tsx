@@ -54,6 +54,7 @@ const ProjectSettingsPage: NextPageWithLayout<{
         onDelete={workspace.deleteProject}
         onRemoveLocale={workspace.removeLocale}
         onRename={workspace.renameProject}
+        onSetAllowedOrigins={workspace.setAllowedOrigins}
         project={workspace.dashboard.project}
       />
       {teamFeatures.payments && (

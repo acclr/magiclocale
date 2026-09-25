@@ -84,10 +84,29 @@ export type FetchLike = (
   init?: RequestInit
 ) => Promise<Response>;
 
+/** `live` fetches published bundles. `static` reads local JSON catalogs. */
+export type KeykitDelivery = 'live' | 'static';
+
+export type LocaleCatalog = Record<string, string>;
+export type LocaleCatalogs = Record<string, LocaleCatalog>;
+
+export type KeykitCatalogFile = {
+  projectId?: string;
+  sourceLocale: string;
+  environment?: string;
+  version?: string;
+  locales: LocaleCatalogs;
+};
+
 export type KeykitConfig = {
-  baseUrl: string;
-  projectId: string;
-  ingestToken: string;
+  /**
+   * `live` (default) fetches translations on load.
+   * `static` reads `catalogs` and never fetches translations.
+   */
+  delivery?: KeykitDelivery;
+  baseUrl?: string;
+  projectId?: string;
+  ingestToken?: string;
   sourceLocale?: string;
   locale?: string;
   environment?: string;
@@ -95,6 +114,8 @@ export type KeykitConfig = {
   context?: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
   initialFlags?: FlagPayload;
+  /** Local locale maps, usually from `keykit pull` / `locales/catalog.json`. */
+  catalogs?: LocaleCatalogs;
   refreshIntervalMs?: number;
   debounceMs?: number;
   batchSize?: number;
@@ -106,25 +127,27 @@ export type KeykitConfig = {
   sourceCatalog?: Record<string, string>;
 };
 
-export type ResolvedKeykitConfig = Required<
-  Omit<
-    KeykitConfig,
-    | 'fetch'
-    | 'onError'
-    | 'initialBundle'
-    | 'initialFlags'
-    | 'environment'
-    | 'version'
-    | 'context'
-    | 'sourceCatalog'
-  >
-> & {
-  fetch: FetchLike;
-  onError: (error: Error) => void;
+export type ResolvedKeykitConfig = {
+  delivery: KeykitDelivery;
+  baseUrl: string;
+  projectId: string;
+  ingestToken: string;
+  sourceLocale: string;
+  locale: string;
   environment: string;
   version: number | null;
   context: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
   initialFlags?: FlagPayload;
+  catalogs: LocaleCatalogs;
+  refreshIntervalMs: number;
+  debounceMs: number;
+  batchSize: number;
+  maxRetries: number;
+  retryDelayMs: number;
+  fetch: FetchLike;
+  onError: (error: Error) => void;
   sourceCatalog?: Record<string, string>;
+  canIngest: boolean;
+  canPull: boolean;
 };

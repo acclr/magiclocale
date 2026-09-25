@@ -53,6 +53,7 @@ function seedState(): StoreState {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
     ],
     environments: [

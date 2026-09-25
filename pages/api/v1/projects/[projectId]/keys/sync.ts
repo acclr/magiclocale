@@ -2,11 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
 import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
-import {
-  corsHeaders,
-  getPublicSdkCorsPolicy,
-  isAllowedOrigin,
-} from '@/lib/api/public-sdk-cors';
+import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
 import { enforceSourceKeyCapacity } from '@/lib/billing/enforce-limits';
 import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import { prisma } from '@/lib/prisma';
@@ -23,18 +19,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const policy = getPublicSdkCorsPolicy();
-  const origin =
-    typeof req.headers.origin === 'string' ? req.headers.origin : null;
-  const headers = corsHeaders(origin, policy);
-  setHeaders(res, headers);
-
-  if (!isAllowedOrigin(origin, policy)) {
-    return res.status(403).json({ error: 'Origin is not allowed.' });
-  }
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
+  const cors = await applyPublicSdkCors(req, res);
+  if (cors !== 'continue') {
     return;
   }
 
@@ -145,11 +131,3 @@ function getSingleQueryValue(
   return typeof value === 'string' && value ? value : null;
 }
 
-function setHeaders(
-  res: NextApiResponse,
-  headers: Record<string, string>
-): void {
-  for (const [name, value] of Object.entries(headers)) {
-    res.setHeader(name, value);
-  }
-}

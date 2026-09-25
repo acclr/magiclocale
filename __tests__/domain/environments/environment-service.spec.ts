@@ -14,6 +14,7 @@ function setup() {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
     ],
     environments: [],

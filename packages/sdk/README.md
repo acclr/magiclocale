@@ -8,31 +8,69 @@ Official Keykit client for ingesting source keys and loading translation bundles
 npm install @keykithq/sdk
 ```
 
-## Quick start
+## Delivery modes
+
+### 1. Live fetch
+
+The SDK loads published translations when the page (or server) starts. A
+reload picks up the latest published bundle. Add the browser origin in
+**Project settings → Allowed browser origins** if this runs in the browser.
 
 ```ts
-import translate, { configureKeykit, flush } from '@keykithq/sdk';
+import { KeykitProvider, useTranslate } from '@keykithq/sdk/react';
 
-configureKeykit({
-  baseUrl: 'https://your-keykit-instance.com',
-  projectId: process.env.KEYKIT_PROJECT_ID!,
-  ingestToken: process.env.KEYKIT_API_KEY!,
-  sourceLocale: 'en',
-  locale: 'en',
-});
-
-const label = translate('settings.save', 'Save changes');
-await flush();
+<KeykitProvider
+  config={{
+    delivery: 'live',
+    baseUrl: 'https://www.keykit.dev',
+    projectId: process.env.NEXT_PUBLIC_KEYKIT_PROJECT_ID!,
+    ingestToken: process.env.NEXT_PUBLIC_KEYKIT_API_KEY!,
+    sourceLocale: 'en',
+  }}
+>
+  <App />
+</KeykitProvider>
 ```
 
-## React
+Server-side and CLI calls do not need an allowed origin. Prefer keeping the
+API key on the server (`createKeykitNext` or `loadTranslationBundle`) so the
+browser never sees it.
 
-Wrap your app in `KeykitProvider`, then call `useTranslate` in client components:
+### 2. Local JSON (no fetch on page load)
+
+Pull published translations into files, commit them, and pass them to the SDK:
+
+```bash
+npx @keykit/cli pull --out ./locales \
+  --base-url https://www.keykit.dev \
+  --project-id "$KEYKIT_PROJECT_ID" \
+  --token "$KEYKIT_API_KEY"
+```
+
+```tsx
+import catalog from './locales/catalog.json';
+import { KeykitProvider, useTranslate } from '@keykithq/sdk/react';
+
+<KeykitProvider
+  config={{
+    delivery: 'static',
+    sourceLocale: catalog.sourceLocale,
+    catalogs: catalog.locales,
+  }}
+>
+  <App />
+</KeykitProvider>
+```
+
+`useTranslate()` reads the local maps. Publish in the dashboard, then run
+`keykit pull` again (typically in CI) to refresh the files.
+
+## React
 
 ```tsx
 'use client';
 
-import { KeykitProvider, useTranslate } from '@keykithq/sdk/react';
+import { useTranslate } from '@keykithq/sdk/react';
 
 function SaveButton() {
   const { t } = useTranslate();
@@ -40,14 +78,13 @@ function SaveButton() {
 }
 ```
 
-Pass `sourceCatalog` in config when you want `t('settings.save')` without a second
+Pass `sourceCatalog` when you want `t('settings.save')` without a second
 argument (for example a flat JSON catalog from a previous i18n setup).
 
-Keys are ingested when code runs: only strings on routes you visit are discovered
-at runtime. To list keys in files that are not executed yet, run
-`npx @keykit/cli scan --root .` in the app repository.
+Keys are ingested when code runs and an ingest token is configured. To list
+keys in files that are not executed yet, run `npx @keykit/cli scan --root .`.
 
 - React: `@keykithq/sdk/react` (`KeykitProvider`, `useTranslate`, `useKeykit`)
 - Next.js App Router: `@keykithq/sdk/next`
 
-Docs: [Keykit](https://keykit.dev) (replace with your production URL).
+Docs: [Keykit](https://keykit.dev)

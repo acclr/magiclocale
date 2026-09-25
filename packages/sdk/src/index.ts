@@ -67,6 +67,7 @@ function requireClient(): KeykitClient {
 }
 
 export { KeykitClient } from './client';
+export { catalogsFromFile } from './config';
 export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
 export type {
@@ -75,7 +76,11 @@ export type {
   FlagPayload,
   FlagSnapshot,
   FlagValue,
+  KeykitCatalogFile,
   KeykitConfig,
+  KeykitDelivery,
+  LocaleCatalog,
+  LocaleCatalogs,
   SourceKey,
   TranslationBundle,
 } from './types';

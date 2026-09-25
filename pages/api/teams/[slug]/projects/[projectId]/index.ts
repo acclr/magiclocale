@@ -1,7 +1,8 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getProjectService } from '@/lib/translations';
+import { invalidateProjectCorsCache } from '@/lib/api/public-sdk-cors';
 import {
-  renameTranslationProjectSchema,
+  updateTranslationProjectSchema,
   translationProjectParamsSchema,
   validateWithSchema,
 } from '@/lib/zod';
@@ -26,15 +27,27 @@ export default createTeamProjectApiHandler({
     resource: 'team_translation_project',
     action: 'update',
     async handle({ req, res, teamMember }) {
-      const { name } = validateWithSchema(
-        renameTranslationProjectSchema,
+      const patch = validateWithSchema(
+        updateTranslationProjectSchema,
         req.body
       );
-      const project = await getProjectService().rename(
-        teamMember.team.id,
-        projectId(req.query),
-        name
-      );
+      const id = projectId(req.query);
+      let project = await getProjectService().get(teamMember.team.id, id);
+      if (patch.name !== undefined) {
+        project = await getProjectService().rename(
+          teamMember.team.id,
+          id,
+          patch.name
+        );
+      }
+      if (patch.allowedOrigins !== undefined) {
+        project = await getProjectService().setAllowedOrigins(
+          teamMember.team.id,
+          id,
+          patch.allowedOrigins
+        );
+        invalidateProjectCorsCache(id);
+      }
       res.status(200).json({ data: project });
     },
   },

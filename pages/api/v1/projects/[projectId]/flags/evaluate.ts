@@ -3,11 +3,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { evaluateFlag, type FlagEvaluationContext } from '@/domain/flags';
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
 import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
-import {
-  corsHeaders,
-  getPublicSdkCorsPolicy,
-  isAllowedOrigin,
-} from '@/lib/api/public-sdk-cors';
+import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
 import { getEnvironmentService, getVersionService } from '@/lib/translations';
 import { findFlag } from '@/lib/flags/flag-payload';
 import { evaluateFlagsSchema, validateWithSchema } from '@/lib/zod';
@@ -21,17 +17,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const policy = getPublicSdkCorsPolicy();
-  const origin =
-    typeof req.headers.origin === 'string' ? req.headers.origin : null;
-  setHeaders(res, corsHeaders(origin, policy));
-
-  if (!isAllowedOrigin(origin, policy)) {
-    return res.status(403).json({ error: 'Origin is not allowed.' });
-  }
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
+  const cors = await applyPublicSdkCors(req, res);
+  if (cors !== 'continue') {
     return;
   }
 
@@ -116,13 +103,4 @@ function isApiError(
 
 function getSingleQueryValue(value: string | string[] | undefined) {
   return typeof value === 'string' && value ? value : null;
-}
-
-function setHeaders(
-  res: NextApiResponse,
-  headers: Record<string, string>
-): void {
-  for (const [name, value] of Object.entries(headers)) {
-    res.setHeader(name, value);
-  }
 }

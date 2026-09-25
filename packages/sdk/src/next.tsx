@@ -33,14 +33,17 @@ export function createKeykitNext(config: KeykitNextConfig) {
       requestedLocale && allowedLocales.has(requestedLocale)
         ? requestedLocale
         : defaultLocale;
-    let initialBundle: TranslationBundle | undefined;
-    try {
-      initialBundle = await loadTranslationBundle(
-        { ...config, refreshIntervalMs: 0 },
-        locale
-      );
-    } catch (error) {
-      reportError(config, error);
+    let initialBundle: TranslationBundle | undefined =
+      bundleFromCatalogs(config, locale) ?? undefined;
+    if (config.delivery !== 'static') {
+      try {
+        initialBundle = await loadTranslationBundle(
+          { ...config, refreshIntervalMs: 0 },
+          locale
+        );
+      } catch (error) {
+        reportError(config, error);
+      }
     }
 
     const client = new KeykitClient({
@@ -89,14 +92,35 @@ export function createKeykitNext(config: KeykitNextConfig) {
   return { KeykitProvider, getKeykit };
 }
 
+function bundleFromCatalogs(
+  config: KeykitConfig,
+  locale: string
+): TranslationBundle | undefined {
+  const translations = config.catalogs?.[locale];
+  if (!translations) {
+    return undefined;
+  }
+  return {
+    projectId: config.projectId ?? '',
+    locale,
+    sourceLocale: config.sourceLocale ?? 'en',
+    translations,
+    version: 'local',
+    environment: config.environment,
+  };
+}
+
 function toBrowserConfig(config: KeykitNextConfig): KeykitConfig {
   return {
+    delivery: config.delivery,
     baseUrl: config.baseUrl,
     projectId: config.projectId,
     ingestToken: config.ingestToken,
     sourceLocale: config.sourceLocale,
     locale: config.locale,
-    refreshIntervalMs: config.refreshIntervalMs,
+    catalogs: config.catalogs,
+    refreshIntervalMs:
+      config.delivery === 'static' ? 0 : config.refreshIntervalMs,
     debounceMs: config.debounceMs,
     batchSize: config.batchSize,
     maxRetries: config.maxRetries,

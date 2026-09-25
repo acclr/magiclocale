@@ -5,11 +5,16 @@ import {
   TranslationCache,
   type TranslationChangeListener,
 } from './translation-cache';
-import { HttpSourceKeyTransport, type KeykitTransport } from './transport';
+import {
+  CatalogTransport,
+  HttpSourceKeyTransport,
+  type KeykitTransport,
+} from './transport';
 import type {
   FlagEvaluationContext,
   FlagValue,
   KeykitConfig,
+  ResolvedKeykitConfig,
 } from './types';
 
 export class KeykitClient {
@@ -38,19 +43,24 @@ export class KeykitClient {
     const resolved = resolveConfig(config);
     this.onError = resolved.onError;
     this.refreshIntervalMs = resolved.refreshIntervalMs;
-    this.cache = new TranslationCache(resolved.locale, resolved.initialBundle);
+    this.cache = new TranslationCache(
+      resolved.locale,
+      resolved.initialBundle,
+      resolved.catalogs
+    );
     this.flags = new FlagCache(resolved.context, resolved.initialFlags);
-    this.transport = transport ?? new HttpSourceKeyTransport(resolved);
+    this.transport =
+      transport ?? createTransport(resolved);
     this.registry = new SourceKeyRegistry(this.transport, resolved);
 
     if (typeof window !== 'undefined') {
       window.addEventListener('pagehide', this.onPageHide);
       document.addEventListener('visibilitychange', this.onVisibilityChange);
       this.startPolling();
-      if (!resolved.initialBundle) {
+      if (resolved.canPull && !resolved.initialBundle) {
         void this.refreshTranslations().catch(this.onError);
       }
-      if (!resolved.initialFlags) {
+      if (resolved.canPull && !resolved.initialFlags) {
         void this.refreshFlags().catch(this.onError);
       }
     }
@@ -140,4 +150,14 @@ export class KeykitClient {
       this.refreshTimer = null;
     }
   }
+}
+
+function createTransport(config: ResolvedKeykitConfig) {
+  if (config.delivery === 'static') {
+    const ingest = config.canIngest
+      ? new HttpSourceKeyTransport(config)
+      : undefined;
+    return new CatalogTransport(config, ingest);
+  }
+  return new HttpSourceKeyTransport(config);
 }

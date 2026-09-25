@@ -1,5 +1,8 @@
 import {
+  clearPublicSdkCorsCache,
   corsHeaders,
+  getPublicSdkCorsPolicyForProject,
+  invalidateProjectCorsCache,
   isAllowedOrigin,
   uniqueOrigins,
   type PublicSdkCorsPolicy,
@@ -20,6 +23,25 @@ describe('public SDK CORS policy', () => {
       'Access-Control-Allow-Origin': 'http://localhost:4002',
       'Access-Control-Allow-Headers': 'Authorization, Content-Type',
     });
+  });
+
+  it('merges host origins with cached per-project origins', async () => {
+    clearPublicSdkCorsCache();
+    const load = jest.fn(async () => ['https://app.example.com']);
+
+    const first = await getPublicSdkCorsPolicyForProject('project_a', load);
+    const second = await getPublicSdkCorsPolicyForProject('project_a', load);
+
+    expect(first.allowedOrigins).toEqual(
+      expect.arrayContaining(['https://app.example.com'])
+    );
+    expect(second.allowedOrigins).toEqual(first.allowedOrigins);
+    expect(load).toHaveBeenCalledTimes(1);
+
+    invalidateProjectCorsCache('project_a');
+    await getPublicSdkCorsPolicyForProject('project_a', load);
+    expect(load).toHaveBeenCalledTimes(2);
+    clearPublicSdkCorsCache();
   });
 
   it('includes the app origin so this host can consume its own SDK API', () => {

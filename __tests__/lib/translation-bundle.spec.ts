@@ -4,7 +4,10 @@ import {
   asCodeTranslation,
   asManualTranslation,
 } from '../../domain/translations';
-import { buildTranslationBundle } from '../../lib/translations/translation-bundle';
+import {
+  buildTranslationBundle,
+  buildTranslationCatalog,
+} from '../../lib/translations/translation-bundle';
 import {
   MemoryRepository,
   type StoreState,
@@ -26,6 +29,7 @@ function createRepository(): MemoryRepository {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
     ],
     environments: [
@@ -201,6 +205,26 @@ describe('buildTranslationBundle', () => {
     ).resolves.toEqual({
       success: false,
       reason: 'version-not-found',
+    });
+  });
+});
+
+describe('buildTranslationCatalog', () => {
+  it('returns every configured locale in one payload', async () => {
+    const repository = createRepository();
+    await expect(
+      buildTranslationCatalog(deps(repository), { projectId: PROJECT_ID })
+    ).resolves.toMatchObject({
+      success: true,
+      catalog: {
+        projectId: PROJECT_ID,
+        sourceLocale: 'en',
+        environment: 'production',
+        locales: {
+          en: { 'settings.save': 'Save changes' },
+          sv: { 'settings.save': 'Spara' },
+        },
+      },
     });
   });
 });

@@ -93,9 +93,9 @@ ownership until accepted.
 
 The API key is shown only when created. It authenticates SDK requests for
 projects owned by the same team. Keep server-side keys in environment
-variables. Browser use exposes the key to that application’s users, so set
-`KEYKIT_ALLOWED_ORIGIN` to the exact browser origin and issue a dedicated
-team key appropriate for that exposure.
+variables. Browser use exposes the key to that application’s users, so add
+the exact browser origin under **Project settings → Allowed browser origins**
+and issue a dedicated team key appropriate for that exposure.
 
 ## SDK workspace
 
@@ -108,12 +108,15 @@ npm run sdk:build
 ```
 
 The workspace package can be referenced by another npm workspace as
-`"@keykithq/sdk": "workspace:*"`. A basic client configuration is:
+`"@keykithq/sdk": "workspace:*"`.
+
+**Live fetch** loads published translations on page load:
 
 ```ts
 import translate, { configureKeykit, flush } from '@keykithq/sdk';
 
 configureKeykit({
+  delivery: 'live',
   baseUrl: 'http://localhost:4002',
   projectId: process.env.KEYKIT_PROJECT_ID!,
   ingestToken: process.env.KEYKIT_API_KEY!,
@@ -125,11 +128,28 @@ const label = translate('settings.save', 'Save changes');
 await flush();
 ```
 
+**Local JSON** skips the network. Pull files, then pass them to the SDK:
+
+```bash
+npx @keykit/cli pull --out ./locales
+```
+
+```ts
+import catalog from './locales/catalog.json';
+import { configureKeykit } from '@keykithq/sdk';
+
+configureKeykit({
+  delivery: 'static',
+  sourceLocale: catalog.sourceLocale,
+  catalogs: catalog.locales,
+});
+```
+
 `translate(key, defaultText)` returns the current bundle value or the source
-text fallback, queues source-key ingestion, and batches sync requests. React
-consumers wrap the tree in `KeykitProvider` and use `useTranslate()` for
-`const { t } = useTranslate(); t('settings.save', 'Save changes')`. Next.js
-App Router consumers can use `createKeykitNext` from `@keykithq/sdk/next`.
+text fallback, queues source-key ingestion when an ingest token is set, and
+batches sync requests. React consumers wrap the tree in `KeykitProvider` and
+use `useTranslate()`. Next.js App Router consumers can use `createKeykitNext`
+from `@keykithq/sdk/next`.
 
 Runtime discovery only sees keys executed in the browser (or during SSR for
 that request). Dead or unvisited files are not ingested until those code paths
@@ -173,10 +193,16 @@ Both endpoints require `Authorization: Bearer <API_KEY>`.
 - `GET /api/v1/projects/:projectId/translations?locale=sv`
 
   Returns the project ID, requested locale, source locale, translation map,
-  and bundle version. Responses use `Cache-Control: no-store`.
+  and bundle version. Responses use `Cache-Control: no-cache`.
 
-Browser requests are allowed only from `KEYKIT_ALLOWED_ORIGIN`. Server-side
-requests without an `Origin` header are supported.
+- `GET /api/v1/projects/:projectId/translations`
+
+  Returns every configured locale in one catalog (`locales` map). Used by
+  `keykit pull` to write local JSON files.
+
+Browser requests are allowed from origins saved on the project plus
+`KEYKIT_ALLOWED_ORIGIN` / `APP_URL` (this host). Server-side requests
+without an `Origin` header are supported.
 
 ## Commands
 
@@ -241,7 +267,8 @@ npx playwright test tests/e2e/translations/production-flow.spec.ts
 2. Configure authentication URLs/secrets and any enabled auth providers.
 3. Configure `OPENAI_API_KEY`, `OPENAI_MODEL`, and optionally
    `OPENAI_BASE_URL`.
-4. Set `KEYKIT_ALLOWED_ORIGIN` to the deployed client origin.
+4. Optionally set `KEYKIT_ALLOWED_ORIGIN` for this host's own browser UI.
+   Customer sites are added per project in **Project settings**.
 5. Apply database migrations **before** creating users (Vercel does not run
    these automatically). From your machine, using the **non-pooling** Postgres
    URL from the Vercel dashboard:

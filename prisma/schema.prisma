@@ -207,6 +207,9 @@ model TranslationProject {
   localeFormat    LocaleFormat @default(LANGUAGE)
   billingScope    BillingScope @default(TEAM)
   billingId       String?
+  /// Browser origins allowed to call the public SDK for this project.
+  /// Server-side SDK and CLI requests send no Origin and skip this list.
+  allowedOrigins  String[]     @default([])
   billingProvider String?
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt

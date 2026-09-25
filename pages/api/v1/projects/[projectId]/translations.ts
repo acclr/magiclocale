@@ -2,11 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
 import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
-import {
-  corsHeaders,
-  getPublicSdkCorsPolicy,
-  isAllowedOrigin,
-} from '@/lib/api/public-sdk-cors';
+import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
 import {
   getEnvironmentService,
   getTranslationRepository,
@@ -14,6 +10,7 @@ import {
 } from '@/lib/translations';
 import {
   buildTranslationBundle,
+  buildTranslationCatalog,
   type TranslationBundleFailure,
 } from '@/lib/translations/translation-bundle';
 
@@ -35,18 +32,8 @@ export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
-  const policy = getPublicSdkCorsPolicy();
-  const origin =
-    typeof req.headers.origin === 'string' ? req.headers.origin : null;
-  const headers = corsHeaders(origin, policy);
-  setHeaders(res, headers);
-
-  if (!isAllowedOrigin(origin, policy)) {
-    return res.status(403).json({ error: 'Origin is not allowed.' });
-  }
-
-  if (req.method === 'OPTIONS') {
-    res.status(204).end();
+  const cors = await applyPublicSdkCors(req, res);
+  if (cors !== 'continue') {
     return;
   }
 
@@ -60,13 +47,7 @@ export default async function handler(
     return res.status(404).json({ error: 'Project not found.' });
   }
 
-  const locale = getSingleQueryValue(req.query.locale)?.trim();
-  if (!locale) {
-    return res
-      .status(422)
-      .json({ error: 'A locale query parameter is required.' });
-  }
-
+  const locale = getSingleQueryValue(req.query.locale)?.trim() ?? null;
   const requestedVersion = parseVersion(req.query.version);
   if (requestedVersion === 'invalid') {
     return res
@@ -81,14 +62,33 @@ export default async function handler(
       getSingleQueryValue(req.query.environment)
     );
 
-    const result = await buildTranslationBundle(
-      {
-        repository: getTranslationRepository(),
-        environmentService: getEnvironmentService(),
-        versionService: getVersionService(),
-      },
-      { projectId, locale, environment: environmentRef, version: requestedVersion }
-    );
+    const dependencies = {
+      repository: getTranslationRepository(),
+      environmentService: getEnvironmentService(),
+      versionService: getVersionService(),
+    };
+
+    if (!locale) {
+      const catalog = await buildTranslationCatalog(dependencies, {
+        projectId,
+        environment: environmentRef,
+        version: requestedVersion,
+      });
+      if (!catalog.success) {
+        return res
+          .status(FAILURE_STATUS[catalog.reason])
+          .json({ error: FAILURE_MESSAGE[catalog.reason] });
+      }
+      res.setHeader('Cache-Control', 'no-cache');
+      return res.status(200).json(catalog.catalog);
+    }
+
+    const result = await buildTranslationBundle(dependencies, {
+      projectId,
+      locale,
+      environment: environmentRef,
+      version: requestedVersion,
+    });
     if (!result.success) {
       return res
         .status(FAILURE_STATUS[result.reason])
@@ -138,11 +138,3 @@ function parseVersion(
   return parsed;
 }
 
-function setHeaders(
-  res: NextApiResponse,
-  headers: Record<string, string>
-): void {
-  for (const [name, value] of Object.entries(headers)) {
-    res.setHeader(name, value);
-  }
-}

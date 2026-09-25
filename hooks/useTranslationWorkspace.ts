@@ -150,6 +150,8 @@ const useTranslationWorkspace = (
       mutateAndRefresh<Project>(envUrl('/locales'), { locale }, 'DELETE'),
     renameProject: (name: string) =>
       mutateAndRefresh<Project>(baseUrl, { name }, 'PATCH'),
+    setAllowedOrigins: (allowedOrigins: string[]) =>
+      mutateAndRefresh<Project>(baseUrl, { allowedOrigins }, 'PATCH'),
     deleteProject: async () => {
       await send<void>(baseUrl, 'DELETE');
     },

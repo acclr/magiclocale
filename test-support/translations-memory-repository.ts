@@ -52,6 +52,7 @@ export class MemoryRepository
       localeFormat: input.localeFormat ?? 'language',
       billingScope: input.billingScope ?? 'team',
       billingId: null,
+      allowedOrigins: [],
     };
     this.state.projects.push(project);
     return project;

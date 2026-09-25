@@ -28,6 +28,7 @@ function setup() {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
       {
         id: 'foreign',
@@ -38,6 +39,7 @@ function setup() {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
     ],
     keys: [

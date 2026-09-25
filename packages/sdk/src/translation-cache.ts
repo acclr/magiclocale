@@ -1,4 +1,4 @@
-import type { TranslationBundle } from './types';
+import type { LocaleCatalogs, TranslationBundle } from './types';
 
 export type TranslationChangeListener = () => void;
 
@@ -8,8 +8,18 @@ export class TranslationCache {
   private readonly listeners = new Set<TranslationChangeListener>();
   private locale: string;
 
-  constructor(initialLocale: string, initialBundle?: TranslationBundle) {
+  constructor(
+    initialLocale: string,
+    initialBundle?: TranslationBundle,
+    catalogs?: LocaleCatalogs
+  ) {
     this.locale = initialLocale;
+    if (catalogs) {
+      for (const [locale, translations] of Object.entries(catalogs)) {
+        this.bundles.set(locale, translations);
+        this.versions.set(locale, 'local');
+      }
+    }
     if (initialBundle) {
       this.bundles.set(initialBundle.locale, initialBundle.translations);
       this.versions.set(initialBundle.locale, initialBundle.version);

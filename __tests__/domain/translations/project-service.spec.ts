@@ -19,6 +19,7 @@ function setup() {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
       {
         id: 'project_b',
@@ -29,6 +30,7 @@ function setup() {
         localeFormat: 'language',
         billingScope: 'team',
         billingId: null,
+        allowedOrigins: [],
       },
     ],
     environments: [],
@@ -153,6 +155,22 @@ describe('ProjectService', () => {
     await expect(
       service.removeLocale('team_a', 'project_a', 'sv')
     ).resolves.toMatchObject({ locales: ['en', 'fr'] });
+  });
+
+  it('replaces the project browser origin allowlist', async () => {
+    const { service } = setup();
+
+    await expect(
+      service.setAllowedOrigins('team_a', 'project_a', [
+        'https://app.example.com',
+        'http://localhost:3000',
+      ])
+    ).resolves.toMatchObject({
+      allowedOrigins: ['https://app.example.com', 'http://localhost:3000'],
+    });
+    await expect(
+      service.setAllowedOrigins('team_b', 'project_a', ['https://evil.example'])
+    ).rejects.toThrow('Project not found: project_a');
   });
 
   it('never removes the source locale', async () => {

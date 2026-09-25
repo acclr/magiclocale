@@ -16,6 +16,8 @@ export type Project = {
   localeFormat: LocaleFormat;
   billingScope: BillingScope;
   billingId: string | null;
+  /** Browser origins allowed to call the public SDK. Empty means no browsers. */
+  allowedOrigins: string[];
 };
 
 export type CreateProjectInput = {
@@ -32,6 +34,7 @@ export type UpdateProjectInput = {
   billingScope?: BillingScope;
   billingId?: string | null;
   billingProvider?: string | null;
+  allowedOrigins?: string[];
 };
 
 export type TranslationKey = {

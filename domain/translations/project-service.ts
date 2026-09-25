@@ -77,6 +77,17 @@ export class ProjectService {
     });
   }
 
+  async setAllowedOrigins(
+    teamId: string,
+    projectId: string,
+    origins: string[]
+  ): Promise<Project> {
+    const project = await this.requireTeamProject(teamId, projectId);
+    return this.repository.updateProject(project.id, {
+      allowedOrigins: origins,
+    });
+  }
+
   async delete(teamId: string, projectId: string): Promise<void> {
     const project = await this.requireTeamProject(teamId, projectId);
     await this.repository.deleteProject(project.id);

@@ -98,6 +98,7 @@ function toProject(project: PrismaTranslationProject): Project {
     localeFormat: localeFormatFromPrisma(project.localeFormat),
     billingScope: billingScopeFromPrisma(project.billingScope),
     billingId: project.billingId,
+    allowedOrigins: project.allowedOrigins ?? [],
   };
 }
 
@@ -207,6 +208,9 @@ export class PrismaTranslationRepository
           : {}),
         ...(patch.billingProvider !== undefined
           ? { billingProvider: patch.billingProvider }
+          : {}),
+        ...(patch.allowedOrigins !== undefined
+          ? { allowedOrigins: patch.allowedOrigins }
           : {}),
       },
     });

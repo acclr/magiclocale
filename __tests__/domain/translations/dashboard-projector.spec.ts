@@ -30,6 +30,7 @@ describe('projectTranslationDashboard', () => {
       localeFormat: 'language',
       billingScope: 'team',
       billingId: null,
+      allowedOrigins: [],
     };
     const keys: TranslationKey[] = [
       {
@@ -107,6 +108,7 @@ describe('projectTranslationDashboard', () => {
       localeFormat: 'language',
       billingScope: 'team',
       billingId: null,
+      allowedOrigins: [],
     };
     const keys: TranslationKey[] = [
       {
@@ -153,6 +155,7 @@ describe('projectTranslationDashboard', () => {
       localeFormat: 'language',
       billingScope: 'team',
       billingId: null,
+      allowedOrigins: [],
     };
     const keys: TranslationKey[] = [
       { id: 'one', projectId: project.id, key: 'billing.save', sourceText: 'Save' },

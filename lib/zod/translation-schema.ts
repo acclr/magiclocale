@@ -6,6 +6,11 @@ import {
   localeFormatError,
   normalizeLocaleTag,
 } from '@/domain/translations/locale-catalog';
+import {
+  AllowedOriginError,
+  MAX_ALLOWED_ORIGINS,
+  parseAllowedOrigin,
+} from '@/lib/api/allowed-origin';
 
 const projectId = z.string().uuid();
 const keyId = z.string().uuid();
@@ -66,9 +71,39 @@ export const createTranslationProjectSchema = z
     };
   });
 
+export const allowedOriginSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .max(255)
+  .transform((value, ctx) => {
+    try {
+      return parseAllowedOrigin(value);
+    } catch (error) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message:
+          error instanceof AllowedOriginError
+            ? error.message
+            : 'Invalid origin',
+      });
+      return z.NEVER;
+    }
+  });
+
 export const renameTranslationProjectSchema = z.object({
   name: z.string().trim().min(1).max(100),
 });
+
+export const updateTranslationProjectSchema = z
+  .object({
+    name: z.string().trim().min(1).max(100).optional(),
+    allowedOrigins: z.array(allowedOriginSchema).max(MAX_ALLOWED_ORIGINS).optional(),
+  })
+  .refine(
+    (value) => value.name !== undefined || value.allowedOrigins !== undefined,
+    { message: 'Provide a project name or allowed origins.' }
+  );
 
 export const projectBillingScopeSchema = z.object({
   billingScope: z.enum(['team', 'project']),

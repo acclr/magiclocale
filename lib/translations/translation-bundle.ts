@@ -104,3 +104,83 @@ export async function buildTranslationBundle(
     },
   };
 }
+
+export type TranslationCatalog = {
+  projectId: string;
+  sourceLocale: string;
+  environment: string;
+  version: string;
+  versionNumber: number | null;
+  publishedAt: string | null;
+  locales: Record<string, Record<string, string>>;
+};
+
+export type TranslationCatalogResult =
+  | { success: true; catalog: TranslationCatalog }
+  | { success: false; reason: TranslationBundleFailure };
+
+export type TranslationCatalogQuery = Omit<TranslationBundleQuery, 'locale'>;
+
+/**
+ * All configured locales for an environment. Used by the CLI to write a
+ * local catalog the SDK can consume without fetching on page load.
+ */
+export async function buildTranslationCatalog(
+  dependencies: TranslationBundleDependencies,
+  query: TranslationCatalogQuery
+): Promise<TranslationCatalogResult> {
+  const project = await dependencies.repository.getProject(query.projectId);
+  if (!project) {
+    return { success: false, reason: 'project-not-found' };
+  }
+
+  let environmentId: string;
+  let environmentSlug: string;
+  try {
+    const environment = await dependencies.environmentService.resolve(
+      project.id,
+      query.environment
+    );
+    environmentId = environment.id;
+    environmentSlug = environment.slug;
+  } catch {
+    return { success: false, reason: 'environment-not-found' };
+  }
+
+  const locales: Record<string, Record<string, string>> = {};
+  let version: string = 'draft';
+  let versionNumber: number | null = null;
+  let publishedAt: string | null = null;
+
+  for (const locale of project.locales) {
+    const resolved = await dependencies.versionService.resolveLocaleBundle(
+      environmentId,
+      locale,
+      query.version
+    );
+    if (
+      query.version !== undefined &&
+      query.version !== null &&
+      !resolved.version
+    ) {
+      return { success: false, reason: 'version-not-found' };
+    }
+    locales[locale] = resolved.bundle?.translations ?? {};
+    version = resolved.version ? String(resolved.version.number) : 'draft';
+    versionNumber = resolved.version?.number ?? null;
+    publishedAt = resolved.version?.publishedAt?.toISOString() ?? null;
+  }
+
+  return {
+    success: true,
+    catalog: {
+      projectId: project.id,
+      sourceLocale: project.sourceLocale,
+      environment: environmentSlug,
+      version,
+      versionNumber,
+      publishedAt,
+      locales,
+    },
+  };
+}

@@ -2,6 +2,7 @@ import { Card, InputWithLabel } from '@/components/shared';
 import type { Project } from '../../domain/translations';
 import { useFormik } from 'formik';
 import { useTranslation } from '@/hooks/useTranslation';
+import { AllowedOriginError, parseAllowedOrigin } from '@/lib/api/allowed-origin';
 import { useRouter } from 'next/router';
 import { useState } from 'react';
 import { Button } from '@/components/shared';
@@ -15,6 +16,7 @@ type ProjectSettingsFormProps = {
   canUpdate: boolean;
   canDelete: boolean;
   onRename: (name: string) => Promise<Project>;
+  onSetAllowedOrigins: (origins: string[]) => Promise<Project>;
   onAddLocale: (locale: string) => Promise<unknown>;
   onRemoveLocale: (locale: string) => Promise<unknown>;
   onDelete: () => Promise<void>;
@@ -25,6 +27,7 @@ const ProjectSettingsForm = ({
   canUpdate,
   canDelete,
   onRename,
+  onSetAllowedOrigins,
   onAddLocale,
   onRemoveLocale,
   onDelete,
@@ -32,8 +35,11 @@ const ProjectSettingsForm = ({
   const { t } = useTranslation('common');
   const router = useRouter();
   const [locale, setLocale] = useState('');
+  const [origin, setOrigin] = useState('');
   const [isLocaleBusy, setIsLocaleBusy] = useState(false);
+  const [isOriginBusy, setIsOriginBusy] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const allowedOrigins = project.allowedOrigins ?? [];
 
   const formik = useFormik({
     enableReinitialize: true,
@@ -71,6 +77,49 @@ const ProjectSettingsForm = ({
       toast.error(error instanceof Error ? error.message : t('error-500'));
     } finally {
       setIsLocaleBusy(false);
+    }
+  };
+
+  const addOrigin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    let nextOrigin: string;
+    try {
+      nextOrigin = parseAllowedOrigin(origin);
+    } catch (error) {
+      toast.error(
+        error instanceof AllowedOriginError
+          ? error.message
+          : t('allowed-origin-invalid')
+      );
+      return;
+    }
+    if (allowedOrigins.includes(nextOrigin)) {
+      toast.error(t('allowed-origin-duplicate'));
+      return;
+    }
+    setIsOriginBusy(true);
+    try {
+      await onSetAllowedOrigins([...allowedOrigins, nextOrigin]);
+      setOrigin('');
+      toast.success(t('allowed-origin-added'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('error-500'));
+    } finally {
+      setIsOriginBusy(false);
+    }
+  };
+
+  const removeOrigin = async (value: string) => {
+    setIsOriginBusy(true);
+    try {
+      await onSetAllowedOrigins(
+        allowedOrigins.filter((item) => item !== value)
+      );
+      toast.success(t('allowed-origin-removed'));
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : t('error-500'));
+    } finally {
+      setIsOriginBusy(false);
     }
   };
 
@@ -200,6 +249,111 @@ const ProjectSettingsForm = ({
               </button>
             </form>
           )}
+        </Card.Body>
+      </Card>
+
+      <Card>
+        <Card.Body>
+          <Card.Header>
+            <Card.Title>{t('allowed-origins')}</Card.Title>
+            <Card.Description>
+              {t('allowed-origins-description')}
+            </Card.Description>
+          </Card.Header>
+          {allowedOrigins.length > 0 && (
+            <ul className="space-y-2">
+              {allowedOrigins.map((value) => (
+                <li
+                  className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                  key={value}
+                >
+                  <span className="font-mono text-sm">{value}</span>
+                  {canUpdate && (
+                    <button
+                      className="btn btn-ghost btn-xs"
+                      disabled={isOriginBusy}
+                      onClick={() => void removeOrigin(value)}
+                      type="button"
+                    >
+                      {t('remove')}
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+          {canUpdate && (
+            <form className="mt-4 flex items-end gap-2" onSubmit={addOrigin}>
+              <div className="flex-1">
+                <InputWithLabel
+                  name="origin"
+                  label={t('allowed-origins')}
+                  placeholder={t('allowed-origin-placeholder')}
+                  value={origin}
+                  onChange={(event) => setOrigin(event.target.value)}
+                />
+              </div>
+              <button
+                className="btn btn-primary btn-sm mb-0.5"
+                disabled={isOriginBusy || !origin.trim()}
+                type="submit"
+              >
+                {t('add')}
+              </button>
+            </form>
+          )}
+        </Card.Body>
+      </Card>
+
+      <Card>
+        <Card.Body>
+          <Card.Header>
+            <Card.Title>{t('connect-your-app')}</Card.Title>
+            <Card.Description>
+              {t('connect-your-app-description')}
+            </Card.Description>
+          </Card.Header>
+          <div className="space-y-4 text-sm">
+            <div>
+              <p className="font-medium">{t('delivery-live-title')}</p>
+              <p className="mt-1 text-muted-foreground">
+                {t('delivery-live-description')}
+              </p>
+              <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
+                {`import { KeykitProvider } from '@keykithq/sdk/react';
+
+<KeykitProvider
+  config={{
+    delivery: 'live',
+    baseUrl: 'https://www.keykit.dev',
+    projectId: '${project.id}',
+    ingestToken: process.env.NEXT_PUBLIC_KEYKIT_API_KEY!,
+    sourceLocale: '${project.sourceLocale}',
+  }}
+>`}
+              </pre>
+            </div>
+            <div>
+              <p className="font-medium">{t('delivery-static-title')}</p>
+              <p className="mt-1 text-muted-foreground">
+                {t('delivery-static-description')}
+              </p>
+              <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
+                {`npx @keykit/cli pull --out ./locales
+
+import catalog from './locales/catalog.json';
+import { KeykitProvider } from '@keykithq/sdk/react';
+
+<KeykitProvider
+  config={{
+    delivery: 'static',
+    sourceLocale: catalog.sourceLocale,
+    catalogs: catalog.locales,
+  }}
+>`}
+              </pre>
+            </div>
+          </div>
         </Card.Body>
       </Card>
 

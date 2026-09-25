@@ -14,6 +14,35 @@ export interface KeykitTransport extends SourceKeyTransport {
   pullFlags?(): Promise<FlagPayload>;
 }
 
+export class CatalogTransport implements KeykitTransport {
+  constructor(
+    private readonly config: ResolvedKeykitConfig,
+    private readonly ingest?: SourceKeyTransport
+  ) {}
+
+  async push(keys: SourceKey[], keepalive = false): Promise<void> {
+    if (!this.ingest) {
+      return;
+    }
+    await this.ingest.push(keys, keepalive);
+  }
+
+  async pull(locale: string): Promise<TranslationBundle> {
+    const translations = this.config.catalogs[locale];
+    if (!translations) {
+      throw new Error(`Keykit has no local catalog for locale "${locale}".`);
+    }
+    return {
+      projectId: this.config.projectId,
+      locale,
+      sourceLocale: this.config.sourceLocale,
+      translations,
+      version: 'local',
+      environment: this.config.environment,
+    };
+  }
+}
+
 export class HttpSourceKeyTransport implements KeykitTransport {
   constructor(private readonly config: ResolvedKeykitConfig) {}
 

@@ -145,4 +145,27 @@ describe('KeykitClient', () => {
     expect(fetch.mock.calls[0]?.[1]?.method).toBe('GET');
     client.dispose();
   });
+
+  it('reads local catalogs without fetching translations', async () => {
+    const fetch = vi.fn<FetchLike>();
+    const client = createClient(fetch, {
+      delivery: 'static',
+      ingestToken: undefined,
+      baseUrl: undefined,
+      projectId: undefined,
+      sourceLocale: 'en',
+      locale: 'en',
+      catalogs: {
+        en: { 'demo.welcome': 'Welcome' },
+        sv: { 'demo.welcome': 'Välkommen' },
+      },
+    });
+
+    expect(client.translate('demo.welcome', 'Fallback')).toBe('Welcome');
+    await client.setLocale('sv');
+    expect(client.translate('demo.welcome', 'Fallback')).toBe('Välkommen');
+    await client.flush();
+    expect(fetch).not.toHaveBeenCalled();
+    client.dispose();
+  });
 });
