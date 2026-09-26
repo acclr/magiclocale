@@ -24,11 +24,13 @@
       "@/domain/*": ["domain/*"],
       "@keykithq/sdk": ["packages/sdk/dist/index"],
       "@keykithq/sdk/react": ["packages/sdk/dist/react"],
+      "@keykithq/sdk/next": ["packages/sdk/dist/next"],
       "@keykithq/sdk/pages": ["packages/sdk/dist/pages"],
+      "@keykithq/sdk/project-config": ["packages/sdk/dist/project-config"],
       "@keykithq/sdk/routing": ["packages/sdk/dist/locale-path"],
       "@databuddy/sdk/react": ["node_modules/@databuddy/sdk/dist/react"]
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],
-  "exclude": ["node_modules", "packages/sdk"],
+  "exclude": ["node_modules", "packages/sdk", "packages/cli"],
 }
