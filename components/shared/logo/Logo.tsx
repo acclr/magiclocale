@@ -6,9 +6,11 @@ import app from '@/lib/app';
 import Logogram from './Logogram';
 import { LOGO_VIEWBOX, LOGOTYPE_PATH, LOGOTYPE_TRANSFORM } from './paths';
 
-export type LogoProps = SVGProps<SVGSVGElement>;
+export type LogoProps = SVGProps<SVGSVGElement> & {
+  color?: 'light' | 'dark';
+};
 
-const Logo = ({ className, ...props }: LogoProps) => (
+const Logo = ({ className, color = 'light', ...props }: LogoProps) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox={LOGO_VIEWBOX}
@@ -20,7 +22,10 @@ const Logo = ({ className, ...props }: LogoProps) => (
   >
     <Logogram />
     <g id="logotype" transform={LOGOTYPE_TRANSFORM}>
-      <path fill="#000000" d={LOGOTYPE_PATH} />
+      <path
+        fill={color === 'light' ? '#FFFFFF' : '#000000'}
+        d={LOGOTYPE_PATH}
+      />
     </g>
   </svg>
 );
