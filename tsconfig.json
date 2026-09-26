@@ -24,9 +24,9 @@
       "@/domain/*": ["domain/*"],
       "@keykithq/sdk": ["packages/sdk/dist/index"],
       "@keykithq/sdk/react": ["packages/sdk/dist/react"],
-      "@keykithq/sdk/next": ["packages/sdk/dist/next"],
-      "@keykithq/sdk/pages": ["packages/sdk/dist/pages"],
-      "@keykithq/sdk/project-config": ["packages/sdk/dist/project-config"],
+      "@keykithq/sdk/next": ["packages/sdk/dist/next.d.ts"],
+      "@keykithq/sdk/pages": ["packages/sdk/dist/pages.d.ts"],
+      "@keykithq/sdk/project-config": ["packages/sdk/dist/project-config.d.ts"],
       "@keykithq/sdk/routing": ["packages/sdk/dist/locale-path"],
       "@databuddy/sdk/react": ["node_modules/@databuddy/sdk/dist/react"]
     },

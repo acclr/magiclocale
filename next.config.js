@@ -24,6 +24,7 @@ if (appUrl) {
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@keykithq/sdk'],
+  serverExternalPackages: ['jiti'],
   images: {
     remotePatterns: [
       {
@@ -38,15 +39,23 @@ const nextConfig = {
   },
   i18n,
   webpack: (config, { isServer }) => {
-    if (isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        '.prisma/client/index-browser': path.join(
-          __dirname,
-          'node_modules/.prisma/client/index.js'
-        ),
-      };
-    }
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      ...(isServer
+        ? {
+            '.prisma/client/index-browser': path.join(
+              __dirname,
+              'node_modules/.prisma/client/index.js'
+            ),
+          }
+        : {
+            // The full pages entry loads jiti. Browsers only need the provider.
+            '@keykithq/sdk/pages': path.join(
+              __dirname,
+              'packages/sdk/dist/pages-provider.js'
+            ),
+          }),
+    };
     return config;
   },
   rewrites: async () => {

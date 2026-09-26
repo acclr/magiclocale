@@ -30,7 +30,9 @@
     },
     "./pages": {
       "types": "./dist/pages.d.ts",
-      "import": "./dist/pages.js"
+      "browser": "./dist/pages-provider.js",
+      "import": "./dist/pages.js",
+      "default": "./dist/pages.js"
     },
     "./project-config": {
       "types": "./dist/project-config.d.ts",
