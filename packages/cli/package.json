@@ -21,7 +21,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@keykithq/sdk": "workspace:*",
+    "@keykithq/sdk": "*",
     "jiti": "^2.7.0"
   },
   "devDependencies": {
