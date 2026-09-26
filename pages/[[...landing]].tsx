@@ -1,4 +1,4 @@
-import { Databuddy } from '@databuddy/sdk/dist/react';
+import { Databuddy } from '@databuddy/sdk/react';
 import { KeykitProvider, type KeykitPageProps } from '@keykithq/sdk/pages';
 import type { GetServerSideProps } from 'next';
 import type { ReactElement } from 'react';

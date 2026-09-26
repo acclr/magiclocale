@@ -26,6 +26,7 @@
       "@keykithq/sdk/react": ["packages/sdk/dist/react"],
       "@keykithq/sdk/pages": ["packages/sdk/dist/pages"],
       "@keykithq/sdk/routing": ["packages/sdk/dist/locale-path"],
+      "@databuddy/sdk/react": ["node_modules/@databuddy/sdk/dist/react"]
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],
