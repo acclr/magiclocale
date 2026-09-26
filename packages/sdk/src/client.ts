@@ -56,7 +56,7 @@ export class KeykitClient {
       window.addEventListener('pagehide', this.onPageHide);
       document.addEventListener('visibilitychange', this.onVisibilityChange);
       this.startPolling();
-      if (resolved.canPull && !resolved.initialBundle) {
+      if (resolved.canPull) {
         void this.refreshTranslations().catch(this.onError);
       }
       if (resolved.canPull && !resolved.initialFlags) {

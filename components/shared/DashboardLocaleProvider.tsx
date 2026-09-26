@@ -10,18 +10,35 @@ import {
   type DashboardLocalePageProps,
 } from '@/lib/dashboard-locale';
 
-let dashboardLocaleRequest: Promise<DashboardLocalePageProps> | null = null;
+let dashboardLocaleRequest: {
+  cookie: string;
+  promise: Promise<DashboardLocalePageProps>;
+} | null = null;
 
 function loadDashboardLocale(): Promise<DashboardLocalePageProps> {
-  dashboardLocaleRequest ??= fetch('/api/dashboard-locale', {
-    credentials: 'same-origin',
-  })
-    .then((response) =>
-      response.ok ? response.json() : emptyDashboardLocalePageProps
-    )
-    .catch(() => emptyDashboardLocalePageProps);
+  const cookie = readLocaleCookie();
+  if (!dashboardLocaleRequest || dashboardLocaleRequest.cookie !== cookie) {
+    dashboardLocaleRequest = {
+      cookie,
+      promise: fetch('/api/dashboard-locale', {
+        credentials: 'same-origin',
+      })
+        .then((response) =>
+          response.ok ? response.json() : emptyDashboardLocalePageProps
+        )
+        .catch(() => emptyDashboardLocalePageProps),
+    };
+  }
 
-  return dashboardLocaleRequest;
+  return dashboardLocaleRequest.promise;
+}
+
+function readLocaleCookie(): string {
+  if (typeof document === 'undefined') {
+    return '';
+  }
+  const match = document.cookie.match(/(?:^|; )keykit-locale=([^;]*)/);
+  return match?.[1] ? decodeURIComponent(match[1]) : '';
 }
 
 function ConnectedDashboardI18n({ children }: { children: ReactNode }) {

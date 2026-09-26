@@ -68,7 +68,6 @@ export async function getSelfHostedLocalePageProps(input: {
     };
     const catalog = await buildTranslationCatalog(dependencies, {
       projectId: config.projectId,
-      workingCopy: true,
     });
     const catalogs = ensureStaticCatalogs(
       catalog.success ? catalog.catalog.locales : {},
@@ -77,7 +76,6 @@ export async function getSelfHostedLocalePageProps(input: {
     const result = await buildTranslationBundle(dependencies, {
       projectId: config.projectId,
       locale,
-      workingCopy: true,
     });
 
     return {
@@ -86,9 +84,8 @@ export async function getSelfHostedLocalePageProps(input: {
       config: {
         ...config,
         sourceLocale,
-        delivery: 'static',
+        delivery: 'live',
         catalogs,
-        refreshIntervalMs: 0,
       },
       initialBundle: result.success ? result.bundle : null,
     };

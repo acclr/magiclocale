@@ -12,7 +12,7 @@ const landingKeykit = createKeykit({
   baseUrl: process.env.APP_URL ?? '',
   sourceLocale:
     process.env.KEYKIT_LANDING_SOURCE_LOCALE ?? landingSite.defaultLocale,
-  delivery: 'static',
+  delivery: 'live',
   routing: 'path',
   defaultLocale: landingRouting.defaultLocale,
   locales: landingRouting.locales,

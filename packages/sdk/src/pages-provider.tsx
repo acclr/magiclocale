@@ -24,14 +24,16 @@ export function KeykitProvider({
 
   const onSetLocale = useCallback(
     (locale: string) => {
+      persistLocaleCookie(locale);
       if (!routing || typeof window === 'undefined') {
-        return;
+        return false;
       }
       const href = hrefForLocale(window.location.pathname, locale, routing);
       if (href === window.location.pathname) {
-        return;
+        return false;
       }
       window.location.assign(href);
+      return true;
     },
     [routing]
   );
@@ -46,4 +48,13 @@ export function KeykitProvider({
       {children}
     </KeykitReactProvider>
   );
+}
+
+function persistLocaleCookie(locale: string): void {
+  if (typeof document === 'undefined') {
+    return;
+  }
+  document.cookie =
+    `keykit-locale=${encodeURIComponent(locale)}; ` +
+    'Path=/; Max-Age=31536000; SameSite=Lax';
 }

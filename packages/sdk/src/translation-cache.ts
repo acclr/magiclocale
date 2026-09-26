@@ -40,7 +40,13 @@ export class TranslationCache {
   }
 
   update(bundle: TranslationBundle): void {
-    if (this.versions.get(bundle.locale) === bundle.version) {
+    const previous = this.bundles.get(bundle.locale);
+    const sameVersion = this.versions.get(bundle.locale) === bundle.version;
+    if (
+      sameVersion &&
+      previous &&
+      sameTranslations(previous, bundle.translations)
+    ) {
       return;
     }
     this.bundles.set(bundle.locale, bundle.translations);
@@ -60,4 +66,15 @@ export class TranslationCache {
       listener();
     }
   }
+}
+
+function sameTranslations(
+  left: Record<string, string>,
+  right: Record<string, string>
+): boolean {
+  const leftKeys = Object.keys(left);
+  if (leftKeys.length !== Object.keys(right).length) {
+    return false;
+  }
+  return leftKeys.every((key) => left[key] === right[key]);
 }

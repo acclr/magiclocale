@@ -150,6 +150,29 @@ describe('KeykitClient', () => {
     client.dispose();
   });
 
+  it('applies a refreshed bundle when the version token stays the same', async () => {
+    const bundle = (text: string) =>
+      new Response(
+        JSON.stringify({
+          projectId: 'proj_acme',
+          locale: 'sv',
+          sourceLocale: 'en',
+          translations: { 'demo.welcome': text },
+          version: 'draft',
+        })
+      );
+    const fetch = vi
+      .fn<FetchLike>()
+      .mockResolvedValueOnce(bundle('Hej'))
+      .mockResolvedValueOnce(bundle('Hejsan'));
+    const client = createClient(fetch);
+    await client.setLocale('sv');
+    expect(client.translate('demo.welcome', 'Welcome')).toBe('Hej');
+    await client.refreshTranslations();
+    expect(client.translate('demo.welcome', 'Welcome')).toBe('Hejsan');
+    client.dispose();
+  });
+
   it('reads local catalogs without fetching translations', async () => {
     const fetch = vi.fn<FetchLike>();
     const client = createClient(fetch, {
