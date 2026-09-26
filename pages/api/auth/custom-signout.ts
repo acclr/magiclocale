@@ -1,10 +1,30 @@
 import { NextApiRequest, NextApiResponse } from 'next';
-import { getServerSession } from 'next-auth/next';
-import { getAuthOptions, sessionTokenCookieName } from '@/lib/nextAuth';
-import { prisma } from '@/lib/prisma';
 import { getCookie } from 'cookies-next';
+
+import {
+  expiredSessionCookieHeaders,
+  sessionCookieNames,
+} from '@/lib/auth-session-cookie';
 import env from '@/lib/env';
-import { deleteSession } from 'models/session';
+import { deleteManySessions } from 'models/session';
+
+async function deleteDatabaseSessions(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
+  for (const name of sessionCookieNames()) {
+    const raw = await getCookie(name, { req, res });
+    if (typeof raw !== 'string' || raw.length === 0) {
+      continue;
+    }
+
+    await deleteManySessions({
+      where: {
+        sessionToken: raw,
+      },
+    });
+  }
+}
 
 export default async function handler(
   req: NextApiRequest,
@@ -15,41 +35,16 @@ export default async function handler(
   }
 
   try {
-    const authOptions = getAuthOptions(req, res);
-    const session = await getServerSession(req, res, authOptions);
-
-    if (!session || !session.user) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-
     if (env.nextAuth.sessionStrategy === 'database') {
-      const sessionToken = await getCookie(sessionTokenCookieName, {
-        req,
-        res,
-      });
-      const sessionDBEntry = await prisma.session.findFirst({
-        where: {
-          sessionToken: sessionToken,
-        },
-      });
-
-      if (sessionDBEntry) {
-        await deleteSession({
-          where: {
-            sessionToken: sessionToken,
-          },
-        });
-      }
+      await deleteDatabaseSessions(req, res);
     }
-
-    res.setHeader(
-      'Set-Cookie',
-      'next-auth.session-token=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT; HttpOnly; Secure; SameSite=Lax'
-    );
-
-    return res.status(200).json({ success: true });
   } catch (error) {
     console.error('Signout error:', error);
-    return res.status(500).json({ error: 'Failed to sign out' });
   }
+
+  for (const header of expiredSessionCookieHeaders()) {
+    res.appendHeader('Set-Cookie', header);
+  }
+
+  return res.status(200).json({ success: true });
 }

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { landingRouting } from '@/content/landing/site';
 
+import LandingAccountNav from './LandingAccountNav';
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
 
 type LandingShellProps = {
@@ -64,21 +65,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
           </nav>
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
             <LandingLocaleSwitcher />
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="hidden sm:inline-flex"
-            >
-              <Link href="/auth/login">
-                {translate('landing.nav.sign-in', 'Sign in')}
-              </Link>
-            </Button>
-            <Button asChild size="sm">
-              <Link href="/auth/join">
-                {translate('landing.nav.sign-up', 'Sign up')}
-              </Link>
-            </Button>
+            <LandingAccountNav />
           </div>
         </div>
       </header>

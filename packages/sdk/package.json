@@ -1,9 +1,10 @@
 {
   "name": "@keykithq/sdk",
-  "version": "0.0.2",
+  "version": "0.0.4",
   "description": "Keykit client SDK — discover translation keys and load bundles from Keykit",
   "type": "module",
   "main": "./dist/index.cjs",
+  "license": "MIT",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -14,8 +15,14 @@
     },
     "./react": {
       "types": "./dist/react.d.ts",
+      "react-server": {
+        "types": "./dist/react-server.d.ts",
+        "import": "./dist/react-server.js",
+        "default": "./dist/react-server.js"
+      },
       "import": "./dist/react.js",
-      "require": "./dist/react.cjs"
+      "require": "./dist/react.cjs",
+      "default": "./dist/react.js"
     },
     "./next": {
       "types": "./dist/next.d.ts",
@@ -24,6 +31,11 @@
     "./pages": {
       "types": "./dist/pages.d.ts",
       "import": "./dist/pages.js"
+    },
+    "./project-config": {
+      "types": "./dist/project-config.d.ts",
+      "import": "./dist/project-config.js",
+      "require": "./dist/project-config.cjs"
     },
     "./routing": {
       "types": "./dist/locale-path.d.ts",
@@ -55,5 +67,8 @@
     "tsup": "^8.5.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.11"
+  },
+  "dependencies": {
+    "jiti": "^2.7.0"
   }
 }

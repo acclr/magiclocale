@@ -62,6 +62,8 @@ function requireClient(): KeykitClient {
 export { KeykitClient } from './client';
 export { createKeykit } from './create-keykit';
 export type { CreatedKeykit, CreateKeykitOptions } from './create-keykit';
+export { defineKeykitConfig, KEYKIT_DIRECTORY } from './define-config';
+export type { KeykitProjectConfig } from './define-config';
 export { catalogsFromFile } from './config';
 export {
   hrefForLocale,

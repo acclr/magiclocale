@@ -11,6 +11,7 @@ import {
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
 import { getKeykitStripePriceIds } from '@/lib/billing/entitlement';
+import { resolveStripePriceId } from '@/lib/billing/stripe-price';
 import { getProjectService } from '@/lib/translations';
 import { checkoutSessionSchema, validateWithSchema } from '@/lib/zod';
 
@@ -51,6 +52,7 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
   if (!allowedPrices.includes(price)) {
     throw new ApiError(422, 'Unknown Keykit price.');
   }
+  const stripePriceId = await resolveStripePriceId(stripe, price);
   const session = await getSession(req, res);
 
   let customer: string;
@@ -82,7 +84,7 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
     mode: 'subscription',
     line_items: [
       {
-        price,
+        price: stripePriceId,
         quantity: quantity ?? 1,
       },
     ],

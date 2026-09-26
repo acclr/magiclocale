@@ -1,12 +1,31 @@
 {
-  "name": "@keykit/cli",
-  "version": "0.1.0",
-  "private": true,
+  "name": "@keykithq/cli",
+  "version": "0.1.2",
+  "description": "Keykit CLI — scan keys, pull locale bundles, and apply migrations locally",
+  "license": "MIT",
   "type": "module",
   "bin": {
-    "keykit": "./src/index.ts"
+    "keykit": "dist/index.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "scripts": {
-    "start": "node --experimental-strip-types src/index.ts"
+    "build": "tsup",
+    "check-types": "tsc --noEmit",
+    "start": "node dist/index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "dependencies": {
+    "@keykithq/sdk": "workspace:*",
+    "jiti": "^2.7.0"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "typescript": "^5.9.3"
   }
 }

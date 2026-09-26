@@ -114,7 +114,7 @@ export type KeykitConfig = {
   context?: FlagEvaluationContext;
   initialBundle?: TranslationBundle;
   initialFlags?: FlagPayload;
-  /** Local locale maps, usually from `keykit pull` / `locales/catalog.json`. */
+  /** Local locale maps, usually from `keykit pull` into `.keykit/catalog.json`. */
   catalogs?: LocaleCatalogs;
   refreshIntervalMs?: number;
   debounceMs?: number;

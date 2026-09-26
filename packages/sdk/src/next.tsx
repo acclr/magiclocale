@@ -1,141 +1,55 @@
-import { cookies } from 'next/headers';
-import { after } from 'next/server';
-import { cache, type ReactNode } from 'react';
-import { KeykitClient } from './client';
-import { loadTranslationBundle } from './load-bundle';
+import { type ReactNode } from 'react';
 import { KeykitNextClientProvider } from './next-client.js';
-import type { KeykitConfig, TranslationBundle } from './types';
+import {
+  configureKeykitNext,
+  getKeykitRequestState,
+  type KeykitNextConfig,
+} from './request-state.js';
+import { createTranslateApi, type KeykitTranslateApi } from './translate-api';
 
-export type KeykitNextConfig = KeykitConfig & {
-  cookieName?: string;
-  defaultLocale?: string;
-  locales?: readonly string[];
-};
+export type { KeykitNextConfig } from './request-state.js';
+export type { KeykitTranslateApi } from './translate-api';
 
-export type KeykitServerTranslator = {
-  locale: string;
-  translate: (key: string, defaultText: string) => string;
-};
+export type KeykitServerTranslator = KeykitTranslateApi;
 
-export function createKeykitNext(config: KeykitNextConfig) {
-  const cookieName = config.cookieName ?? 'keykit-locale';
-  const sourceLocale = config.sourceLocale ?? 'en';
-  const defaultLocale = config.defaultLocale ?? config.locale ?? sourceLocale;
-  const allowedLocales = new Set(
-    config.locales ?? [sourceLocale, defaultLocale]
-  );
-  const browserConfig = toBrowserConfig(config);
-
-  const getRequestState = cache(async () => {
-    const cookieStore = await cookies();
-    const requestedLocale = cookieStore.get(cookieName)?.value;
-    const locale =
-      requestedLocale && allowedLocales.has(requestedLocale)
-        ? requestedLocale
-        : defaultLocale;
-    let initialBundle: TranslationBundle | undefined =
-      bundleFromCatalogs(config, locale) ?? undefined;
-    if (config.delivery !== 'static') {
-      try {
-        initialBundle = await loadTranslationBundle(
-          { ...config, refreshIntervalMs: 0 },
-          locale
-        );
-      } catch (error) {
-        reportError(config, error);
-      }
-    }
-
-    const client = new KeykitClient({
-      ...config,
-      locale,
-      initialBundle,
-      refreshIntervalMs: 0,
-    });
-    return { client, initialBundle, locale, flushScheduled: false };
-  });
-
-  async function KeykitProvider({
-    children,
-  }: Readonly<{ children: ReactNode }>) {
-    const { initialBundle, locale } = await getRequestState();
-    return (
-      <KeykitNextClientProvider
-        config={browserConfig}
-        initialLocale={locale}
-        initialBundle={initialBundle}
-        cookieName={cookieName}
-      >
-        {children}
-      </KeykitNextClientProvider>
-    );
-  }
-
-  async function getKeykit(): Promise<KeykitServerTranslator> {
-    const state = await getRequestState();
-    if (!state.flushScheduled) {
-      state.flushScheduled = true;
-      after(async () => {
-        try {
-          await state.client.flush();
-        } finally {
-          state.client.dispose();
-        }
-      });
-    }
-    return {
-      locale: state.locale,
-      translate: state.client.translate.bind(state.client),
-    };
-  }
-
+/**
+ * App Router setup. `keykit.config.ts` and `.keykit/` are picked up
+ * automatically. Call this only to override that file. Env vars
+ * `KEYKIT_API_KEY`, `KEYKIT_PROJECT_ID`, and `KEYKIT_BASE_URL` fill any gaps.
+ *
+ * Server and Client Components then call `useTranslate()` from
+ * `@keykithq/sdk/react`. Wrap the tree in `KeykitProvider` so client
+ * components hydrate with the same locale and published bundle.
+ */
+export function createKeykitNext(config: KeykitNextConfig = {}) {
+  configureKeykitNext(config);
   return { KeykitProvider, getKeykit };
 }
 
-function bundleFromCatalogs(
-  config: KeykitConfig,
-  locale: string
-): TranslationBundle | undefined {
-  const translations = config.catalogs?.[locale];
-  if (!translations) {
-    return undefined;
-  }
-  return {
-    projectId: config.projectId ?? '',
-    locale,
-    sourceLocale: config.sourceLocale ?? 'en',
-    translations,
-    version: 'local',
-    environment: config.environment,
-  };
+export async function KeykitProvider({
+  children,
+}: Readonly<{ children: ReactNode }>) {
+  const state = await getKeykitRequestState();
+  return (
+    <KeykitNextClientProvider
+      config={state.browserConfig}
+      initialLocale={state.locale}
+      initialBundle={state.initialBundle}
+      cookieName={state.cookieName}
+    >
+      {children}
+    </KeykitNextClientProvider>
+  );
 }
 
-function toBrowserConfig(config: KeykitNextConfig): KeykitConfig {
-  return {
-    delivery: config.delivery,
-    baseUrl: config.baseUrl,
-    projectId: config.projectId,
-    ingestToken: config.ingestToken,
-    sourceLocale: config.sourceLocale,
-    locale: config.locale,
-    catalogs: config.catalogs,
-    refreshIntervalMs:
-      config.delivery === 'static' ? 0 : config.refreshIntervalMs,
-    debounceMs: config.debounceMs,
-    batchSize: config.batchSize,
-    maxRetries: config.maxRetries,
-    retryDelayMs: config.retryDelayMs,
-    environment: config.environment,
-    version: config.version,
-    context: config.context,
-  };
-}
-
-function reportError(config: KeykitConfig, error: unknown): void {
-  const normalized = error instanceof Error ? error : new Error(String(error));
-  if (config.onError) {
-    config.onError(normalized);
-    return;
-  }
-  console.warn('[Keykit]', normalized.message);
+/** Async Server Components and metadata. Sync Server Components use `useTranslate()`. */
+export async function getKeykit(): Promise<KeykitServerTranslator> {
+  const state = await getKeykitRequestState();
+  return createTranslateApi({
+    locale: state.locale,
+    sourceCatalog: state.sourceCatalog,
+    translate: (key, defaultText) => state.client.translate(key, defaultText),
+    isLoading: false,
+    refresh: () => state.client.refreshTranslations(),
+  });
 }

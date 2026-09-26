@@ -11,6 +11,7 @@ import {
   type ReactNode,
 } from 'react';
 import { KeykitClient } from './client';
+import { createTranslateApi } from './translate-api';
 import type { KeykitConfig, TranslationBundle } from './types';
 
 export type KeykitContextValue = {
@@ -177,25 +178,18 @@ export function useTranslate() {
   const { translate, locale, isLoading, setLocale, refresh, sourceCatalog } =
     useKeykit();
 
-  const t = useCallback(
-    (key: string, defaultText?: string) => {
-      const sourceText =
-        (defaultText !== undefined && defaultText !== ''
-          ? defaultText
-          : sourceCatalog?.[key]) ?? key;
-      return translate(key, sourceText);
-    },
-    [sourceCatalog, translate]
+  return useMemo(
+    () =>
+      createTranslateApi({
+        locale,
+        translate,
+        sourceCatalog,
+        isLoading,
+        setLocale,
+        refresh,
+      }),
+    [isLoading, locale, refresh, setLocale, sourceCatalog, translate]
   );
-
-  return {
-    t,
-    translate,
-    locale,
-    isLoading,
-    setLocale,
-    refresh,
-  };
 }
 
 export function useFlag(

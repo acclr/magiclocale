@@ -28,7 +28,7 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
     assertNonEmpty(config.ingestToken ?? '', 'ingestToken');
   } else if (!hasCatalogs) {
     throw new Error(
-      'Keykit static delivery requires catalogs from `keykit pull` or locale JSON files.'
+      'Keykit static delivery requires .keykit/catalog.json from `keykit pull`, or catalogs in keykit.config.'
     );
   }
 

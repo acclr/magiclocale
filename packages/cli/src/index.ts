@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
+import { resolveKeykitSetup } from '@keykithq/sdk/project-config';
 import { pullTranslationCatalog } from './pull';
 import { rewriteSourceTree, type RewritePlan } from './rewrite';
 import { scanSourceTree } from './scan';
@@ -42,15 +43,38 @@ async function main() {
   }
 
   if (command === 'pull') {
-    const outDir = argValue(args, '--out') ?? 'locales';
+    const setup = await resolveKeykitSetup();
+    const outDir = argValue(args, '--out') ?? setup.directory;
     const catalog = await pullTranslationCatalog({
-      baseUrl: requiredEnvOrArg(args, '--base-url', 'KEYKIT_BASE_URL'),
-      projectId: requiredEnvOrArg(args, '--project-id', 'KEYKIT_PROJECT_ID'),
-      token: requiredEnvOrArg(args, '--token', 'KEYKIT_API_KEY'),
+      baseUrl: requiredSetting(
+        args,
+        '--base-url',
+        setup.config.baseUrl,
+        'KEYKIT_BASE_URL'
+      ),
+      projectId: requiredSetting(
+        args,
+        '--project-id',
+        setup.config.projectId,
+        'KEYKIT_PROJECT_ID'
+      ),
+      token: requiredSetting(
+        args,
+        '--token',
+        setup.config.apiKey ?? setup.config.ingestToken,
+        'KEYKIT_API_KEY'
+      ),
       outDir,
       environment:
-        argValue(args, '--environment') ?? process.env.KEYKIT_ENVIRONMENT,
-      version: parseOptionalVersion(argValue(args, '--version')),
+        argValue(args, '--environment') ??
+        setup.config.environment ??
+        process.env.KEYKIT_ENVIRONMENT,
+      version: parseOptionalVersion(
+        argValue(args, '--version') ??
+          (setup.config.version !== undefined
+            ? String(setup.config.version)
+            : undefined)
+      ),
     });
     const locales = Object.keys(catalog.locales);
     console.log(
@@ -79,13 +103,15 @@ async function main() {
 
   console.log(`Keykit CLI
   scan --root .
-  pull --out ./locales [--base-url URL] [--project-id ID] [--token KEY]
+  pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json
 
-pull writes locales/catalog.json plus one JSON file per locale for
-@keykithq/sdk static delivery. Credentials can also come from
-KEYKIT_BASE_URL, KEYKIT_PROJECT_ID, and KEYKIT_API_KEY.
+pull writes .keykit/catalog.json plus one JSON file per locale for
+@keykithq/sdk static delivery. It reads keykit.config.ts when present.
+Flags override the environment, which overrides the config file.
+Credentials can also come from KEYKIT_BASE_URL, KEYKIT_PROJECT_ID, and
+KEYKIT_API_KEY.
 
 The backend never writes customer filesystems. Apply Keykit migrations
 locally, then commit the result.`);
@@ -96,14 +122,17 @@ function argValue(args: string[], name: string): string | undefined {
   return index >= 0 ? args[index + 1] : undefined;
 }
 
-function requiredEnvOrArg(
+function requiredSetting(
   args: string[],
   flag: string,
+  fromConfig: string | undefined,
   envName: string
 ): string {
-  const value = argValue(args, flag) ?? process.env[envName];
+  const value = argValue(args, flag) ?? process.env[envName] ?? fromConfig;
   if (!value?.trim()) {
-    throw new Error(`Missing ${flag} (or ${envName}).`);
+    throw new Error(
+      `Missing ${flag} (or ${envName} in the environment or keykit.config).`
+    );
   }
   return value.trim();
 }

@@ -8,7 +8,7 @@ import {
 import { getByCustomerId } from '../../models/subscription';
 import {
   getEntitlementForCustomer,
-  getKeykitStripePriceIds,
+  getResolvedKeykitStripePriceIds,
   planIdForPriceId,
 } from './entitlement';
 
@@ -19,7 +19,7 @@ export async function getBillingCatalog(
   billingScope: BillingScope
 ) {
   const entitlement = await getEntitlementForCustomer(customerId, billingScope);
-  const priceIds = getKeykitStripePriceIds();
+  const priceIds = await getResolvedKeykitStripePriceIds();
   const subscriptions = customerId ? await getByCustomerId(customerId) : [];
 
   return {
@@ -35,9 +35,9 @@ export async function getBillingCatalog(
       .filter((subscription) => subscription.active)
       .map((subscription) => ({
         ...subscription,
-        planId: planIdForPriceId(subscription.priceId),
+        planId: planIdForPriceId(subscription.priceId, priceIds),
         planName: (() => {
-          const planId = planIdForPriceId(subscription.priceId);
+          const planId = planIdForPriceId(subscription.priceId, priceIds);
           return planId ? KEYKIT_PLANS[planId].name : 'Keykit';
         })(),
       })),

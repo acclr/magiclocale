@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Button } from '@/components/shared';
 import toast from 'react-hot-toast';
 
+import { sdkSetupSnippets } from '@/content/sdk-setup-docs';
 import LocaleName from './LocaleName';
 import LocaleSelect from './LocaleSelect';
 
@@ -140,6 +141,8 @@ const ProjectSettingsForm = ({
       setIsDeleting(false);
     }
   };
+
+  const setupDocs = sdkSetupSnippets(project.id);
 
   return (
     <div className="space-y-6">
@@ -317,61 +320,31 @@ const ProjectSettingsForm = ({
             </Card.Description>
           </Card.Header>
           <div className="space-y-4 text-sm">
-            <div>
-              <p className="font-medium">{t('delivery-live-title')}</p>
-              <p className="mt-1 text-muted-foreground">
-                {t('delivery-live-description')}
-              </p>
-              <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
-                {`# .env
-KEYKIT_API_KEY=
-KEYKIT_PROJECT_ID=${project.id}
-KEYKIT_BASE_URL=https://www.keykit.dev
-
-import { createKeykit, KeykitProvider } from '@keykithq/sdk/pages';
-import { useKeykit } from '@keykithq/sdk/react';
-
-const { getServerSideProps } = createKeykit();
-export { getServerSideProps };
-
-export default function Page({ keykit }) {
-  return (
-    <KeykitProvider keykit={keykit}>
-      <App />
-    </KeykitProvider>
-  );
-}
-
-function App() {
-  const { translate, locale, setLocale } = useKeykit();
-  return (
-    <button onClick={() => setLocale(locale === 'en' ? 'sv' : 'en')}>
-      {translate('settings.save', 'Save changes')}
-    </button>
-  );
-}`}
-              </pre>
-            </div>
-            <div>
-              <p className="font-medium">{t('delivery-static-title')}</p>
-              <p className="mt-1 text-muted-foreground">
-                {t('delivery-static-description')}
-              </p>
-              <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
-                {`npx @keykit/cli pull --out ./locales
-
-import catalog from './locales/catalog.json';
-import { KeykitProvider } from '@keykithq/sdk/react';
-
-<KeykitProvider
-  config={{
-    delivery: 'static',
-    sourceLocale: catalog.sourceLocale,
-    catalogs: catalog.locales,
-  }}
->`}
-              </pre>
-            </div>
+            {(
+              [
+                ['install', 'sdk-install-title', 'sdk-install-description'],
+                ['env', 'sdk-env-title', 'sdk-env-description'],
+                ['config', 'sdk-config-title', 'sdk-config-description'],
+                [
+                  'appRouter',
+                  'sdk-app-router-title',
+                  'sdk-app-router-description',
+                ],
+                [
+                  'pagesRouter',
+                  'sdk-pages-router-title',
+                  'sdk-pages-router-description',
+                ],
+                ['cli', 'sdk-cli-title', 'sdk-cli-description'],
+              ] as const
+            ).map(([snippet, title, description]) => (
+              <SetupBlock
+                key={snippet}
+                code={setupDocs[snippet]}
+                description={t(description)}
+                title={t(title)}
+              />
+            ))}
           </div>
         </Card.Body>
       </Card>
@@ -403,5 +376,25 @@ import { KeykitProvider } from '@keykithq/sdk/react';
     </div>
   );
 };
+
+function SetupBlock({
+  title,
+  description,
+  code,
+}: {
+  title: string;
+  description: string;
+  code: string;
+}) {
+  return (
+    <div>
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 text-muted-foreground">{description}</p>
+      <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
+        {code}
+      </pre>
+    </div>
+  );
+}
 
 export default ProjectSettingsForm;

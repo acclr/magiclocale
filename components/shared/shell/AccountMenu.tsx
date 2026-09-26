@@ -48,7 +48,11 @@ const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
             <UserCircleIcon className="mr-1 h-5 w-5" /> {t('account')}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={signOut}>
+        <DropdownMenuItem
+          onSelect={() => {
+            void signOut();
+          }}
+        >
           <ArrowRightOnRectangleIcon className="mr-1 h-5 w-5" /> {t('logout')}
         </DropdownMenuItem>
       </DropdownMenuContent>

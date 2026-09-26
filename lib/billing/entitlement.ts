@@ -9,6 +9,8 @@ import {
 } from '../../domain/billing';
 import type { Project } from '../../domain/translations';
 import { prisma } from '../prisma';
+import { stripe } from '../stripe';
+import { resolveStripePriceId } from './stripe-price';
 
 export type PaidKeykitPlanId = 'premium' | 'enterprise';
 
@@ -24,8 +26,10 @@ export function getKeykitStripePriceIds(): Record<PaidKeykitPlanId, string> {
   };
 }
 
-export function planIdForPriceId(priceId: string): KeykitPlanId | null {
-  const prices = getKeykitStripePriceIds();
+export function planIdForPriceId(
+  priceId: string,
+  prices: Record<PaidKeykitPlanId, string> = getKeykitStripePriceIds()
+): KeykitPlanId | null {
   if (priceId && priceId === prices.enterprise) {
     return 'enterprise';
   }
@@ -33,6 +37,30 @@ export function planIdForPriceId(priceId: string): KeykitPlanId | null {
     return 'premium';
   }
   return null;
+}
+
+let resolvedPriceIds:
+  | { key: string; ids: Record<PaidKeykitPlanId, string> }
+  | undefined;
+
+/** Maps configured `prod_` or `price_` ids to the Price id Checkout and webhooks use. */
+export async function getResolvedKeykitStripePriceIds(): Promise<
+  Record<PaidKeykitPlanId, string>
+> {
+  const configured = getKeykitStripePriceIds();
+  const key = `${configured.premium}\n${configured.enterprise}`;
+  if (resolvedPriceIds?.key === key) {
+    return resolvedPriceIds.ids;
+  }
+
+  const ids = {
+    premium: await resolveStripePriceId(stripe, configured.premium),
+    enterprise: configured.enterprise
+      ? await resolveStripePriceId(stripe, configured.enterprise)
+      : '',
+  };
+  resolvedPriceIds = { key, ids };
+  return ids;
 }
 
 export async function getEntitlementForCustomer(
@@ -51,7 +79,7 @@ export async function getEntitlementForCustomer(
 
   return resolveKeykitPlan(
     livePriceIds,
-    getKeykitStripePriceIds(),
+    await getResolvedKeykitStripePriceIds(),
     billingScope
   );
 }

@@ -128,33 +128,26 @@ const label = translate('settings.save', 'Save changes');
 await flush();
 ```
 
-**Local JSON** skips the network. Pull files, then pass them to the SDK:
+**Local JSON** skips the network. Set `delivery: 'static'` in `keykit.config.ts`, then pull into `.keykit`:
 
 ```bash
-npx @keykit/cli pull --out ./locales
+npx @keykithq/cli pull
 ```
 
-```ts
-import catalog from './locales/catalog.json';
-import { configureKeykit } from '@keykithq/sdk';
-
-configureKeykit({
-  delivery: 'static',
-  sourceLocale: catalog.sourceLocale,
-  catalogs: catalog.locales,
-});
-```
+The SDK reads `.keykit/catalog.json` from that folder. No catalog import in application code.
 
 `translate(key, defaultText)` returns the current bundle value or the source
 text fallback, queues source-key ingestion when an ingest token is set, and
 batches sync requests. Pages Router apps call `createKeykit` and render
 `KeykitProvider` from `@keykithq/sdk/pages`, then read
-`const { translate, locale, setLocale } = useKeykit()`. App Router apps can
-use `createKeykitNext` from `@keykithq/sdk/next`.
+`const { translate, locale, setLocale } = useKeykit()`. Project settings live
+in `keykit.config.ts`. App Router apps wrap the tree in `KeykitProvider` from
+`@keykithq/sdk/next` and call `useTranslate()` from `@keykithq/sdk/react` in
+both Server and Client Components.
 
 Runtime discovery only sees keys executed in the browser (or during SSR for
 that request). Dead or unvisited files are not ingested until those code paths
-run. Use `npx @keykit/cli scan --root .` to statically list
+run. Use `npx @keykithq/cli scan --root .` to statically list
 `translate(...)` / `t(...)` calls with source text before shipping.
 
 ## Localize the Keykit landing page and dashboard
@@ -238,7 +231,8 @@ points such as Crowdin Pro and Lokalise Explorer):
 
 Create Stripe prices and copy the printed IDs into `STRIPE_PREMIUM_PRICE_ID`
 and `STRIPE_ENTERPRISE_PRICE_ID` (`STRIPE_STARTER_PRICE_ID` still works as an
-alias for Premium):
+alias for Premium). A product id (`prod_...`) is also accepted; checkout uses
+that product's default price:
 
 ```bash
 npm run stripe:ensure-plans
