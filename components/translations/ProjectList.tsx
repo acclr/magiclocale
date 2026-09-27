@@ -96,10 +96,8 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
               <div className="grid gap-2 sm:grid-cols-2">
                 {(['language', 'regional'] as const).map((format) => (
                   <label
-                    className={`flex cursor-pointer gap-3 rounded-lg border px-3 py-2 ${
-                      localeFormat === format
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border'
+                    className={`flex cursor-pointer gap-3 rounded-lg px-3 py-3 ${
+                      localeFormat === format ? 'bg-elevated' : 'bg-muted'
                     }`}
                     key={format}
                   >
@@ -190,7 +188,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg border border-dashed border-border p-12 text-center">
+        <div className="rounded-lg bg-card p-12 text-center">
           <h2 className="font-semibold">{t('no-translation-projects')}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {canCreate

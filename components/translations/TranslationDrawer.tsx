@@ -101,7 +101,7 @@ const TranslationDrawer = ({
           type="button"
         />
         <aside className="flex min-h-full w-full max-w-md flex-col bg-background shadow-xl">
-          <header className="flex items-start justify-between border-b border-border p-5">
+          <header className="flex items-start justify-between p-5">
             <div>
               <h2 className="text-xl font-semibold">
                 <span
@@ -129,7 +129,7 @@ const TranslationDrawer = ({
                 {t('source-text')} (
                 <LocaleName code={sourceLocale} />)
               </p>
-              <p className="mt-2 rounded-lg bg-card p-3 text-sm">
+              <p className="mt-2 rounded-lg bg-muted p-3 text-sm">
                 {row.sourceText}
               </p>
             </div>
@@ -197,7 +197,7 @@ const TranslationDrawer = ({
             )}
 
             {suggestion && (
-              <div className="rounded-lg border border-info bg-info/10 p-4">
+              <div className="rounded-lg bg-muted p-4">
                 <p className="text-xs font-semibold uppercase text-info">
                   {t('ai-suggestion')}
                 </p>
@@ -215,7 +215,7 @@ const TranslationDrawer = ({
           </div>
 
           {canEdit && (
-            <footer className="space-y-2 border-t border-border p-5">
+            <footer className="space-y-2 bg-card p-5">
               {!isSourceLocale && (
                 <button
                   className="btn btn-outline btn-primary w-full"

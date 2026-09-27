@@ -49,7 +49,7 @@ const ProductPricing = ({ plans, subscriptions }: ProductPricingProps) => {
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {plans.map((plan) => {
           return (
-            <div className="relative rounded-md bg-card" key={plan.id}>
+            <div className="relative rounded-lg bg-card" key={plan.id}>
               <div className="p-8">
                 <div className="flex items-center space-x-2">
                   <h3 className="font-display text-2xl font-bold text-foreground">
@@ -67,7 +67,7 @@ const ProductPricing = ({ plans, subscriptions }: ProductPricingProps) => {
                       size="md"
                       fullWidth
                       disabled
-                      className="rounded-full"
+                      className="rounded-lg"
                     >
                       {t('current')}
                     </Button>

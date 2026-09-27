@@ -70,6 +70,9 @@ export async function enforceSourceKeyCapacity(
   });
   const existingKeys = new Set(existing.map((row) => row.key));
   const newKeys = uniqueIncoming.filter((key) => !existingKeys.has(key)).length;
+  if (newKeys === 0) {
+    return;
+  }
   const currentTotal = await prisma.translationKey.count({
     where: { projectId },
   });

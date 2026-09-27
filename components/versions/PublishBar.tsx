@@ -44,17 +44,17 @@ const PublishBar = ({
   };
 
   return (
-    <div className="flex rounded-xl flex-row fixed bottom-8 left-1/2 -translate-x-1/2 w-1/3 z-50 bg-foreground border-border shadow-lg p-4 text-foreground flex-wrap items-center justify-between gap-3">
+    <div className="fixed bottom-8 left-1/2 z-50 flex w-[min(36rem,calc(100%-2rem))] -translate-x-1/2 flex-row flex-wrap items-center justify-between gap-3 rounded-xl bg-card p-4 text-foreground shadow-pill">
       <div className="flex flex-row items-start gap-4">
         <div className="flex flex-col">
-          <div className="flex mb-1.5 items-center font-semibold text-background">
+          <div className="mb-1.5 flex items-center font-semibold text-foreground">
             <RefreshCcwIcon className="w-5 h-5" />
             <span className="ml-1.5">
               {t('unpublished-changes-title', { count: pending })}
             </span>
             !
           </div>
-          <p className="text-sm text-background/80">
+          <p className="text-sm text-muted-foreground">
             {t('unpublished-changes-help', {
               translations: publishState.translationCount,
               flags: publishState.flagCount,

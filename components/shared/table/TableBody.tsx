@@ -2,8 +2,7 @@ import { Button } from '@/components/shared';
 import Badge from '@/components/shared/Badge';
 import { useTranslation } from '@/hooks/useTranslation';
 
-const trClass =
-  'border-b border-border bg-background last:border-b-0 hover:bg-card';
+const trClass = 'bg-transparent hover:bg-elevated/60';
 const tdClassBase = 'px-6 py-3 text-sm text-muted-foreground';
 const tdClass = `whitespace-nowrap ${tdClassBase}`;
 const tdClassWrap = `break-all ${tdClassBase}`;

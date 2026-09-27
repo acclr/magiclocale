@@ -77,7 +77,8 @@ function ProjectTable({
   }
 
   return (
-    <table className="table w-full border text-sm">
+    <div className="overflow-hidden rounded-lg bg-card">
+    <table className="table w-full text-sm">
       <thead>
         <tr>
           <th>{t('translation-project-name')}</th>
@@ -107,6 +108,7 @@ function ProjectTable({
         ))}
       </tbody>
     </table>
+    </div>
   );
 }
 

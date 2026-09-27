@@ -81,7 +81,7 @@ const SSO: NextPageWithLayout<
       <Head>
         <title>{t('signin-with-saml-sso')}</title>
       </Head>
-      <div className="rounded-md bg-card p-6">
+      <div className="rounded-lg bg-card p-6">
         <form onSubmit={formik.handleSubmit}>
           <div className="space-y-2">
             {useEmail ? (

@@ -180,7 +180,7 @@ const ArchitectureExplorer = ({
       ) : null}
 
       {canEdit ? (
-        <section className="space-y-3 rounded-md bg-card p-4">
+        <section className="space-y-3 rounded-lg bg-card p-4">
           <h2 className="font-semibold">{t('architecture-rules')}</h2>
           <label className="form-control">
             <span className="label-text">{t('allowed-root-namespaces')}</span>
@@ -259,11 +259,11 @@ const ArchitectureExplorer = ({
         </section>
       ) : null}
 
-      <section className="rounded-md bg-card p-4">
+      <section className="rounded-lg bg-card p-4">
         <h2 className="mb-3 font-semibold">{t('findings')}</h2>
         <ul className="space-y-3">
           {(payload?.findings ?? []).map((finding) => (
-            <li className="rounded border border-border p-3" key={finding.id}>
+            <li className="rounded-lg bg-muted p-3" key={finding.id}>
               <p className="font-medium">{finding.title}</p>
               <p className="text-sm text-muted-foreground">{finding.message}</p>
               {finding.suggestion ? (
@@ -310,7 +310,7 @@ const ArchitectureExplorer = ({
         </ul>
       </section>
 
-      <section className="rounded-md bg-card p-4">
+      <section className="rounded-lg bg-card p-4">
         <h2 className="mb-3 font-semibold">{t('architecture-explorer')}</h2>
         <Tree nodes={payload?.explorer ?? []} base={base} />
       </section>
@@ -320,7 +320,7 @@ const ArchitectureExplorer = ({
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-md bg-card p-4">
+    <div className="rounded-lg bg-card p-4">
       <p className="text-xs uppercase text-muted-foreground">{label}</p>
       <p className="text-2xl font-semibold">{value}</p>
     </div>

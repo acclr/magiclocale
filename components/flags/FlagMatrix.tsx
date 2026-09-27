@@ -59,7 +59,7 @@ const FlagMatrix = ({
           {t('environment-matrix-help')}
         </p>
       </div>
-      <div className="overflow-x-auto rounded-md bg-card">
+      <div className="overflow-x-auto rounded-lg bg-card">
         <table className="table table-sm">
           <thead>
             <tr>

@@ -16,8 +16,25 @@ export type LandingPageDefinition = {
 
 export const landingSite = {
   defaultLocale: 'en',
-  locales: ['en', 'sv', 'dk'],
-  pages: [{ id: 'home', slug: '' }] satisfies LandingPageDefinition[],
+  locales: ['en', 'sv'],
+  pages: [
+    { id: 'home', slug: '' },
+    { id: 'guides', slug: 'guides' },
+    { id: 'compare', slug: 'compare' },
+    { id: 'how-it-works', slug: 'how-it-works' },
+    {
+      id: 'automatic-key-discovery',
+      slug: 'automatic-translation-key-discovery',
+    },
+    { id: 'translation-key-lifecycle', slug: 'translation-key-lifecycle' },
+    { id: 'react-translations', slug: 'react-translations' },
+    { id: 'nextjs-translations', slug: 'nextjs-translations' },
+    { id: 'translation-management', slug: 'translation-management' },
+    { id: 'keykit-vs-lokalise', slug: 'keykit-vs-lokalise' },
+    { id: 'keykit-vs-phrase', slug: 'keykit-vs-phrase' },
+    { id: 'keykit-vs-crowdin', slug: 'keykit-vs-crowdin' },
+    { id: 'keykit-vs-tolgee', slug: 'keykit-vs-tolgee' },
+  ] satisfies LandingPageDefinition[],
 };
 
 export const landingRouting = {

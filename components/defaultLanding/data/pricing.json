@@ -1,41 +1,53 @@
 [
   {
     "id": "free",
+    "name": "Free",
     "amount": "0",
     "currency": "USD",
     "duration": "month",
     "highlight": false,
-    "description": "Evaluate Keykit with a teammate on one project.",
+    "pricePrefix": "",
+    "description": "For side projects, prototypes, and trying Keykit with a real application.",
     "benefits": [
-      { "id": "seats", "text": "2 team members" },
-      { "id": "projects", "text": "1 project · 2 languages" },
-      { "id": "keys", "text": "1,000 source keys" }
+      { "id": "active-keys", "text": "500 active translation keys" },
+      { "id": "languages", "text": "3 languages · 1 project" },
+      { "id": "team", "text": "2 team members · 1 connected source" },
+      { "id": "discovery", "text": "Automatic discovery and deprecation" },
+      { "id": "delivery", "text": "Static delivery and limited live delivery" }
     ]
   },
   {
     "id": "premium",
-    "amount": "12",
+    "name": "Pro",
+    "amount": "29",
     "currency": "USD",
     "duration": "month",
     "highlight": true,
-    "description": "For product teams — priced below Crowdin Pro and Lokalise entry tiers.",
+    "pricePrefix": "",
+    "description": "Everything a software team needs. Unlimited languages and seats.",
     "benefits": [
-      { "id": "seats", "text": "10 team members · 5 projects" },
-      { "id": "locales", "text": "6 languages & 10,000 keys per project" },
-      { "id": "workflow", "text": "Key discovery, AI fill, and review" }
+      { "id": "active-keys", "text": "3,000 active keys included" },
+      { "id": "overage", "text": "+$4 per extra 1,000 active keys" },
+      { "id": "unlimited", "text": "Unlimited languages, projects, and members" },
+      { "id": "sources", "text": "5 connected sources" },
+      { "id": "live-delivery", "text": "1M live requests and static delivery" },
+      { "id": "deprecated", "text": "Deprecated and archived keys are free" }
     ]
   },
   {
     "id": "enterprise",
-    "amount": "49",
+    "name": "Enterprise",
+    "amount": "299",
     "currency": "USD",
     "duration": "month",
     "highlight": false,
-    "description": "Unlimited projects, languages, keys, and seats for larger apps.",
+    "pricePrefix": "From",
+    "description": "Governance, security, support, and higher committed capacity.",
     "benefits": [
-      { "id": "locales", "text": "Unlimited languages & source keys" },
-      { "id": "envs", "text": "5 environments & unlimited flags" },
-      { "id": "support", "text": "Priority AI translation usage" }
+      { "id": "active-keys", "text": "25,000+ active keys" },
+      { "id": "unlimited", "text": "Unlimited languages, projects, members, and sources" },
+      { "id": "security", "text": "SAML SSO, SCIM, and audit logs" },
+      { "id": "assistance", "text": "SLA, onboarding, and migration help" }
     ]
   }
 ]

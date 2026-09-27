@@ -55,11 +55,11 @@ const EnvironmentSettings = ({
             {t('environments-help')}
           </p>
         </div>
-        <ul className="divide-y divide-base-300 rounded-lg border border-border">
+        <ul className="space-y-2">
           {environments.environments.map((environment) => (
             <li
               key={environment.id}
-              className="flex flex-wrap items-center justify-between gap-3 px-4 py-3"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-4 py-3"
             >
               <div>
                 <p className="font-medium">{environment.name}</p>

@@ -79,7 +79,7 @@ const UnlockAccount = ({
   };
 
   return (
-    <div className="rounded-md bg-card p-6">
+    <div className="rounded-lg bg-card p-6">
       {message.text && message.status && (
         <Alert status={message.status}>{message.text}</Alert>
       )}

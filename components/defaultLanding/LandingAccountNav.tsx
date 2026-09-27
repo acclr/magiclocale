@@ -3,14 +3,16 @@ import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 
 import { LetterAvatar } from '@/components/shared';
-import { Button } from '@/components/ui/button';
+
+const pillClass =
+  'rounded-lg bg-primary px-4 py-1.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/80';
 
 const LandingAccountNav = () => {
   const { data: session, status } = useSession();
   const { translate } = useKeykit();
 
   if (status === 'loading') {
-    return <div className="h-8 w-8 rounded-full bg-muted" aria-hidden />;
+    return <div className="h-8 w-8 rounded-full bg-elevated" aria-hidden />;
   }
 
   if (status === 'authenticated' && session?.user) {
@@ -18,11 +20,9 @@ const LandingAccountNav = () => {
 
     return (
       <>
-        <Button asChild size="sm">
-          <Link href="/dashboard">
-            {translate('landing.nav.dashboard', 'Dashboard')}
-          </Link>
-        </Button>
+        <Link href="/dashboard" className={pillClass}>
+          {translate('landing.nav.dashboard', 'Dashboard')}
+        </Link>
         <span
           role="img"
           title={label}
@@ -36,21 +36,15 @@ const LandingAccountNav = () => {
 
   return (
     <>
-      <Button
-        asChild
-        variant="ghost"
-        size="sm"
-        className="hidden sm:inline-flex"
+      <Link
+        href="/auth/login"
+        className="hidden text-sm text-muted-foreground transition-colors hover:text-foreground sm:inline"
       >
-        <Link href="/auth/login">
-          {translate('landing.nav.sign-in', 'Sign in')}
-        </Link>
-      </Button>
-      <Button asChild size="sm">
-        <Link href="/auth/join">
-          {translate('landing.nav.sign-up', 'Sign up')}
-        </Link>
-      </Button>
+        {translate('landing.nav.sign-in', 'Sign in')}
+      </Link>
+      <Link href="/auth/join" className={pillClass}>
+        {translate('landing.nav.sign-up', 'Sign up')}
+      </Link>
     </>
   );
 };

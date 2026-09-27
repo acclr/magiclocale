@@ -297,6 +297,35 @@ export class PrismaTranslationRepository
     return translationKey ? toKey(translationKey) : null;
   }
 
+  async findKeysByNames(
+    projectId: string,
+    keys: string[]
+  ): Promise<TranslationKey[]> {
+    if (keys.length === 0) {
+      return [];
+    }
+    const rows = await this.client.translationKey.findMany({
+      where: { projectId, key: { in: keys } },
+    });
+    return rows.map(toKey);
+  }
+
+  async listPresentLocales(
+    environmentId: string,
+    translationKeyIds: string[]
+  ): Promise<Array<{ translationKeyId: string; locale: string }>> {
+    if (translationKeyIds.length === 0) {
+      return [];
+    }
+    return this.client.translation.findMany({
+      where: {
+        environmentId,
+        translationKeyId: { in: translationKeyIds },
+      },
+      select: { translationKeyId: true, locale: true },
+    });
+  }
+
   async createKey(input: Omit<TranslationKey, 'id'>): Promise<TranslationKey> {
     try {
       const key = await this.client.translationKey.create({ data: input });

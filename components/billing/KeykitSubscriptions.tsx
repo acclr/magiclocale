@@ -23,7 +23,8 @@ const KeykitSubscriptions = ({
       <h2 className="card-title text-xl font-medium leading-none tracking-tight">
         {t('subscriptions')}
       </h2>
-      <table className="table w-full border text-sm">
+      <div className="overflow-hidden rounded-lg bg-card">
+      <table className="table w-full text-sm">
         <thead>
           <tr>
             <th>{t('plan')}</th>
@@ -41,6 +42,7 @@ const KeykitSubscriptions = ({
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 };

@@ -47,9 +47,10 @@ function MyApp({ Component, pageProps, router }: AppPropsWithLayout) {
           toastOptions={{
             duration: 4000,
             style: {
-              background: '#141416',
-              color: '#ececee',
-              border: '1px solid #2e2e32',
+              background: '#161618',
+              color: '#f4f4f5',
+              borderRadius: '16px',
+              boxShadow: '0 18px 50px rgb(0 0 0 / 0.45)',
             },
           }}
         />

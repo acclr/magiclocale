@@ -10,7 +10,7 @@ const Header = () => {
   const { openMobileSidebar } = useSidebarLayout();
 
   return (
-    <div className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 border-b border-sidebar-border bg-sidebar px-4 text-sidebar-foreground lg:hidden">
+    <div className="sticky top-0 z-40 flex h-14 shrink-0 items-center gap-3 bg-background/80 px-4 text-sidebar-foreground backdrop-blur-xl lg:hidden">
       <Button
         type="button"
         variant="ghost"

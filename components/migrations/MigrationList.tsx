@@ -87,7 +87,7 @@ const MigrationList = ({
 
       {canEdit ? (
         <form
-          className="space-y-3 rounded-md bg-card p-4"
+          className="space-y-3 rounded-lg bg-card p-4"
           onSubmit={(event) =>
             void create(event).catch((error) => toast.error(error.message))
           }
@@ -124,7 +124,7 @@ const MigrationList = ({
 
       <ul className="space-y-3">
         {(data?.data ?? []).map((migration) => (
-          <li className="rounded-md bg-card p-4" key={migration.id}>
+          <li className="rounded-lg bg-card p-4" key={migration.id}>
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-medium">{migration.name}</p>
@@ -168,7 +168,7 @@ const MigrationList = ({
       </ul>
 
       {canEdit ? (
-        <section className="space-y-2 rounded-md bg-card p-4">
+        <section className="space-y-2 rounded-lg bg-card p-4">
           <h2 className="font-medium">{t('import-json')}</h2>
           <textarea
             className="textarea textarea-bordered w-full font-mono text-xs"

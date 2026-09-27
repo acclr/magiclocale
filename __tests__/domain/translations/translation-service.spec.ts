@@ -344,6 +344,22 @@ describe('TranslationService', () => {
     });
   });
 
+  it('does not translate again when a synced key is already complete', async () => {
+    const { service, translator } = setup();
+    translator.calls.length = 0;
+
+    await expect(
+      service.syncFromSource(PROJECT_ID, ENV_ID, [
+        { key: 'settings.save', sourceText: 'Save changes' },
+      ])
+    ).resolves.toMatchObject({
+      createdKeys: 0,
+      filled: 0,
+      sourceChanges: 0,
+    });
+    expect(translator.calls).toEqual([]);
+  });
+
   it('creates source and target rows for new synced keys', async () => {
     const { service, repository } = setup();
     const result = await service.syncFromSource(PROJECT_ID, ENV_ID, [

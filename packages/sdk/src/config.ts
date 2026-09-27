@@ -53,7 +53,7 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
     catalogs,
     refreshIntervalMs: nonNegativeInteger(
       config.refreshIntervalMs,
-      canPull ? 30_000 : 0,
+      0,
       'refreshIntervalMs'
     ),
     debounceMs: positiveInteger(config.debounceMs, 250, 'debounceMs'),

@@ -1,10 +1,8 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
-import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
 import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
-import { getEnvironmentService, getVersionService } from '@/lib/translations';
-import { toPublicFlagPayload } from '@/lib/flags/flag-payload';
+import { servePublicFlags } from '@/lib/api/serve-public-content';
 
 /**
  * Ruleset for one environment, evaluated locally by the SDK.
@@ -33,33 +31,21 @@ export default async function handler(
   }
 
   try {
-    const { environmentRef } = await authenticatePublicSdkApiRequest(
-      req.headers.authorization,
+    const served = await servePublicFlags({
+      authorization: req.headers.authorization,
       projectId,
-      getSingleQueryValue(req.query.environment)
-    );
-
-    const environment = await getEnvironmentService().resolve(
-      projectId,
-      environmentRef
-    );
-    const { flags, version } = await getVersionService().resolveFlags(
-      environment.id
-    );
-    const payload = toPublicFlagPayload(flags);
-
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader(
-      'ETag',
-      `"${environment.slug}:${version ? version.number : 'draft'}:flags"`
-    );
-    return res.status(200).json({
-      projectId,
-      environment: environment.slug,
-      version: version ? String(version.number) : 'draft',
-      versionNumber: version?.number ?? null,
-      flags: payload,
+      environment: getSingleQueryValue(req.query.environment),
+      ifNoneMatch: req.headers['if-none-match'],
     });
+    if (served.kind === 'error') {
+      return res.status(served.status).json({ error: served.error });
+    }
+    res.setHeader('Cache-Control', served.cacheControl);
+    res.setHeader('ETag', served.etag);
+    if (served.kind === 'not-modified') {
+      return res.status(304).end();
+    }
+    return res.status(200).json(served.body);
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
       return res.status(error.status).json({ error: error.message });

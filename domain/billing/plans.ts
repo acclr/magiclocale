@@ -17,25 +17,28 @@ export type KeykitPlan = {
   features: string[];
 };
 
-/** Free: small teams trying Keykit (2 seats — product requirement). */
+/** Free: a real product trial, limited by product size. */
 export const FREE_MAX_TEAM_MEMBERS = 2;
 export const FREE_MAX_PROJECTS = 1;
-export const FREE_MAX_LOCALES = 2;
-export const FREE_MAX_SOURCE_KEYS = 1_000;
+export const FREE_MAX_LOCALES = 3;
+export const FREE_MAX_SOURCE_KEYS = 500;
 export const FREE_MAX_ENVIRONMENTS = 1;
 export const FREE_MAX_FLAGS = 10;
 
-/** Premium: below Crowdin Pro ($50) and Lokalise entry (~$144); key-based like Lokalise. */
-export const PREMIUM_MAX_TEAM_MEMBERS = 10;
-export const PREMIUM_MAX_PROJECTS = 5;
-export const PREMIUM_MAX_LOCALES = 6;
-export const PREMIUM_MAX_SOURCE_KEYS = 10_000;
-export const PREMIUM_MAX_ENVIRONMENTS = 2;
-export const PREMIUM_MAX_FLAGS = 50;
-export const PREMIUM_AMOUNT_CENTS = 1_200;
+/**
+ * Pro (`premium` id, kept so existing Stripe price env vars stay valid).
+ * Languages, projects, and seats are unlimited. Active keys are the meter.
+ */
+export const PREMIUM_MAX_TEAM_MEMBERS = null;
+export const PREMIUM_MAX_PROJECTS = null;
+export const PREMIUM_MAX_LOCALES = null;
+export const PREMIUM_MAX_SOURCE_KEYS = 3_000;
+export const PREMIUM_MAX_ENVIRONMENTS = null;
+export const PREMIUM_MAX_FLAGS = null;
+export const PREMIUM_AMOUNT_CENTS = 2_900;
 
-export const ENTERPRISE_MAX_ENVIRONMENTS = 5;
-export const ENTERPRISE_AMOUNT_CENTS = 4_900;
+export const ENTERPRISE_MAX_ENVIRONMENTS = null;
+export const ENTERPRISE_AMOUNT_CENTS = 29_900;
 
 /** @deprecated Use PREMIUM_* — kept for tests referencing old names. */
 export const STARTER_MAX_LOCALES = PREMIUM_MAX_LOCALES;
@@ -55,18 +58,19 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxEnvironments: FREE_MAX_ENVIRONMENTS,
     maxFlags: FREE_MAX_FLAGS,
     description:
-      'For side projects and evaluation — 2 teammates, 1 project, and core workflow.',
+      'For side projects, prototypes, and trying Keykit with a real application.',
     features: [
+      '500 active translation keys',
+      '3 languages',
+      '1 project · 1 connected source',
       '2 team members',
-      '1 translation project',
-      'Up to 2 languages per project',
-      '1,000 source keys & 1 environment',
-      '10 feature flags',
+      'Automatic key discovery and deprecation',
+      'Static delivery and limited live delivery',
     ],
   },
   premium: {
     id: 'premium',
-    name: 'Premium',
+    name: 'Pro',
     amountCents: PREMIUM_AMOUNT_CENTS,
     interval: 'month',
     maxTeamMembers: PREMIUM_MAX_TEAM_MEMBERS,
@@ -76,13 +80,14 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxEnvironments: PREMIUM_MAX_ENVIRONMENTS,
     maxFlags: PREMIUM_MAX_FLAGS,
     description:
-      '$12/month for growing product teams — well under typical TMS entry pricing.',
+      'Everything a software team needs. Unlimited languages and seats. Pay for active keys, not people.',
     features: [
-      '10 team members',
-      '5 translation projects',
-      'Up to 6 languages per project',
-      '10,000 source keys per project',
-      '2 environments & 50 feature flags',
+      '3,000 active keys included',
+      'Unlimited languages, projects, and team members',
+      '5 connected sources',
+      'Live and static delivery',
+      'Review workflow and translation history',
+      'Deprecated and archived keys are free',
     ],
   },
   enterprise: {
@@ -97,13 +102,13 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxEnvironments: ENTERPRISE_MAX_ENVIRONMENTS,
     maxFlags: null,
     description:
-      '$49/month for larger apps — unlimited projects, languages, keys, and seats.',
+      'From $299/month for governance, security, support, and higher committed capacity.',
     features: [
-      'Unlimited team members & projects',
-      'Unlimited languages & source keys',
-      '5 environments per project',
-      'Unlimited feature flags',
-      'Priority usage for AI translation',
+      '25,000+ active keys',
+      'Unlimited languages, projects, members, and sources',
+      'SAML SSO, SCIM, and audit logs',
+      'Custom delivery and AI allowance',
+      'SLA and migration assistance',
     ],
   },
 };
@@ -130,7 +135,7 @@ export function canAddProjectLocale(
 export function localeLimitMessage(maxLocales: number): string {
   return (
     `Your plan includes up to ${maxLocales} languages per project. ` +
-    `Upgrade from Free or move to Enterprise for more languages.`
+    `Upgrade to Pro for unlimited languages.`
   );
 }
 
@@ -144,7 +149,7 @@ export function canAddEnvironment(
 export function environmentLimitMessage(maxEnvironments: number): string {
   return (
     `This plan includes up to ${maxEnvironments} environments per project. ` +
-    'Upgrade to Enterprise for more environments.'
+    'Upgrade to Pro or Enterprise for more environments.'
   );
 }
 
@@ -158,28 +163,28 @@ export function canAddFlag(
 export function flagLimitMessage(maxFlags: number): string {
   return (
     `Your plan includes up to ${maxFlags} feature flags per project. ` +
-    'Upgrade to Enterprise for unlimited flags.'
+    'Upgrade to Pro or Enterprise for more flags.'
   );
 }
 
 export function teamMemberLimitMessage(maxMembers: number): string {
   return (
     `Your plan includes up to ${maxMembers} team members ` +
-    '(including pending invitations). Upgrade to Premium or Enterprise for more seats.'
+    '(including pending invitations). Upgrade to Pro or Enterprise for unlimited seats.'
   );
 }
 
 export function projectLimitMessage(maxProjects: number): string {
   return (
     `Your plan includes up to ${maxProjects} translation project(s). ` +
-    'Upgrade to Premium or Enterprise for more projects.'
+    'Upgrade to Pro or Enterprise for unlimited projects.'
   );
 }
 
 export function sourceKeyLimitMessage(maxKeys: number): string {
   return (
     `This project has reached the ${maxKeys.toLocaleString()} source key limit on your plan. ` +
-    'Upgrade to Premium or Enterprise for a higher cap.'
+    'Upgrade to Pro or Enterprise for a higher active-key allowance.'
   );
 }
 

@@ -2,6 +2,15 @@ import type { DetectedKeyInput, KeyLifecycle, KeyMeta, KeyType } from './types';
 
 export interface KeyCatalogWriter {
   recordDetection(input: DetectedKeyInput): Promise<KeyMeta>;
+  /**
+   * Marks keys seen again without inserting rows or rewriting fresh detections.
+   * Missing keys are left untouched so the caller can still create them.
+   */
+  touchDetections?(input: {
+    projectId: string;
+    type: KeyType;
+    keys: string[];
+  }): Promise<void>;
   upsertDefinition(input: {
     projectId: string;
     type: KeyType;

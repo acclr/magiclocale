@@ -95,13 +95,13 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
       </div>
 
       {sourceText ? (
-        <section className="rounded-md bg-card p-4">
+        <section className="rounded-lg bg-card p-4">
           <h2 className="mb-2 font-semibold">{t('source-text')}</h2>
           <p className="text-sm">{sourceText}</p>
         </section>
       ) : null}
 
-      <section className="space-y-3 rounded-md bg-card p-4">
+      <section className="space-y-3 rounded-lg bg-card p-4">
         <label className="form-control">
           <span className="label-text">{t('owner')}</span>
           <input
@@ -146,7 +146,7 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
         ) : null}
       </section>
 
-      <section className="rounded-md bg-card p-4">
+      <section className="rounded-lg bg-card p-4">
         <h2 className="mb-3 font-semibold">{t('source-usages')}</h2>
         {usages.length ? (
           <ul className="space-y-1 font-mono text-xs">
@@ -163,12 +163,12 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
         )}
       </section>
 
-      <section className="rounded-md bg-card p-4">
+      <section className="rounded-lg bg-card p-4">
         <h2 className="mb-3 font-semibold">{t('history')}</h2>
         {(history?.data ?? []).length ? (
           <ul className="space-y-2 text-sm">
             {(history?.data ?? []).map((change) => (
-              <li key={change.id} className="rounded border border-border p-2">
+              <li key={change.id} className="rounded-lg bg-muted p-3">
                 <p className="text-xs text-muted-foreground">
                   {new Date(change.createdAt).toLocaleString()} ·{' '}
                   {change.actor ?? 'system'}

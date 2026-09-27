@@ -38,13 +38,8 @@ export type KeykitProviderProps = {
   cookieName?: string;
   onServerRefresh?: () => void;
   /**
-   * Replaces the default locale change (cookie + in-memory bundle reload).
-   * Path-based apps use this to navigate to `/sv` instead of swapping in place.
-   */
-  /**
-   * Return `false` to keep the default behavior: store the locale cookie and
-   * fetch that locale's bundle. Any other return value means the callback
-   * handled the change (for example by navigating).
+   * Return `false` to store the locale cookie and fetch that locale's bundle.
+   * Any other return value means the callback fully handled the change.
    */
   onSetLocale?: (
     locale: string

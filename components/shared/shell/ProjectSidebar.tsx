@@ -15,7 +15,6 @@ import { useRouter } from 'next/router';
 
 import EnvironmentSwitcher from '@/components/environments/EnvironmentSwitcher';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { useProjectEnvironment } from 'hooks/useProjectEnvironment';
 import { useProjectEnvironments } from 'hooks/useProjectVersions';
 import useTeamProjects from 'hooks/useTeamProjects';
@@ -97,7 +96,7 @@ const ProjectSidebar = ({
   ];
 
   return (
-    <div className="flex h-full grow flex-col gap-y-5 overflow-y-auto bg-sidebar-accent px-4 pb-4 text-sidebar-accent-foreground">
+    <div className="flex h-full grow flex-col gap-y-5 overflow-y-auto bg-transparent px-4 pb-4 text-sidebar-accent-foreground">
       <div className="flex flex-col gap-3 pt-6">
         {variant === 'mobile' && (
           <Button
@@ -132,9 +131,7 @@ const ProjectSidebar = ({
           />
         )}
 
-        <Separator />
-
-        <nav className="flex flex-1 flex-col -mt-1.5">
+        <nav className="flex flex-1 flex-col">
           <NavigationItems menus={menus} tone="muted" />
         </nav>
       </div>

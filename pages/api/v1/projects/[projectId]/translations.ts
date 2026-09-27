@@ -3,13 +3,13 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
 import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
 import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
+import { servePublicTranslation } from '@/lib/api/serve-public-content';
 import {
   getEnvironmentService,
   getTranslationRepository,
   getVersionService,
 } from '@/lib/translations';
 import {
-  buildTranslationBundle,
   buildTranslationCatalog,
   type TranslationBundleFailure,
 } from '@/lib/translations/translation-bundle';
@@ -56,57 +56,52 @@ export default async function handler(
   }
 
   try {
-    const { environmentRef } = await authenticatePublicSdkApiRequest(
-      req.headers.authorization,
-      projectId,
-      getSingleQueryValue(req.query.environment)
-    );
-
-    const dependencies = {
-      repository: getTranslationRepository(),
-      environmentService: getEnvironmentService(),
-      versionService: getVersionService(),
-    };
+    const environment = getSingleQueryValue(req.query.environment);
 
     if (!locale) {
-      const catalog = await buildTranslationCatalog(dependencies, {
+      const { environmentRef } = await authenticatePublicSdkApiRequest(
+        req.headers.authorization,
         projectId,
-        environment: environmentRef,
-        version: requestedVersion,
-      });
+        environment
+      );
+      const catalog = await buildTranslationCatalog(
+        {
+          repository: getTranslationRepository(),
+          environmentService: getEnvironmentService(),
+          versionService: getVersionService(),
+        },
+        {
+          projectId,
+          environment: environmentRef,
+          version: requestedVersion,
+        }
+      );
       if (!catalog.success) {
         return res
           .status(FAILURE_STATUS[catalog.reason])
           .json({ error: FAILURE_MESSAGE[catalog.reason] });
       }
-      res.setHeader('Cache-Control', 'no-cache');
+      res.setHeader('Cache-Control', 'private, no-cache');
       return res.status(200).json(catalog.catalog);
     }
 
-    const result = await buildTranslationBundle(dependencies, {
+    const served = await servePublicTranslation({
+      authorization: req.headers.authorization,
       projectId,
       locale,
-      environment: environmentRef,
+      environment,
       version: requestedVersion,
+      ifNoneMatch: req.headers['if-none-match'],
     });
-    if (!result.success) {
-      return res
-        .status(FAILURE_STATUS[result.reason])
-        .json({ error: FAILURE_MESSAGE[result.reason] });
+    if (served.kind === 'error') {
+      return res.status(served.status).json({ error: served.error });
     }
-
-    // A pinned version is immutable, so it can be cached hard. The live
-    // pointer can move at any publish, so it must always be revalidated.
-    if (requestedVersion !== null && result.bundle.versionNumber !== null) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    } else {
-      res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Cache-Control', served.cacheControl);
+    res.setHeader('ETag', served.etag);
+    if (served.kind === 'not-modified') {
+      return res.status(304).end();
     }
-    res.setHeader(
-      'ETag',
-      `"${result.bundle.environment}:${result.bundle.version}:${locale}"`
-    );
-    return res.status(200).json(result.bundle);
+    return res.status(200).json(served.body);
   } catch (error) {
     if (error instanceof PublicSdkAuthError) {
       return res.status(error.status).json({ error: error.message });

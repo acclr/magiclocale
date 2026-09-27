@@ -32,6 +32,8 @@ const typeFromPrisma: Record<PrismaKeyTypeValue, KeyType> = {
   FEATURE_FLAG: 'feature-flag',
 };
 
+const DETECTION_TOUCH_MS = 60 * 60 * 1000;
+
 const lifecycleToPrisma: Record<KeyLifecycle, PrismaKeyLifecycleValue> = {
   active: 'ACTIVE',
   unused: 'UNUSED',
@@ -295,11 +297,49 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
     return toMeta(row);
   }
 
+  async touchDetections(input: {
+    projectId: string;
+    type: KeyType;
+    keys: string[];
+  }): Promise<void> {
+    const keys = Array.from(
+      new Set(input.keys.map((key) => key.trim()).filter(Boolean))
+    );
+    if (keys.length === 0) {
+      return;
+    }
+
+    const staleBefore = new Date(Date.now() - DETECTION_TOUCH_MS);
+    await this.client.keyMeta.updateMany({
+      where: {
+        projectId: input.projectId,
+        type: typeToPrisma[input.type],
+        key: { in: keys },
+        lifecycle: { notIn: ['DEPRECATED', 'ARCHIVED'] },
+        OR: [{ lastDetectedAt: null }, { lastDetectedAt: { lt: staleBefore } }],
+      },
+      data: {
+        lastDetectedAt: new Date(),
+        lifecycle: 'ACTIVE',
+      },
+    });
+  }
+
   async recordDetection(input: DetectedKeyInput): Promise<KeyMeta> {
+    const key = input.key.trim();
+    const existing = await this.findByKey(input.projectId, input.type, key);
+    if (
+      existing?.lastDetectedAt &&
+      Date.now() - existing.lastDetectedAt.getTime() < DETECTION_TOUCH_MS &&
+      !input.usage?.file
+    ) {
+      return existing;
+    }
+
     const meta = await this.upsert({
       projectId: input.projectId,
       type: input.type,
-      key: input.key,
+      key,
     });
     const usage = input.usage;
     if (usage?.file) {

@@ -14,7 +14,7 @@ type LandingRouteProps = {
 
 const LandingRoute: NextPageWithLayout<LandingRouteProps> = ({ keykit }) => {
   return (
-    <KeykitProvider key={keykit.locale} keykit={keykit}>
+    <KeykitProvider keykit={keykit}>
       <Databuddy
         clientId={DATABUDDY_CLIENT_ID}
         disabled={process.env.NODE_ENV !== 'production'}

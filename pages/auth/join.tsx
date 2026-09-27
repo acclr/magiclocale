@@ -50,7 +50,7 @@ const Signup: NextPageWithLayout<
       <Head>
         <title>{t('sign-up-title')}</title>
       </Head>
-      <div className="rounded-md bg-card p-6">
+      <div className="rounded-lg bg-card p-6">
         <div className="flex gap-2 flex-wrap">
           {authProviders.github && <GithubButton />}
           {authProviders.google && <GoogleButton />}

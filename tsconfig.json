@@ -32,5 +32,5 @@
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],
-  "exclude": ["node_modules", "packages/sdk", "packages/cli"],
+  "exclude": ["node_modules", "packages/sdk", "packages/cli", "_concept"],
 }

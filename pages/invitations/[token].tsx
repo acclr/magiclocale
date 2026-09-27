@@ -49,7 +49,7 @@ const AcceptTeamInvitation: NextPageWithLayout = () => {
       <Head>
         <title>{`${t('invitation-title')} ${invitation.team.name}`}</title>
       </Head>
-      <div className="rounded-md bg-card p-6">
+      <div className="rounded-lg bg-card p-6">
         <div className="flex flex-col items-center space-y-6">
           <h2 className="font-bold">
             {`${invitation.team.name} ${t('team-invite')}`}

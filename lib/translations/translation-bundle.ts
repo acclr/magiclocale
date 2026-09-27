@@ -31,7 +31,9 @@ export type TranslationBundleResult =
 export type TranslationBundleDependencies = {
   repository: TranslationRepository;
   environmentService: EnvironmentService;
-  versionService: Pick<VersionService, 'resolveLocaleBundle'>;
+  versionService: Pick<VersionService, 'resolveLocaleBundle'> & {
+    resolveLocaleBundles?: VersionService['resolveLocaleBundles'];
+  };
 };
 
 export type TranslationBundleQuery = {
@@ -155,10 +157,10 @@ export async function buildTranslationCatalog(
   let versionNumber: number | null = null;
   let publishedAt: string | null = null;
 
-  for (const locale of project.locales) {
-    const resolved = await dependencies.versionService.resolveLocaleBundle(
+  if (dependencies.versionService.resolveLocaleBundles) {
+    const resolved = await dependencies.versionService.resolveLocaleBundles(
       environmentId,
-      locale,
+      project.locales,
       query.version,
       { workingCopy: query.workingCopy }
     );
@@ -169,10 +171,32 @@ export async function buildTranslationCatalog(
     ) {
       return { success: false, reason: 'version-not-found' };
     }
-    locales[locale] = resolved.bundle?.translations ?? {};
+    for (const locale of project.locales) {
+      locales[locale] = resolved.bundles.get(locale)?.translations ?? {};
+    }
     version = resolved.version ? String(resolved.version.number) : 'draft';
     versionNumber = resolved.version?.number ?? null;
     publishedAt = resolved.version?.publishedAt?.toISOString() ?? null;
+  } else {
+    for (const locale of project.locales) {
+      const resolved = await dependencies.versionService.resolveLocaleBundle(
+        environmentId,
+        locale,
+        query.version,
+        { workingCopy: query.workingCopy }
+      );
+      if (
+        query.version !== undefined &&
+        query.version !== null &&
+        !resolved.version
+      ) {
+        return { success: false, reason: 'version-not-found' };
+      }
+      locales[locale] = resolved.bundle?.translations ?? {};
+      version = resolved.version ? String(resolved.version.number) : 'draft';
+      versionNumber = resolved.version?.number ?? null;
+      publishedAt = resolved.version?.publishedAt?.toISOString() ?? null;
+    }
   }
 
   return {

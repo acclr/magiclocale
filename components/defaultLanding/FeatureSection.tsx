@@ -1,33 +1,8 @@
-import type { LucideIcon } from 'lucide-react';
-import {
-  BotIcon,
-  CreditCardIcon,
-  GlobeIcon,
-  LayersIcon,
-  LayoutDashboardIcon,
-  SparklesIcon,
-} from 'lucide-react';
-
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { cn } from 'cn';
+import { useKeykit } from '@keykithq/sdk/react';
 
 import features from './data/features.json';
 import LandingSection from './LandingSection';
-import { useKeykit } from '@keykithq/sdk/react';
-
-const featureIcons: Record<string, LucideIcon> = {
-  discovery: SparklesIcon,
-  dashboard: LayoutDashboardIcon,
-  sdk: GlobeIcon,
-  environments: LayersIcon,
-  'ai-assist': BotIcon,
-  billing: CreditCardIcon,
-};
+import Reveal from './Reveal';
 
 const FeatureSection = () => {
   const { translate } = useKeykit();
@@ -41,40 +16,26 @@ const FeatureSection = () => {
         'landing.features.subtitle',
         'Everything you need to localize application copy — including this marketing site.'
       )}
-      className="border-t border-border/40 bg-muted/15"
     >
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature) => {
-          const Icon = featureIcons[feature.id] ?? SparklesIcon;
-          return (
-            <Card
-              key={feature.id}
-              className="border-border/70 bg-card/80 transition-colors hover:border-primary/35 hover:bg-card"
-            >
-              <CardHeader className="gap-3">
-                <div
-                  className={cn(
-                    'flex size-10 items-center justify-center rounded-lg border border-border/60 bg-muted/50 text-primary'
-                  )}
-                >
-                  <Icon className="size-5" aria-hidden />
-                </div>
-                <CardTitle className="text-base">
-                  {translate(
-                    `landing.features.${feature.id}.name`,
-                    feature.name
-                  )}
-                </CardTitle>
-                <CardDescription className="text-sm leading-relaxed">
-                  {translate(
-                    `landing.features.${feature.id}.description`,
-                    feature.description
-                  )}
-                </CardDescription>
-              </CardHeader>
-            </Card>
-          );
-        })}
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map((feature, index) => (
+          <Reveal key={feature.id} delay={index * 60}>
+            <div className="flex h-full flex-col rounded-xl bg-surface p-7 transition-colors hover:bg-elevated">
+              <span className="font-mono text-xs text-muted-foreground">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <h3 className="mt-5 text-lg font-semibold tracking-tight text-foreground">
+                {translate(`landing.features.${feature.id}.name`, feature.name)}
+              </h3>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                {translate(
+                  `landing.features.${feature.id}.description`,
+                  feature.description
+                )}
+              </p>
+            </div>
+          </Reveal>
+        ))}
       </div>
     </LandingSection>
   );

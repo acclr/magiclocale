@@ -207,7 +207,7 @@ const FlagDrawer = ({
           </div>
           {rules.map((rule, index) => (
             <div
-              className="grid gap-2 rounded-lg border border-border p-3 md:grid-cols-2"
+              className="grid gap-2 rounded-lg bg-muted p-3 md:grid-cols-2"
               key={`${rule.attribute}-${index}`}
             >
               <input

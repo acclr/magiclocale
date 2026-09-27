@@ -1,21 +1,12 @@
 import Link from 'next/link';
 import { CheckIcon } from 'lucide-react';
 
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import { cn } from 'cn';
+import { useKeykit } from '@keykithq/sdk/react';
 
 import plans from './data/pricing.json';
 import LandingSection from './LandingSection';
-import { useKeykit } from '@keykithq/sdk/react';
+import Reveal from './Reveal';
 
 const PricingSection = () => {
   const { translate } = useKeykit();
@@ -24,33 +15,42 @@ const PricingSection = () => {
     <LandingSection
       id="pricing"
       eyebrow={translate('landing.pricing.eyebrow', 'Plans')}
-      title={translate('landing.pricing.title', 'Simple monthly pricing')}
+      title={translate(
+        'landing.pricing.headline',
+        'Pay for what your product uses'
+      )}
       description={translate(
-        'landing.pricing.subtitle',
-        'Start free with a teammate. Upgrade to Premium or Enterprise as you grow.'
+        'landing.pricing.lead',
+        'Unlimited languages and team members on Pro. Active keys are the meter. Deprecated and archived keys never count.'
       )}
     >
-      <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
-        {plans.map((plan) => (
-          <Card
-            key={plan.id}
-            className={cn(
-              'relative flex flex-col border-border/70 bg-card/90',
-              plan.highlight &&
-                'border-primary/50 shadow-lg shadow-primary/10 ring-1 ring-primary/25'
-            )}
-          >
-            {plan.highlight ? (
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2">
-                {translate('landing.pricing.popular', 'Popular')}
-              </Badge>
-            ) : null}
-            <CardHeader className="gap-2 pb-2">
-              <CardTitle className="font-heading text-lg capitalize">
-                {translate(`landing.pricing.${plan.id}.name`, plan.id)}
-              </CardTitle>
-              <div className="flex items-baseline gap-1">
-                <span className="font-heading text-4xl font-semibold tracking-tight">
+      <div className="mx-auto w-full grid gap-3 md:grid-cols-3">
+        {plans.map((plan, index) => (
+          <Reveal key={plan.id} delay={index * 60}>
+            <div
+              className={cn(
+                'flex h-full flex-col rounded-xl p-7',
+                plan.highlight ? 'bg-elevated' : 'bg-surface'
+              )}
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-lg font-semibold tracking-tight text-foreground">
+                  {translate(`landing.pricing.${plan.id}.label`, plan.name)}
+                </h3>
+                {plan.highlight ? (
+                  <span className="rounded-lg bg-primary/15 px-2.5 py-0.5 font-mono text-[10px] text-primary">
+                    {translate('landing.pricing.popular', 'Popular')}
+                  </span>
+                ) : null}
+              </div>
+              <div className="mt-5 flex items-baseline gap-1">
+                <span className="text-4xl font-semibold tracking-tight text-foreground">
+                  {plan.pricePrefix
+                    ? `${translate(
+                        `landing.pricing.${plan.id}.prefix`,
+                        plan.pricePrefix
+                      )} `
+                    : null}
                   ${plan.amount}
                 </span>
                 <span className="text-sm text-muted-foreground">
@@ -61,15 +61,13 @@ const PricingSection = () => {
                   )}
                 </span>
               </div>
-              <CardDescription className="text-sm leading-relaxed">
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                 {translate(
-                  `landing.pricing.${plan.id}.description`,
+                  `landing.pricing.${plan.id}.summary`,
                   plan.description
                 )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1">
-              <ul className="space-y-3">
+              </p>
+              <ul className="mt-6 flex-1 space-y-3">
                 {plan.benefits.map((benefit) => (
                   <li key={benefit.id} className="flex gap-2 text-sm">
                     <CheckIcon
@@ -85,19 +83,19 @@ const PricingSection = () => {
                   </li>
                 ))}
               </ul>
-            </CardContent>
-            <CardFooter className="pt-2">
-              <Button
-                asChild
-                className="w-full"
-                variant={plan.highlight ? 'default' : 'outline'}
+              <Link
+                href="/auth/join"
+                className={cn(
+                  'mt-8 inline-flex w-full items-center justify-center rounded-lg px-6 py-2.5 text-sm font-semibold transition-colors',
+                  plan.highlight
+                    ? 'bg-primary text-primary-foreground hover:bg-primary/80'
+                    : 'bg-background/60 text-foreground hover:bg-background'
+                )}
               >
-                <Link href="/auth/join">
-                  {translate('landing.pricing.get-started', 'Get started')}
-                </Link>
-              </Button>
-            </CardFooter>
-          </Card>
+                {translate('landing.pricing.get-started', 'Get started')}
+              </Link>
+            </div>
+          </Reveal>
         ))}
       </div>
     </LandingSection>

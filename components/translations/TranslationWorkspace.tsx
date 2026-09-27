@@ -277,7 +277,7 @@ const TranslationWorkspace = ({
           </button>
         </header>
 
-        <div className="hidden flex flex-wrap items-end gap-3 rounded-md bg-card p-3">
+        <div className="hidden flex flex-wrap items-end gap-3 rounded-lg bg-card p-3">
           {canUpdateProject && (
             <form className="flex items-end gap-2" onSubmit={addLocale}>
               <label className="form-control min-w-64">
@@ -345,7 +345,7 @@ const TranslationWorkspace = ({
         </div>
 
         {canEdit && (
-          <div className="flex hidden flex-wrap items-end gap-3 rounded-md bg-card p-3">
+          <div className="flex hidden flex-wrap items-end gap-3 rounded-lg bg-card p-3">
             <p className="w-full text-sm text-muted-foreground">
               {t('retranslate-help')}
             </p>
@@ -389,7 +389,7 @@ const TranslationWorkspace = ({
         )}
 
         {canEdit && (
-          <div className="rounded-md bg-card p-3 text-sm text-muted-foreground">
+          <div className="rounded-lg bg-card p-3 text-sm text-muted-foreground">
             {t('translation-queue-help')}
           </div>
         )}
@@ -417,9 +417,9 @@ const TranslationWorkspace = ({
           </nav>
         </section>
 
-        <div className="rounded-[8px] overflow-hidden relative border border-[#dddddd22] bg-card">
-          <div className="flex w-full max-w-full relative overflow-auto">
-            <table className="table-pin-rows min-w-max table-pin-cols table [&_td]:border-l [&_td]:border-[#ffffff11] [&_th]:border-l [&_th]:border-[#ffffff11] [&_th:first-child]:border-l-0">
+        <div className="relative overflow-hidden rounded-lg bg-card">
+          <div className="relative flex w-full max-w-full overflow-auto">
+            <table className="table-pin-rows table-pin-cols table min-w-max">
               <thead className="sticky top-0">
                 <tr>
                   {canEdit && (

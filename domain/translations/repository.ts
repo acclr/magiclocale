@@ -30,6 +30,15 @@ export interface TranslationRepository extends ProjectLocaleRepository {
   listKeys(projectId: string): Promise<TranslationKey[]>;
   getKey(id: string): Promise<TranslationKey | null>;
   findKeyByName(projectId: string, key: string): Promise<TranslationKey | null>;
+  findKeysByNames(
+    projectId: string,
+    keys: string[]
+  ): Promise<TranslationKey[]>;
+  /** Locales that already have a cell, without loading the cell values. */
+  listPresentLocales(
+    environmentId: string,
+    translationKeyIds: string[]
+  ): Promise<Array<{ translationKeyId: string; locale: string }>>;
   createKey(input: Omit<TranslationKey, 'id'>): Promise<TranslationKey>;
   updateKeySourceText(id: string, sourceText: string): Promise<TranslationKey>;
   renameKey(id: string, key: string): Promise<TranslationKey>;

@@ -35,7 +35,7 @@ const Drawer = () => {
                   />
                 </button>
               </div>
-              <div className="flex w-full grow flex-col overflow-hidden border-r border-sidebar-border bg-sidebar pb-4">
+              <div className="flex w-full grow flex-col overflow-hidden bg-background pb-4">
                 {mobileView === 'project' && isProjectRoute ? (
                   <ProjectSidebar variant="mobile" />
                 ) : (
@@ -48,7 +48,7 @@ const Drawer = () => {
       )}
 
       <div
-        className="hidden shrink-0 border-r border-foreground/5 bg-[#040404] text-sidebar-foreground transition-[width] duration-200 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
+        className="hidden shrink-0 bg-background text-sidebar-foreground transition-[width] duration-200 lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col"
         style={{ width: primaryWidth }}
       >
         <PrimarySidebar />
@@ -56,7 +56,7 @@ const Drawer = () => {
 
       {isProjectRoute && (
         <div
-          className="hidden shrink-0 border-r border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground transition-[left] duration-200 lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:flex-col"
+          className="hidden shrink-0 bg-sidebar-accent text-sidebar-accent-foreground transition-[left] duration-200 lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:flex-col"
           style={{ left: primaryWidth, width: PROJECT_SIDEBAR_WIDTH }}
         >
           <ProjectSidebar />

@@ -61,7 +61,7 @@ const KeyExplorer = ({ slug, projectId }: KeyExplorerProps) => {
       {health ? (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <Link
-            className="rounded-md bg-card p-4"
+            className="rounded-lg bg-card p-4"
             href={`${base}/architecture`}
           >
             <p className="text-xs uppercase text-muted-foreground">
@@ -71,7 +71,7 @@ const KeyExplorer = ({ slug, projectId }: KeyExplorerProps) => {
           </Link>
           {openFindings.slice(0, 3).map((kind) => (
             <Link
-              className="rounded-md bg-card p-4"
+              className="rounded-lg bg-card p-4"
               href={`${base}/architecture`}
               key={kind}
             >
@@ -100,7 +100,7 @@ const KeyExplorer = ({ slug, projectId }: KeyExplorerProps) => {
           <option value="feature-flag">{t('feature-flags')}</option>
         </select>
       </div>
-      <div className="overflow-x-auto rounded-md bg-card">
+      <div className="overflow-x-auto rounded-lg bg-card">
         <table className="table table-sm">
           <thead>
             <tr>

@@ -143,10 +143,10 @@ const VersionHistory = ({
       <section className="card bg-card">
         <div className="card-body space-y-3">
           <h2 className="card-title text-lg">{t('version-history')}</h2>
-          <ul className="divide-y divide-base-300">
+          <ul className="space-y-2">
             {payload.versions.map((version) => (
               <li
-                className="flex flex-wrap items-center justify-between gap-3 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-muted px-3 py-3"
                 key={version.id}
               >
                 <div>

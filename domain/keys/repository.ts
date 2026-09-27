@@ -35,6 +35,11 @@ export interface KeyCatalogRepository {
     toKey: string
   ): Promise<KeyMeta>;
   recordDetection(input: DetectedKeyInput): Promise<KeyMeta>;
+  touchDetections(input: {
+    projectId: string;
+    type: KeyType;
+    keys: string[];
+  }): Promise<void>;
   listUsages(keyMetaId: string): Promise<SourceUsage[]>;
   listUsagesForProject(projectId: string): Promise<SourceUsage[]>;
   delete(id: string): Promise<void>;

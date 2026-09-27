@@ -100,7 +100,7 @@ export type KeykitCatalogFile = {
 
 export type KeykitConfig = {
   /**
-   * `live` (default) fetches translations on load.
+   * `live` (default) fetches translations once when the page loads.
    * `static` reads `catalogs` and never fetches translations.
    */
   delivery?: KeykitDelivery;

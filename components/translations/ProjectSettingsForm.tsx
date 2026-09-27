@@ -210,7 +210,7 @@ const ProjectSettingsForm = ({
           <ul className="space-y-2">
             {project.locales.map((code) => (
               <li
-                className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                className="flex items-center justify-between rounded-lg bg-muted px-3 py-2"
                 key={code}
               >
                 <span className="flex items-center gap-2 text-sm">
@@ -270,7 +270,7 @@ const ProjectSettingsForm = ({
             <ul className="space-y-2">
               {allowedOrigins.map((value) => (
                 <li
-                  className="flex items-center justify-between rounded-md border border-border px-3 py-2"
+                  className="flex items-center justify-between rounded-lg bg-muted px-3 py-2"
                   key={value}
                 >
                   <span className="font-mono text-sm">{value}</span>
@@ -390,7 +390,7 @@ function SetupBlock({
     <div>
       <p className="font-medium">{title}</p>
       <p className="mt-1 text-muted-foreground">{description}</p>
-      <pre className="mt-2 overflow-x-auto rounded-md border border-border bg-muted/40 p-3 text-xs">
+      <pre className="mt-2 overflow-x-auto rounded-lg bg-muted p-3 text-xs">
         {code}
       </pre>
     </div>

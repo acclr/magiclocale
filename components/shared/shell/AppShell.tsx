@@ -15,7 +15,7 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
       <Header />
       <Drawer />
       <div
-        className="bg-[#080808] min-h-full flex-1 transition-[padding] duration-200 lg:pl-(--sidebar-offset)"
+        className="min-h-full flex-1 bg-background transition-[padding] duration-200 lg:pl-(--sidebar-offset)"
         style={
           {
             '--sidebar-offset': `${contentOffset}px`,

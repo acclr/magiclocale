@@ -16,6 +16,9 @@ export default defineConfig({
   format: ['esm', 'cjs'],
   external: [
     'jiti',
+    'next',
+    'react',
+    'react/jsx-runtime',
     './next-client.js',
     './pages-provider.js',
     './request-state.js',

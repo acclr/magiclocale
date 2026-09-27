@@ -170,9 +170,10 @@ so those keys show up in the translation workspace.
 
 Visiting `/` discovers `landing.*` keys automatically. Visiting a dashboard
 screen discovers that screen's `t()` keys (for example `back-to-projects`)
-from `locales/en/common.json`. Edit them in the matching project; bundles
-refresh about every 30 seconds. Without those env values the UI still
-renders English source text.
+from `locales/en/common.json`. Edit them in the matching project. The
+marketing site serves the catalog from the server. A live bundle is loaded
+once per page view. Repeat visits do not rewrite keys that have not
+changed. Without those env values the UI still renders English source text.
 
 ## Public SDK endpoints
 

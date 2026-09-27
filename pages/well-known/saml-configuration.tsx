@@ -27,7 +27,7 @@ const SPConfig: NextPageWithLayout<
   return (
     <>
       <div className="mt-10 flex w-full justify-center px-5">
-        <div className="w-full rounded-md bg-card p-6 md:w-1/2">
+        <div className="w-full rounded-lg bg-card p-6 md:w-1/2">
           <div className="flex flex-col space-y-3">
             <h2 className="font-bold text-foreground md:text-xl">
               {t('sp-saml-config-title')}

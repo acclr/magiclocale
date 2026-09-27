@@ -115,7 +115,7 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
           }),
           collapsed
             ? 'h-10 w-10 font-bold'
-            : 'h-10 w-full justify-between rounded-md px-4 text-sm font-bold'
+            : 'h-10 w-full justify-between rounded-lg bg-elevated px-4 text-sm font-bold hover:bg-elevated'
         )}
         aria-label={label}
       >

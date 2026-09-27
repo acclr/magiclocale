@@ -24,7 +24,7 @@ describe('landing locale helpers', () => {
       projectId: 'project_a',
       ingestToken: 'token_a',
       sourceLocale: 'en',
-      refreshIntervalMs: 30_000,
+      refreshIntervalMs: 0,
     });
     expect(
       createLandingSdkConfig({

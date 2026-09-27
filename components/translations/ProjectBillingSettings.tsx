@@ -105,7 +105,7 @@ const ProjectBillingSettings = ({
             <p className="text-sm text-muted-foreground">{t('loading')}</p>
           ) : (
             <div className="space-y-4">
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3">
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-muted p-3">
                 <input
                   checked={billing.billingScope === 'team'}
                   className="radio radio-sm mt-1"
@@ -123,7 +123,7 @@ const ProjectBillingSettings = ({
                   </span>
                 </span>
               </label>
-              <label className="flex cursor-pointer items-start gap-3 rounded-md border border-border p-3">
+              <label className="flex cursor-pointer items-start gap-3 rounded-lg bg-muted p-3">
                 <input
                   checked={billing.billingScope === 'project'}
                   className="radio radio-sm mt-1"

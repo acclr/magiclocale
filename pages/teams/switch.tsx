@@ -38,7 +38,7 @@ const Organizations: NextPageWithLayout<
     <>
       <div className="mb-6 flex w-1/2 flex-col items-center gap-4 p-3">
         <h3>{t('choose-team')}</h3>
-        <div className="w-3/5 rounded-md bg-card sm:max-w-md md:mt-0 xl:p-0"></div>
+        <div className="w-3/5 rounded-lg bg-card sm:max-w-md md:mt-0 xl:p-0"></div>
       </div>
     </>
   );

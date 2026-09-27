@@ -79,7 +79,6 @@ export class HttpSourceKeyTransport implements KeykitTransport {
     const response = await this.config.fetch(endpoint, {
       method: 'GET',
       headers: { Authorization: `Bearer ${this.config.ingestToken}` },
-      cache: 'no-store',
     });
 
     if (!response.ok) {
@@ -101,7 +100,6 @@ export class HttpSourceKeyTransport implements KeykitTransport {
     const response = await this.config.fetch(endpoint, {
       method: 'GET',
       headers: { Authorization: `Bearer ${this.config.ingestToken}` },
-      cache: 'no-store',
     });
 
     if (!response.ok) {

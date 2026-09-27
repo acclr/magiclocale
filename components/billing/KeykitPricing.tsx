@@ -45,7 +45,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
     <section className="py-3">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
         {plans.map((plan) => (
-          <div className="relative rounded-md bg-card" key={plan.id}>
+          <div className="relative rounded-lg bg-card" key={plan.id}>
             <div className="p-8">
               <h3 className="font-display text-2xl font-bold text-foreground">
                 {plan.name}
@@ -53,7 +53,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
               <p className="mt-2 text-3xl font-semibold">
                 {plan.amountCents === 0
                   ? t('plan-price-free')
-                  : `$${plan.amountCents / 100}`}
+                  : `${plan.id === 'enterprise' ? 'From ' : ''}$${plan.amountCents / 100}`}
                 <span className="text-base font-normal text-gray-500">
                   {' '}
                   / {plan.interval}
@@ -68,7 +68,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
                   size="md"
                   fullWidth
                   disabled
-                  className="rounded-full"
+                  className="rounded-lg"
                 >
                   {t('current')}
                 </Button>
@@ -78,7 +78,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
                   size="md"
                   fullWidth
                   disabled
-                  className="rounded-full"
+                  className="rounded-lg"
                 >
                   {t('plan-included')}
                 </Button>
@@ -88,7 +88,7 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
                   variant="outline"
                   size="md"
                   fullWidth
-                  className="rounded-full"
+                  className="rounded-lg"
                   disabled={!plan.priceId}
                   onClick={() => {
                     if (plan.priceId) {

@@ -1,9 +1,11 @@
-import { Button } from '@/components/ui/button';
-import { landingSite } from '@/content/landing/site';
+import { hrefForLocaleSlug } from '@keykithq/sdk/routing';
 import { useKeykit } from '@keykithq/sdk/react';
+import { cn } from 'cn';
+
+import { landingRouting, landingSite } from '@/content/landing/site';
 
 const LandingLocaleSwitcher = () => {
-  const { locale, isLoading, setLocale } = useKeykit();
+  const { locale } = useKeykit();
   const locales = landingSite.locales;
 
   if (locales.length < 2) {
@@ -11,27 +13,25 @@ const LandingLocaleSwitcher = () => {
   }
 
   return (
-    <div
-      className="inline-flex overflow-hidden rounded-lg border border-border/80 bg-muted/30 p-0.5"
-      role="group"
-      aria-label="Language"
-    >
-      {locales.map((code) => (
-        <Button
-          key={code}
-          type="button"
-          size="sm"
-          variant={locale === code ? 'secondary' : 'ghost'}
-          className="h-8 min-w-10 rounded-md px-2.5 font-mono text-xs"
-          aria-pressed={locale === code}
-          disabled={isLoading}
-          onClick={() => {
-            void setLocale(code);
-          }}
-        >
-          {code.toUpperCase()}
-        </Button>
-      ))}
+    <div className="flex items-center gap-1" role="group" aria-label="Language">
+      {locales.map((code) => {
+        const active = locale === code;
+        return (
+          <a
+            key={code}
+            href={hrefForLocaleSlug(code, '', landingRouting)}
+            aria-current={active ? 'page' : undefined}
+            className={cn(
+              'rounded-md px-2.5 py-1 font-mono text-[10px] tracking-wide transition-colors',
+              active
+                ? 'bg-elevated text-foreground'
+                : 'text-muted-foreground hover:text-foreground'
+            )}
+          >
+            {code.toUpperCase()}
+          </a>
+        );
+      })}
     </div>
   );
 };

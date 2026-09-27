@@ -136,7 +136,7 @@ const LocaleSelect = ({
       />
       {open && (
         <ul
-          className="absolute z-30 mt-1 flex max-h-72 w-full flex-col overflow-auto rounded-md border border-border bg-popover p-1 shadow-lg"
+          className="absolute z-30 mt-1 flex max-h-72 w-full flex-col overflow-auto rounded-lg bg-popover p-1 shadow-pill"
           id={listId}
           role="listbox"
         >

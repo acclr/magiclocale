@@ -9,16 +9,17 @@ async function ensurePlans() {
   const stripe = new Stripe(secret);
   const premium = await ensurePlan(stripe, {
     planId: 'premium',
-    name: 'Keykit Premium',
+    name: 'Keykit Pro',
     description:
-      '$12/month — 10 seats, 5 projects, 6 languages, 10k keys per project.',
-    amount: 1200,
+      '$29/month — 3,000 active keys, unlimited languages, projects, and seats.',
+    amount: 2900,
   });
   const enterprise = await ensurePlan(stripe, {
     planId: 'enterprise',
     name: 'Keykit Enterprise',
-    description: '$49/month — unlimited projects, languages, keys, and seats.',
-    amount: 4900,
+    description:
+      'From $299/month — 25,000+ active keys, security, support, and committed capacity.',
+    amount: 29900,
   });
 
   console.log('Add these to .env:');

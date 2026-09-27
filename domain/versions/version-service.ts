@@ -227,6 +227,60 @@ export class VersionService {
     };
   }
 
+  /**
+   * Every locale of one environment in a single snapshot read.
+   * Callers that need the whole catalog should use this instead of
+   * `resolveLocaleBundle` once per locale.
+   */
+  async resolveLocaleBundles(
+    environmentId: string,
+    locales: readonly string[],
+    versionNumber?: number | null,
+    options?: { workingCopy?: boolean }
+  ): Promise<{
+    bundles: Map<string, LocaleBundleSnapshot | null>;
+    version: Version | null;
+  }> {
+    const environment = await this.requireEnvironment(environmentId);
+    const pinned = versionNumber !== undefined && versionNumber !== null;
+
+    if (!options?.workingCopy && pinned) {
+      const versions = await this.repository.listVersions(environmentId);
+      const version = versions.find(
+        (item) => item.number === versionNumber && item.status === 'published'
+      );
+      if (!version) {
+        return { bundles: new Map(), version: null };
+      }
+      return {
+        bundles: await this.bundlesForVersion(version.id, locales),
+        version,
+      };
+    }
+
+    if (!options?.workingCopy && environment.liveVersionId) {
+      const version = await this.repository.getVersion(
+        environment.liveVersionId
+      );
+      if (version && version.status === 'published') {
+        return {
+          bundles: await this.bundlesForVersion(version.id, locales),
+          version,
+        };
+      }
+    }
+
+    const working = await this.buildWorkingSnapshot(environment);
+    const byLocale = new Map(
+      working.locales.map((bundle) => [bundle.locale, bundle])
+    );
+    const bundles = new Map<string, LocaleBundleSnapshot | null>();
+    for (const locale of locales) {
+      bundles.set(locale, byLocale.get(locale) ?? null);
+    }
+    return { bundles, version: null };
+  }
+
   /** The published flag set for an environment, used by the SDK payload. */
   async resolveFlags(environmentId: string): Promise<{
     flags: FlagSetSnapshot;
@@ -490,6 +544,19 @@ export class VersionService {
   }
 
   /* ---------- Snapshot helpers ---------- */
+
+  private async bundlesForVersion(
+    versionId: string,
+    locales: readonly string[]
+  ): Promise<Map<string, LocaleBundleSnapshot | null>> {
+    const stored = await this.repository.listLocaleBundles(versionId);
+    const byLocale = new Map(stored.map((bundle) => [bundle.locale, bundle]));
+    const bundles = new Map<string, LocaleBundleSnapshot | null>();
+    for (const locale of locales) {
+      bundles.set(locale, byLocale.get(locale) ?? null);
+    }
+    return bundles;
+  }
 
   private async buildWorkingSnapshot(environment: Environment): Promise<{
     locales: LocaleBundleSnapshot[];

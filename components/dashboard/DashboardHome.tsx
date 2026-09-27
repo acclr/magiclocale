@@ -59,7 +59,7 @@ const DashboardHome = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-lg border border-dashed border-border p-12 text-center">
+          <div className="rounded-lg bg-card p-12 text-center">
             <h2 className="font-semibold">{t('dashboard-empty-title')}</h2>
             <p className="mt-2 text-sm text-muted-foreground">
               {t('dashboard-empty-description')}

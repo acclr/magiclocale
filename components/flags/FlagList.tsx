@@ -53,7 +53,7 @@ const FlagList = ({ slug, projectId, environment, canEdit }: FlagListProps) => {
     <div className="space-y-4">
       {canEdit ? (
         <form
-          className="flex flex-wrap items-end gap-3 rounded-md bg-card p-4"
+          className="flex flex-wrap items-end gap-3 rounded-lg bg-card p-4"
           onSubmit={create}
         >
           <label className="form-control">
@@ -114,7 +114,7 @@ const FlagList = ({ slug, projectId, environment, canEdit }: FlagListProps) => {
         </form>
       ) : null}
 
-      <div className="overflow-x-auto rounded-md bg-card">
+      <div className="overflow-x-auto rounded-lg bg-card">
         <table className="table table-sm [&_td]:px-2.5 [&_td]:py-2 [&_th]:px-2.5 [&_th]:py-2">
           <thead>
             <tr>

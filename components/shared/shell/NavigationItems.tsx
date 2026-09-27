@@ -64,15 +64,15 @@ const NavigationItem = ({
   className,
   collapsed = false,
 }: NavigationItemProps) => {
-  const surface = 'hover:bg-foreground/5 active:bg-foreground/10';
-  const activeSurface = 'bg-foreground/5 active:bg-foreground/10';
+  const surface = 'hover:bg-elevated active:bg-elevated';
+  const activeSurface = 'bg-elevated';
   const activeText = 'text-foreground';
 
   const link = (
     <Link
       href={menu.href}
       className={classNames(
-        'group flex items-center rounded-3xl text-sm text-sidebar-foreground -mx-1.5',
+        'group flex items-center rounded-lg text-sm text-sidebar-foreground -mx-1.5',
         surface,
         collapsed ? 'justify-center p-2' : 'gap-2 p-2 px-2',
         menu.active && `${activeSurface}`,

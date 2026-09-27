@@ -8,10 +8,7 @@ import {
   parseSelfHostedLocale,
   type SelfHostedLocalePageProps,
 } from './self-hosted-locale';
-import {
-  buildTranslationBundle,
-  buildTranslationCatalog,
-} from './translations/translation-bundle';
+import { buildTranslationCatalog } from './translations/translation-bundle';
 import {
   getEnvironmentService,
   getTranslationRepository,
@@ -22,7 +19,39 @@ type CookieRequest = Pick<IncomingMessage, 'headers'> & {
   cookies?: Partial<Record<string, string>>;
 };
 
-export async function getSelfHostedLocalePageProps(input: {
+const LOCALE_PROPS_TTL_MS = 60_000;
+
+type CachedLocaleProps = {
+  expiresAt: number;
+  value: SelfHostedLocalePageProps;
+};
+
+const localePropsCache = new Map<string, CachedLocaleProps>();
+
+export async function getSelfHostedLocalePageProps(
+  input: Parameters<typeof loadSelfHostedLocalePageProps>[0]
+): Promise<SelfHostedLocalePageProps> {
+  const cacheKey = [
+    input.projectId ?? '',
+    input.locale ?? '',
+    readCookie(input.req, KEYKIT_LOCALE_COOKIE) ?? '',
+  ].join('|');
+  const cached = localePropsCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) {
+    return cached.value;
+  }
+
+  const value = await loadSelfHostedLocalePageProps(input);
+  if (value.config) {
+    localePropsCache.set(cacheKey, {
+      expiresAt: Date.now() + LOCALE_PROPS_TTL_MS,
+      value,
+    });
+  }
+  return value;
+}
+
+async function loadSelfHostedLocalePageProps(input: {
   req?: CookieRequest;
   /** URL locale. When set, it wins over the locale cookie. */
   locale?: string;
@@ -73,10 +102,8 @@ export async function getSelfHostedLocalePageProps(input: {
       catalog.success ? catalog.catalog.locales : {},
       sourceLocale
     );
-    const result = await buildTranslationBundle(dependencies, {
-      projectId: config.projectId,
-      locale,
-    });
+    const published = catalog.success ? catalog.catalog : null;
+    const translations = published?.locales[locale];
 
     return {
       locale,
@@ -87,7 +114,19 @@ export async function getSelfHostedLocalePageProps(input: {
         delivery: 'live',
         catalogs,
       },
-      initialBundle: result.success ? result.bundle : null,
+      initialBundle:
+        published && translations
+          ? {
+              projectId: published.projectId,
+              environment: published.environment,
+              locale,
+              sourceLocale: published.sourceLocale,
+              translations,
+              version: published.version,
+              versionNumber: published.versionNumber,
+              publishedAt: published.publishedAt,
+            }
+          : null,
     };
   } catch (error) {
     console.error('[keykit] Failed to load self-hosted locale props', error);

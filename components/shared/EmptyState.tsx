@@ -8,7 +8,7 @@ interface EmptyStateProps {
 
 const EmptyState = ({ title, description }: EmptyStateProps) => {
   return (
-    <div className="flex h-80 w-full flex-col items-center justify-center gap-2 rounded-md bg-card lg:p-20">
+    <div className="flex h-80 w-full flex-col items-center justify-center gap-2 rounded-lg bg-card lg:p-20">
       <InformationCircleIcon className="w-10 h-10" />
       <h3 className="text-semibold text-emphasis text-center text-lg">
         {title}

@@ -102,6 +102,9 @@ export function createTranslationServices(
     recordDetection: (
       input: Parameters<KeyCatalogRepository['recordDetection']>[0]
     ) => keyCatalogRepository.recordDetection(input),
+    touchDetections: (
+      input: Parameters<KeyCatalogRepository['touchDetections']>[0]
+    ) => keyCatalogRepository.touchDetections(input),
     upsertDefinition: (input: Parameters<KeyCatalogRepository['upsert']>[0]) =>
       keyCatalogRepository.upsert(input),
   };

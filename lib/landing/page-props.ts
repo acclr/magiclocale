@@ -12,7 +12,9 @@ const landingKeykit = createKeykit({
   baseUrl: process.env.APP_URL ?? '',
   sourceLocale:
     process.env.KEYKIT_LANDING_SOURCE_LOCALE ?? landingSite.defaultLocale,
-  delivery: 'live',
+  // Catalogs are rendered on the server. The browser must not poll the API.
+  delivery: 'static',
+  refreshIntervalMs: 0,
   routing: 'path',
   defaultLocale: landingRouting.defaultLocale,
   locales: landingRouting.locales,

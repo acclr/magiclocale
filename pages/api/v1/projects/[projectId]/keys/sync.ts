@@ -57,23 +57,30 @@ export default async function handler(
     );
     const flags = parsed.keys.filter((item) => item.type === 'feature-flag');
 
-    const teamBillingId = await prisma.team.findUnique({
-      where: { id: auth.project.teamId },
-      select: { billingId: true },
-    });
-    const project = await getProjectService().get(
-      auth.project.teamId,
-      projectId
-    );
-    const entitlement = await getProjectEntitlement(
-      project,
-      teamBillingId?.billingId ?? null
-    );
-    await enforceSourceKeyCapacity(
-      projectId,
-      entitlement,
-      translations.map((item) => item.key)
-    );
+    const incomingNames = translations.map((item) => item.key);
+    if (incomingNames.length > 0) {
+      const existing = await prisma.translationKey.findMany({
+        where: { projectId, key: { in: incomingNames } },
+        select: { key: true },
+      });
+      const known = new Set(existing.map((row) => row.key));
+      const hasNewKey = incomingNames.some((key) => !known.has(key));
+      if (hasNewKey) {
+        const teamBillingId = await prisma.team.findUnique({
+          where: { id: auth.project.teamId },
+          select: { billingId: true },
+        });
+        const project = await getProjectService().get(
+          auth.project.teamId,
+          projectId
+        );
+        const entitlement = await getProjectEntitlement(
+          project,
+          teamBillingId?.billingId ?? null
+        );
+        await enforceSourceKeyCapacity(projectId, entitlement, incomingNames);
+      }
+    }
 
     const result =
       translations.length > 0

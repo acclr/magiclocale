@@ -332,58 +332,119 @@ export class TranslationService {
     let needsReview = 0;
     let fillFailed = 0;
 
+    const existingKeys = await this.repository.findKeysByNames(
+      projectId,
+      incoming.map((item) => item.key)
+    );
+    const existingByName = new Map(existingKeys.map((key) => [key.key, key]));
+    const missing: IncomingSourceKey[] = [];
+    const unchanged: IncomingSourceKey[] = [];
+    const changed: Array<{
+      item: IncomingSourceKey;
+      existing: TranslationKey;
+    }> = [];
+
     for (const item of incoming) {
-      const existing = await this.repository.findKeyByName(projectId, item.key);
-
+      const existing = existingByName.get(item.key);
       if (!existing) {
-        const created = await this.repository.createKey({
-          projectId,
-          key: item.key,
-          sourceText: item.sourceText,
-        });
-        createdKeys += 1;
-        await this.catalog.recordDetection({
-          projectId,
-          type: 'translation',
-          key: item.key,
-          usage: item.usage,
-        });
-        const sourceRow = await this.repository.createTranslation({
-          translationKeyId: created.id,
-          environmentId,
-          locale: project.sourceLocale,
-          ...asCodeTranslation(item.sourceText),
-        });
-        await this.record(created, sourceRow, null);
-
-        const fill = await this.fillTargetsBestEffort(
-          created.id,
-          environmentId,
-          targetLocales
-        );
-        filled += fill.filled;
-        fillFailed += fill.fillFailed;
-        continue;
+        missing.push(item);
+      } else if (existing.sourceText === item.sourceText) {
+        unchanged.push(item);
+      } else {
+        changed.push({ item, existing });
       }
+    }
 
+    for (const item of missing) {
+      const created = await this.repository.createKey({
+        projectId,
+        key: item.key,
+        sourceText: item.sourceText,
+      });
+      createdKeys += 1;
       await this.catalog.recordDetection({
         projectId,
         type: 'translation',
         key: item.key,
         usage: item.usage,
       });
+      const sourceRow = await this.repository.createTranslation({
+        translationKeyId: created.id,
+        environmentId,
+        locale: project.sourceLocale,
+        ...asCodeTranslation(item.sourceText),
+      });
+      await this.record(created, sourceRow, null);
 
-      if (existing.sourceText === item.sourceText) {
+      const fill = await this.fillTargetsBestEffort(
+        created.id,
+        environmentId,
+        targetLocales
+      );
+      filled += fill.filled;
+      fillFailed += fill.fillFailed;
+    }
+
+    if (unchanged.length > 0) {
+      const quiet = unchanged.filter((item) => !item.usage?.file);
+      const withUsage = unchanged.filter((item) => item.usage?.file);
+      if (quiet.length > 0 && this.catalog.touchDetections) {
+        await this.catalog.touchDetections({
+          projectId,
+          type: 'translation',
+          keys: quiet.map((item) => item.key),
+        });
+      } else {
+        for (const item of quiet) {
+          await this.catalog.recordDetection({
+            projectId,
+            type: 'translation',
+            key: item.key,
+            usage: item.usage,
+          });
+        }
+      }
+      for (const item of withUsage) {
+        await this.catalog.recordDetection({
+          projectId,
+          type: 'translation',
+          key: item.key,
+          usage: item.usage,
+        });
+      }
+
+      const present = await this.repository.listPresentLocales(
+        environmentId,
+        unchanged.map((item) => existingByName.get(item.key)!.id)
+      );
+      const presentLocales = new Set(
+        present.map((cell) => `${cell.translationKeyId}:${cell.locale}`)
+      );
+      for (const item of unchanged) {
+        const existing = existingByName.get(item.key)!;
+        const missingLocales = targetLocales.filter(
+          (locale) => !presentLocales.has(`${existing.id}:${locale}`)
+        );
+        if (missingLocales.length === 0) {
+          continue;
+        }
         const fill = await this.fillTargetsBestEffort(
           existing.id,
           environmentId,
-          targetLocales
+          missingLocales
         );
         filled += fill.filled;
         fillFailed += fill.fillFailed;
-        continue;
       }
+    }
 
+    for (const { item, existing } of changed) {
+      await this.catalog.recordDetection({
+        projectId,
+        type: 'translation',
+        key: item.key,
+        usage: item.usage,
+      });
       sourceChanges += 1;
       try {
         const change = await this.handleSourceChange(

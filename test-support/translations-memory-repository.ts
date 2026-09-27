@@ -186,6 +186,32 @@ export class MemoryRepository
     );
   }
 
+  async findKeysByNames(
+    projectId: string,
+    keys: string[]
+  ): Promise<TranslationKey[]> {
+    const wanted = new Set(keys);
+    return this.state.keys.filter(
+      (item) => item.projectId === projectId && wanted.has(item.key)
+    );
+  }
+
+  async listPresentLocales(
+    environmentId: string,
+    translationKeyIds: string[]
+  ): Promise<Array<{ translationKeyId: string; locale: string }>> {
+    const ids = new Set(translationKeyIds);
+    return this.state.translations
+      .filter(
+        (item) =>
+          item.environmentId === environmentId && ids.has(item.translationKeyId)
+      )
+      .map((item) => ({
+        translationKeyId: item.translationKeyId,
+        locale: item.locale,
+      }));
+  }
+
   async createKey(input: Omit<TranslationKey, 'id'>): Promise<TranslationKey> {
     const key = { id: this.id('key'), ...input };
     this.state.keys.push(key);
