@@ -40,20 +40,11 @@ const HeroSection = () => {
     <section className="relative">
       <div className="mx-auto max-w-6xl px-6 pt-36 pb-16 sm:pt-44 sm:pb-20">
         <Reveal className="mx-auto w-full text-center">
-          <p className="font-mono text-xs font-medium text-muted-foreground">
-            {translate(
-              'landing.hero.badge',
-              'Live on Keykit — change this page from the dashboard'
-            )}
-          </p>
           <h1 className="mt-6 text-balance text-5xl font-semibold leading-[1.05] tracking-tight text-foreground sm:text-6xl md:text-7xl">
-            {translate('landing.hero.title', 'Keykit')}
-            <span className="mt-2 block text-foreground/90">
-              {translate(
-                'landing.hero.headline-accent',
-                'Product copy, localized'
-              )}
-            </span>
+            {translate(
+              'landing.hero.headline-accent',
+              'Product copy, localized'
+            )}
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
             {translate(
