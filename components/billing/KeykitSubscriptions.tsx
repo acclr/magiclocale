@@ -20,7 +20,7 @@ const KeykitSubscriptions = ({
 
   return (
     <div className="space-y-3">
-      <h2 className="card-title text-xl font-medium leading-none tracking-tight">
+      <h2 className="card-title text-sm font-medium tracking-tight">
         {t('subscriptions')}
       </h2>
       <div className="overflow-hidden rounded-lg bg-card">

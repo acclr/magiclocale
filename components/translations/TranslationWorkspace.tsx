@@ -1,16 +1,17 @@
-import type {
-  TranslationFilter,
-  DashboardRow,
+import {
+  paginateTranslationDashboard,
+  type TranslationFilter,
+  type DashboardRow,
 } from '../../domain/translations';
 import { getLocaleDisplay, localeColor } from '../../domain/translations';
 import useCanAccess from '../../hooks/useCanAccess';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useEffect, useState } from 'react';
+import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
-import { Error as ErrorDisplay, Loading } from '@/components/shared';
+import { Error as ErrorDisplay } from '@/components/shared';
 import { CellDraftsProvider } from './CellDrafts';
 import LocaleName from './LocaleName';
 import LocaleSelect from './LocaleSelect';
@@ -58,15 +59,11 @@ const TranslationWorkspace = ({
   ];
   const [filter, setFilter] = useState<TranslationFilter>('all');
   const [search, setSearch] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const deferredSearch = useDeferredValue(search.trim());
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(50);
   const { environment } = useProjectEnvironment();
   const workspace = useTranslationWorkspace(slug, projectId, {
-    page,
-    pageSize,
-    filter,
-    search: debouncedSearch,
     environment,
   });
   const [selected, setSelected] = useState<{
@@ -81,24 +78,29 @@ const TranslationWorkspace = ({
   const [selectAllMatching, setSelectAllMatching] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const dashboard = workspace.dashboard;
-  const rows = dashboard?.rows ?? [];
-  const pagination = dashboard?.pagination;
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      setDebouncedSearch(search.trim());
-    }, 300);
-    return () => window.clearTimeout(timeout);
-  }, [search]);
+  const view = useMemo(
+    () =>
+      dashboard
+        ? paginateTranslationDashboard(dashboard, {
+            page,
+            pageSize,
+            filter,
+            search: deferredSearch,
+          })
+        : null,
+    [dashboard, deferredSearch, filter, page, pageSize]
+  );
+  const rows = view?.rows ?? [];
+  const pagination = view?.pagination;
 
   useEffect(() => {
     setPage(1);
-  }, [debouncedSearch, filter, pageSize]);
+  }, [search, filter, pageSize]);
 
   useEffect(() => {
     setSelectedKeyIds([]);
     setSelectAllMatching(false);
-  }, [debouncedSearch, filter, pageSize, projectId, environment]);
+  }, [search, filter, pageSize, projectId, environment]);
 
   useEffect(() => {
     if (dashboard?.project.sourceLocale) {
@@ -178,7 +180,7 @@ const TranslationWorkspace = ({
           mode,
           sourceLocale: mode === 'retranslate' ? fromLocale.trim() : undefined,
           filter,
-          search: debouncedSearch,
+          search: deferredSearch,
         });
         setSelectedKeyIds([]);
         setSelectAllMatching(false);
@@ -192,15 +194,15 @@ const TranslationWorkspace = ({
     );
   };
 
-  if (workspace.isLoading) {
-    return <Loading />;
+  if (!dashboard && workspace.isLoading) {
+    return <WorkspaceSkeleton />;
   }
 
-  if (workspace.isError) {
+  if (workspace.isError && !dashboard) {
     return <ErrorDisplay message={workspace.isError.message} />;
   }
 
-  if (!dashboard) {
+  if (!dashboard || !view) {
     return <ErrorDisplay message={t('translation-project-not-found')} />;
   }
 
@@ -249,7 +251,7 @@ const TranslationWorkspace = ({
 
         <header className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <div className="flex flex-row items-center text-2xl font-semibold">
+            <div className="flex flex-row items-center text-lg font-medium tracking-tight">
               <h1 className="mr-2.5">{dashboard.project.name}</h1>
               <LocaleName
                 code={dashboard.project.sourceLocale}
@@ -388,36 +390,34 @@ const TranslationWorkspace = ({
           </div>
         )}
 
-        {canEdit && (
-          <div className="rounded-lg bg-card p-3 text-sm text-muted-foreground">
-            {t('translation-queue-help')}
-          </div>
-        )}
+        <nav className="w-full tabs tabs-bordered overflow-x-auto">
+          {filters.map((item) => (
+            <button
+              className={`tab whitespace-nowrap ${
+                filter === item.id ? 'tab-active' : ''
+              }`}
+              key={item.id}
+              onClick={() => {
+                setFilter(item.id);
+                setPage(1);
+              }}
+              type="button"
+            >
+              {item.label}
+              <span className="badge badge-ghost badge-sm ml-2">
+                {dashboard.counts[item.id]}
+              </span>
+            </button>
+          ))}
+        </nav>
 
-        <section className="flex flex-row items-center justify-between gap-4">
-          <nav className="tabs tabs-bordered overflow-x-auto">
-            {filters.map((item) => (
-              <button
-                className={`tab whitespace-nowrap ${
-                  filter === item.id ? 'tab-active' : ''
-                }`}
-                key={item.id}
-                onClick={() => {
-                  setFilter(item.id);
-                  setPage(1);
-                }}
-                type="button"
-              >
-                {item.label}
-                <span className="badge badge-ghost badge-sm ml-2">
-                  {dashboard.counts[item.id]}
-                </span>
-              </button>
-            ))}
-          </nav>
-        </section>
-
-        <div className="relative overflow-hidden rounded-lg bg-card">
+        <div
+          aria-busy={workspace.isRefreshing}
+          className="relative overflow-hidden rounded-lg bg-card"
+        >
+          {workspace.isRefreshing && (
+            <div className="absolute inset-x-0 top-0 z-20 h-0.5 animate-pulse bg-primary" />
+          )}
           <div className="relative flex w-full max-w-full overflow-auto">
             <table className="table-pin-rows table-pin-cols table min-w-max">
               <thead className="sticky top-0">
@@ -717,5 +717,22 @@ const TranslationWorkspace = ({
     </CellDraftsProvider>
   );
 };
+
+function WorkspaceSkeleton() {
+  return (
+    <div className="space-y-4" aria-busy="true" aria-live="polite">
+      <div className="h-10 w-48 animate-pulse rounded-md bg-card" />
+      <div className="h-8 w-full animate-pulse rounded-md bg-card" />
+      <div className="space-y-2 rounded-lg bg-card p-3">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div
+            className="h-12 animate-pulse rounded-md bg-elevated"
+            key={index}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export default TranslationWorkspace;

@@ -77,13 +77,17 @@ const LandingShell = ({ children }: LandingShellProps) => {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
-      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4">
-        <div className="w-full max-w-6xl">
+      <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 sm:px-6">
+        <div
+          className={`w-full transition-[max-width] duration-500 ease-out ${
+            scrolled ? 'max-w-[1260px]' : 'max-w-[1240px]'
+          }`}
+        >
           <nav
-            className={`pointer-events-auto flex w-full items-center justify-between gap-4 transition-all duration-500 ease-out ${
+            className={`pointer-events-auto flex w-full items-center justify-between gap-4 border transition-all duration-500 ease-out ${
               scrolled
-                ? 'shadow-pill mt-3 rounded-full bg-surface/85 px-4 py-2.5 backdrop-blur-xl sm:px-6'
-                : 'mt-0 bg-transparent px-2 py-5 sm:px-6'
+                ? 'mt-3 rounded-full border-border bg-surface/85 px-4 py-3 backdrop-blur-xl sm:px-5'
+                : 'mt-0 border-transparent bg-transparent px-1 py-3 sm:px-2'
             }`}
           >
             <Link href={homeHref} locale={false} className="shrink-0">

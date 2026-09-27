@@ -181,4 +181,6 @@ export const translationDashboardQuerySchema = z.object({
     ])
     .optional(),
   search: z.string().trim().max(200).optional(),
+  /** Return every row so the workspace can filter without another request. */
+  complete: z.literal('1').optional(),
 });

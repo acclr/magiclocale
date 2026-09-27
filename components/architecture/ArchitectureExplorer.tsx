@@ -149,7 +149,7 @@ const ArchitectureExplorer = ({
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold">{t('architecture')}</h1>
+          <h1 className="text-lg font-medium tracking-tight">{t('architecture')}</h1>
           <p className="text-sm text-muted-foreground">
             {t('architecture-help')}
           </p>

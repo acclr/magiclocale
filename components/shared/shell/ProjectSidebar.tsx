@@ -96,8 +96,8 @@ const ProjectSidebar = ({
   ];
 
   return (
-    <div className="flex h-full grow flex-col gap-y-5 overflow-y-auto bg-transparent px-4 pb-4 text-sidebar-accent-foreground">
-      <div className="flex flex-col gap-3 pt-6">
+    <div className="flex h-full grow flex-col gap-y-3 overflow-y-auto bg-transparent px-2.5 pb-3 text-sidebar-accent-foreground">
+      <div className="flex flex-col gap-2.5 pt-3.5">
         {variant === 'mobile' && (
           <Button
             type="button"
@@ -118,7 +118,7 @@ const ProjectSidebar = ({
         </Link>
 
         <div>
-          <h2 className="mt-1 truncate text-base font-semibold">
+          <h2 className="mt-1 truncate text-sm font-medium tracking-tight">
             {project?.name || t('translation-workspace')}
           </h2>
         </div>

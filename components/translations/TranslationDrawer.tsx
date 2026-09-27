@@ -103,7 +103,7 @@ const TranslationDrawer = ({
         <aside className="flex min-h-full w-full max-w-md flex-col bg-background shadow-xl">
           <header className="flex items-start justify-between p-5">
             <div>
-              <h2 className="text-xl font-semibold">
+              <h2 className="text-sm font-medium tracking-tight">
                 <span
                   className="inline-flex items-center rounded px-2 py-0.5 text-base"
                   style={{

@@ -11,18 +11,18 @@ function AppShellFrame({ children }: { children: React.ReactNode }) {
   const { contentOffset } = useSidebarLayout();
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="app-canvas flex min-h-screen flex-col">
       <Header />
       <Drawer />
       <div
-        className="min-h-full flex-1 bg-background transition-[padding] duration-200 lg:pl-(--sidebar-offset)"
+        className="min-h-full flex-1 transition-[padding] duration-200 lg:pl-(--sidebar-offset)"
         style={
           {
             '--sidebar-offset': `${contentOffset}px`,
           } as React.CSSProperties
         }
       >
-        <main className="py-5">
+        <main className="py-4">
           <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             {children}
           </div>

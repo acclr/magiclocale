@@ -2,7 +2,7 @@ import { TableHeader } from './TableHeader';
 import { TableBody, TableBodyType } from './TableBody';
 
 const tableWrapperClass =
-  'relative overflow-x-auto rounded-lg bg-card scrollbar';
+  'relative overflow-x-auto rounded-lg border border-border bg-card scrollbar';
 const tableClass = 'w-full text-left text-sm text-muted-foreground';
 
 export const Table = ({

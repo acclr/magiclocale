@@ -114,8 +114,8 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
             size: collapsed ? 'icon' : 'xl',
           }),
           collapsed
-            ? 'h-10 w-10 font-bold'
-            : 'h-10 w-full justify-between rounded-lg bg-elevated px-4 text-sm font-bold hover:bg-elevated'
+            ? 'size-8 font-medium'
+            : 'h-8 w-full justify-between px-2.5 text-sm font-medium'
         )}
         aria-label={label}
       >

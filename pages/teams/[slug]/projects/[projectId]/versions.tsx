@@ -32,7 +32,7 @@ const ProjectVersionsPage: NextPageWithLayout = () => {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">{t('versions')}</h1>
+        <h1 className="text-lg font-medium tracking-tight">{t('versions')}</h1>
         <p className="text-sm text-muted-foreground">{t('versions-help')}</p>
       </div>
       <VersionHistory

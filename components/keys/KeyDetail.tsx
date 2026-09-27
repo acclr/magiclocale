@@ -77,7 +77,7 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
       </button>
       <div>
         <p className="text-xs uppercase text-muted-foreground">{meta.type}</p>
-        <h1 className="font-mono text-2xl font-semibold">{meta.key}</h1>
+        <h1 className="font-mono text-lg font-medium tracking-tight">{meta.key}</h1>
         <p className="text-sm text-muted-foreground">
           {t('namespace')}: {meta.namespace ?? '—'} · {t('lifecycle')}:{' '}
           {meta.lifecycle} · {t('usages')}: {meta.usageCount}

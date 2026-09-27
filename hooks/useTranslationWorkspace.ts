@@ -1,11 +1,12 @@
 import { defaultHeaders } from '@/lib/common';
 import fetcher from '@/lib/fetcher';
 import type { Environment } from '../domain/environments';
-import type {
-  Project,
-  Translation,
-  TranslationDashboard,
-  TranslationFilter,
+import {
+  applySavedCell,
+  type Project,
+  type Translation,
+  type TranslationDashboard,
+  type TranslationFilter,
 } from '../domain/translations';
 import type { Version } from '../domain/versions';
 import type { ApiResponse } from 'types';
@@ -63,29 +64,16 @@ const useTranslationWorkspace = (
 ) => {
   const baseUrl = `/api/teams/${slug}/projects/${projectId}`;
   const params = new URLSearchParams();
-  if (query.page) {
-    params.set('page', String(query.page));
-  }
-  if (query.pageSize) {
-    params.set('pageSize', String(query.pageSize));
-  }
-  if (query.filter && query.filter !== 'all') {
-    params.set('filter', query.filter);
-  }
-  if (query.search) {
-    params.set('search', query.search);
-  }
+  params.set('complete', '1');
   if (query.environment) {
     params.set('environment', query.environment);
   }
-  const queryString = params.toString();
-  const dashboardUrl = `${baseUrl}/dashboard${
-    queryString ? `?${queryString}` : ''
-  }`;
+  const dashboardUrl = `${baseUrl}/dashboard?${params.toString()}`;
   const { data, error, isLoading, isValidating, mutate } = useSWR<
     ApiResponse<WorkspaceDashboard>
   >(slug && projectId ? dashboardUrl : null, fetcher, {
     keepPreviousData: true,
+    revalidateOnFocus: false,
   });
 
   const envUrl = (path: string) =>
@@ -120,9 +108,31 @@ const useTranslationWorkspace = (
         'POST',
         input
       );
-      if (options?.refresh !== false) {
-        await refresh();
+      if (options?.refresh === false) {
+        return result;
       }
+      await mutate(
+        (current) => {
+          if (!current?.data) {
+            return current;
+          }
+          const next: ApiResponse<WorkspaceDashboard> = {
+            data: applySavedCell(current.data, {
+              keyId: input.keyId,
+              locale: input.locale,
+              id: result.id,
+              value: result.value,
+              source: result.source,
+              status: result.status,
+              aiLocked: result.aiLocked,
+              updatedAt: result.updatedAt,
+            }),
+            error: undefined as never,
+          };
+          return next;
+        },
+        { revalidate: false }
+      );
       return result;
     },
     suggest: (input: CellInput) =>

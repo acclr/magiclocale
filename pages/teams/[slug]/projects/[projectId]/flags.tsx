@@ -40,7 +40,7 @@ const ProjectFlagsPage: NextPageWithLayout = () => {
         publishState={workspace.dashboard.publishState}
       />
       <div>
-        <h1 className="text-2xl font-semibold">{t('feature-flags')}</h1>
+        <h1 className="text-lg font-medium tracking-tight">{t('feature-flags')}</h1>
         <p className="text-sm text-muted-foreground">
           {t('feature-flags-help')}
         </p>

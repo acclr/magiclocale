@@ -55,7 +55,7 @@ const KeyExplorer = ({ slug, projectId }: KeyExplorerProps) => {
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">{t('keys')}</h1>
+        <h1 className="text-lg font-medium tracking-tight">{t('keys')}</h1>
         <p className="text-sm text-muted-foreground">{t('keys-help')}</p>
       </div>
       {health ? (

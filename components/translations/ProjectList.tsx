@@ -57,7 +57,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">
+          <h1 className="text-lg font-medium tracking-tight">
             {t('translation-projects')}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
@@ -159,17 +159,17 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
       )}
 
       {projects?.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {projects.map((project: Project) => (
             <Link
-              className="card bg-card transition hover:bg-muted"
+              className="card bg-card transition-colors hover:border-foreground/20 hover:bg-muted"
               href={`/teams/${slug}/projects/${project.id}/keys`}
               key={project.id}
             >
               <div className="card-body">
-                <h2 className="card-title text-lg">{project.name}</h2>
+                <h2 className="card-title text-sm">{project.name}</h2>
 
-                <p className="mt-1 text-base text-foreground/50">
+                <p className="mt-1 text-xs text-muted-foreground">
                   {project.billingScope === 'project'
                     ? t('billing-scope-project')
                     : t('billing-scope-team')}
@@ -188,7 +188,7 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
           ))}
         </div>
       ) : (
-        <div className="rounded-lg bg-card p-12 text-center">
+        <div className="rounded-lg border border-border bg-card p-10 text-center">
           <h2 className="font-semibold">{t('no-translation-projects')}</h2>
           <p className="mt-2 text-sm text-muted-foreground">
             {canCreate

@@ -1,5 +1,6 @@
 import type { Environment } from '../../../domain/environments';
 import {
+  applySavedCell,
   asAiTranslation,
   asManualTranslation,
   paginateTranslationDashboard,
@@ -206,5 +207,64 @@ describe('projectTranslationDashboard', () => {
       { search: 'file:billing' }
     );
     expect(byFile.rows.map((row) => row.key)).toEqual(['billing.save']);
+  });
+});
+
+describe('applySavedCell', () => {
+  it('updates one cell in place so search can see the new text', () => {
+    const project: Project = {
+      id: 'project',
+      teamId: 'team',
+      name: 'Website',
+      sourceLocale: 'en',
+      locales: ['en', 'sv'],
+      localeFormat: 'language',
+      billingScope: 'team',
+      billingId: null,
+      allowedOrigins: [],
+    };
+    const keys: TranslationKey[] = [
+      {
+        id: 'key',
+        projectId: project.id,
+        key: 'nav.save',
+        sourceText: 'Save',
+      },
+    ];
+    const translations: Translation[] = [
+      {
+        id: 'tr-en',
+        translationKeyId: 'key',
+        environmentId: environment.id,
+        locale: 'en',
+        ...asManualTranslation('Save'),
+        updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+      },
+    ];
+    const dashboard = projectTranslationDashboard(
+      project,
+      environment,
+      keys,
+      translations
+    );
+    const saved = applySavedCell(dashboard, {
+      keyId: 'key',
+      locale: 'sv',
+      id: 'tr-sv',
+      value: 'Spara',
+      source: 'manual',
+      status: 'manual',
+      aiLocked: true,
+      updatedAt: '2026-02-01T00:00:00.000Z',
+    });
+
+    expect(saved.rows[0]?.cells.sv).toMatchObject({
+      value: 'Spara',
+      status: 'manual',
+      missing: false,
+    });
+    expect(saved.rows[0]?.searchText).toContain('spara');
+    expect(saved.counts.missing).toBe(dashboard.counts.missing - 1);
+    expect(saved.counts.manual).toBe(dashboard.counts.manual + 1);
   });
 });

@@ -26,7 +26,7 @@ const FAQSection = () => {
       <Accordion
         type="single"
         collapsible
-        className="mx-auto max-w-2xl rounded-xl bg-surface px-3"
+        className="mx-auto max-w-2xl rounded-lg border border-border bg-surface px-3"
       >
         {faqs.map((faq) => (
           <AccordionItem key={faq.id} value={faq.id} className="px-4">

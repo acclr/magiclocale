@@ -35,7 +35,9 @@ const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
             variant: 'outline',
             size: collapsed ? 'icon' : 'xl',
           }),
-          collapsed ? 'h-10 w-10' : 'w-full justify-start text-sm font-semibold'
+          collapsed
+            ? 'size-8'
+            : 'h-8 w-full justify-start px-2 text-sm font-medium'
         )}
         aria-label={user.name || t('account')}
       >

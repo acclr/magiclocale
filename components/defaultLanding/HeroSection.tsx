@@ -69,7 +69,7 @@ const HeroSection = () => {
         </Reveal>
 
         <Reveal delay={150} className="relative mt-16 sm:mt-20">
-          <div className="mx-auto max-w-4xl overflow-hidden rounded-xl bg-surface">
+          <div className="mx-auto max-w-4xl overflow-hidden rounded-lg border border-border bg-surface">
             <div className="flex items-center justify-between gap-4 px-5 py-3.5">
               <span className="font-mono text-xs text-muted-foreground">
                 {translate(
@@ -86,7 +86,7 @@ const HeroSection = () => {
               {previewRows.map((row) => (
                 <div
                   key={row.key}
-                  className="grid grid-cols-1 items-center gap-x-4 gap-y-1 rounded-lg bg-background/60 px-4 py-3 sm:grid-cols-[minmax(0,14rem)_1fr_auto]"
+                  className="grid grid-cols-1 items-center gap-x-4 gap-y-1 rounded-md border border-border bg-background/60 px-3 py-2.5 sm:grid-cols-[minmax(0,14rem)_1fr_auto]"
                 >
                   <span className="truncate font-mono text-xs text-muted-foreground">
                     {row.key}
@@ -105,7 +105,7 @@ const HeroSection = () => {
               {stats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="rounded-lg bg-background/60 px-4 py-3"
+                  className="rounded-md border border-border bg-background/60 px-3 py-2.5"
                 >
                   <p className="font-mono text-[10px] uppercase tracking-wide text-muted-foreground">
                     {stat.label}

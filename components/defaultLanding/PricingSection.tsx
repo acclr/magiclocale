@@ -29,7 +29,7 @@ const PricingSection = () => {
           <Reveal key={plan.id} delay={index * 60}>
             <div
               className={cn(
-                'flex h-full flex-col rounded-xl p-7',
+                'flex h-full flex-col rounded-lg border border-border p-6',
                 plan.highlight ? 'bg-elevated' : 'bg-surface'
               )}
             >

@@ -31,7 +31,7 @@ const TeamTab = ({ activeTab, team, heading }: TeamTabProps) => {
       <p className="text-xs font-semibold uppercase tracking-wide text-primary">
         {team.name}
       </p>
-      <h2 className="mt-1 text-xl font-semibold">
+      <h2 className="mt-1 text-sm font-medium tracking-tight">
         {heading || (titleKey ? t(titleKey) : team.name)}
       </h2>
     </div>

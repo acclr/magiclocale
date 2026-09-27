@@ -40,7 +40,7 @@ const ProjectSettingsPage: NextPageWithLayout<{
         <p className="text-xs font-semibold uppercase tracking-wide text-primary">
           {workspace.dashboard.project.name}
         </p>
-        <h1 className="mt-1 text-2xl font-semibold">{t('project-settings')}</h1>
+        <h1 className="mt-1 text-lg font-medium tracking-tight">{t('project-settings')}</h1>
       </div>
       <EnvironmentSettings
         canEdit={canAccess('team_environment', ['update'])}

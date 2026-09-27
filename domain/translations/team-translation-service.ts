@@ -39,6 +39,25 @@ export class TeamTranslationService {
     environmentRef?: string | null,
     query?: Partial<DashboardQuery>
   ): Promise<TranslationDashboard> {
+    const loaded = await this.loadDashboard(teamId, projectId, environmentRef);
+    return paginateTranslationDashboard(loaded.dashboard, query);
+  }
+
+  /**
+   * The full working-copy grid plus the rows it was built from, so publish
+   * state can be derived without reading those tables again.
+   */
+  async loadDashboard(
+    teamId: string,
+    projectId: string,
+    environmentRef?: string | null
+  ): Promise<{
+    dashboard: TranslationDashboard;
+    project: Project;
+    environment: Environment;
+    keys: TranslationKey[];
+    translations: Translation[];
+  }> {
     const { project, environment } = await this.requireScope(
       teamId,
       projectId,
@@ -78,8 +97,13 @@ export class TeamTranslationService {
       }
       usageFilesByKey[meta.key] = files;
     }
-    return paginateTranslationDashboard(
-      projectTranslationDashboard(
+
+    return {
+      project,
+      environment,
+      keys,
+      translations,
+      dashboard: projectTranslationDashboard(
         project,
         environment,
         keys,
@@ -87,8 +111,7 @@ export class TeamTranslationService {
         catalogByKey,
         usageFilesByKey
       ),
-      query
-    );
+    };
   }
 
   async saveManualByKey(

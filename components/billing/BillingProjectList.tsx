@@ -32,7 +32,7 @@ const BillingProjectList = ({
   return (
     <div className="space-y-6">
       <section className="space-y-3">
-        <h2 className="card-title text-xl font-medium leading-none tracking-tight">
+        <h2 className="card-title text-sm font-medium tracking-tight">
           {t('team-retainer-projects')}
         </h2>
         <p className="text-sm text-muted-foreground">
@@ -45,7 +45,7 @@ const BillingProjectList = ({
         />
       </section>
       <section className="space-y-3">
-        <h2 className="card-title text-xl font-medium leading-none tracking-tight">
+        <h2 className="card-title text-sm font-medium tracking-tight">
           {t('project-billed-projects')}
         </h2>
         <p className="text-sm text-muted-foreground">

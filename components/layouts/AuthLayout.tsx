@@ -17,7 +17,7 @@ export default function AuthLayout({
 
   return (
     <>
-      <div className="flex min-h-full flex-1 flex-col justify-center px-6 py-20 lg:px-8">
+      <div className="app-canvas flex min-h-full flex-1 flex-col justify-center px-6 py-16 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-sm">
           <Link href="/">
             <Logo className="mx-auto h-12" color="light" />

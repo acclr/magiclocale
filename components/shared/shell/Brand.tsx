@@ -9,11 +9,11 @@ const Brand = ({ collapsed = false }: { collapsed?: boolean }) => {
   return (
     <Link
       href={href}
-      className={`flex shrink-0 items-center text-xl font-bold text-foreground transition-[width] duration-200 ease-out ${
+      className={`flex shrink-0 items-center text-foreground transition-[width] duration-200 ease-out ${
         collapsed ? 'justify-center' : 'gap-2'
       }`}
     >
-      <KeykitLogo collapsed={collapsed} />
+      <KeykitLogo collapsed={collapsed} heightClassName="h-6" />
       {collapsed ? <span className="sr-only">{app.name}</span> : null}
     </Link>
   );

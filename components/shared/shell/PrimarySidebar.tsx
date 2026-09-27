@@ -43,13 +43,13 @@ const PrimarySidebar = ({
 
   return (
     <div
-      className={`flex h-full grow flex-col gap-y-5 overflow-y-auto bg-sidebar text-sidebar-foreground ${
-        isCollapsed ? 'items-center px-5' : 'px-5'
+      className={`flex h-full grow flex-col gap-y-3 overflow-y-auto bg-sidebar text-sidebar-foreground ${
+        isCollapsed ? 'items-center px-2' : 'px-2.5'
       }`}
     >
       <div
-        className={`flex items-center pt-6 ${
-          isCollapsed ? 'flex-col gap-3' : 'justify-between gap-2'
+        className={`flex items-center pt-3.5 ${
+          isCollapsed ? 'flex-col gap-2' : 'justify-between gap-2'
         }`}
       >
         <Brand collapsed={isCollapsed} />

@@ -192,6 +192,91 @@ export function projectTranslationDashboard(
   };
 }
 
+const COUNTED_STATUSES = new Set<DashboardCell['status']>([
+  'ai',
+  'manual',
+  'needs-review',
+  'missing',
+]);
+
+export function applySavedCell<T extends TranslationDashboard>(
+  dashboard: T,
+  input: {
+    keyId: string;
+    locale: string;
+    id: string;
+    value: string;
+    source: TranslationSource;
+    status: TranslationStatus;
+    aiLocked: boolean;
+    updatedAt: Date | string;
+  }
+): T {
+  const counts = { ...dashboard.counts };
+  let replaced = false;
+  const rows = dashboard.rows.map((row) => {
+    if (row.keyId !== input.keyId) {
+      return row;
+    }
+    const previous = row.cells[input.locale];
+    if (!previous) {
+      return row;
+    }
+    replaced = true;
+    if (COUNTED_STATUSES.has(previous.status)) {
+      counts[previous.status] = Math.max(0, counts[previous.status] - 1);
+    }
+    if (COUNTED_STATUSES.has(input.status)) {
+      counts[input.status] += 1;
+    }
+
+    const cell: DashboardCell = {
+      translationId: input.id,
+      locale: input.locale,
+      value: input.value,
+      source: input.source,
+      status: input.status,
+      aiLocked: input.aiLocked,
+      missing: false,
+      updatedAt:
+        input.updatedAt instanceof Date
+          ? input.updatedAt.toISOString()
+          : input.updatedAt,
+    };
+    const cells = { ...row.cells, [input.locale]: cell };
+    const statuses = new Set<DashboardCell['status']>();
+    const missingLocales: string[] = [];
+    for (const [locale, item] of Object.entries(cells)) {
+      statuses.add(item.status);
+      if (item.missing) {
+        missingLocales.push(locale);
+      }
+    }
+    const previousValue = (previous.value ?? '').toLocaleLowerCase();
+    const nextValue = input.value.toLocaleLowerCase();
+    let searchText = row.searchText;
+    if (previousValue && searchText.includes(previousValue)) {
+      searchText = searchText.replace(previousValue, nextValue);
+    } else if (nextValue) {
+      searchText = `${searchText} ${nextValue}`;
+    }
+
+    return {
+      ...row,
+      cells,
+      statuses: Array.from(statuses),
+      missingLocales,
+      searchText,
+    };
+  });
+
+  if (!replaced) {
+    return dashboard;
+  }
+
+  return { ...dashboard, rows, counts };
+}
+
 export function filterDashboardRows(
   rows: DashboardRow[],
   queryInput: Partial<DashboardQuery> = {}

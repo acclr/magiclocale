@@ -72,9 +72,9 @@ const NavigationItem = ({
     <Link
       href={menu.href}
       className={classNames(
-        'group flex items-center rounded-lg text-sm text-sidebar-foreground -mx-1.5',
+        'group -mx-1 flex items-center rounded-md text-[13px] leading-5 text-sidebar-foreground',
         surface,
-        collapsed ? 'justify-center p-2' : 'gap-2 p-2 px-2',
+        collapsed ? 'justify-center p-1.5' : 'gap-2 px-2 py-1.5',
         menu.active && `${activeSurface}`,
         className
       )}

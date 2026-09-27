@@ -7,8 +7,8 @@
 
 @theme inline {
   --font-heading: var(--font-sans);
-  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+  --font-sans: 'Geist', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, SFMono-Regular, monospace;
   --color-persian-blue-50: #edf2ff;
   --color-persian-blue-100: #dfe8ff;
   --color-persian-blue-200: #c5d4ff;
@@ -31,9 +31,9 @@
   --color-international-orange-800: #a1320b;
   --color-international-orange-900: #822b0c;
   --color-international-orange-950: #461304;
-  --color-surface: #161618;
-  --color-elevated: #222226;
-  --shadow-pill: 0 18px 50px rgb(0 0 0 / 0.45);
+  --color-surface: #19191c;
+  --color-elevated: #26262b;
+  --shadow-pill: 0 10px 28px rgb(0 0 0 / 0.42);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -68,49 +68,49 @@
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
-  --radius-xl: 0.75rem;
-  --radius-2xl: 1rem;
-  --radius-3xl: 1.5rem;
-  --radius-4xl: 2rem;
+  --radius-xl: 0.625rem;
+  --radius-2xl: 0.75rem;
+  --radius-3xl: 1rem;
+  --radius-4xl: 1.25rem;
 }
 
 :root,
 .dark {
   color-scheme: dark;
-  /* Flat grayscale field. Cards and controls separate by fill, not stroke. */
-  --background: #09090b;
+  /* Charcoal field. Panels separate with a hairline stroke and a small fill step. */
+  --background: #141416;
   --foreground: #f4f4f5;
-  --card: #161618;
+  --card: #1b1b1e;
   --card-foreground: #f4f4f5;
-  --popover: #1c1c1f;
+  --popover: #1e1e22;
   --popover-foreground: #f4f4f5;
   --primary: #ff5900;
   --primary-foreground: #fff7ec;
   --secondary: #312ecb;
   --secondary-foreground: #edf2ff;
-  --muted: #222226;
-  --muted-foreground: #a1a1aa;
+  --muted: #232328;
+  --muted-foreground: #9b9ba4;
   --accent: #5d69f7;
   --accent-foreground: #edf2ff;
   --destructive: #e24b4b;
-  --border: rgb(255 255 255 / 0.06);
-  --input: #222226;
+  --border: rgb(255 255 255 / 0.1);
+  --input: #101012;
   --ring: #ff700a;
   --chart-1: #ff5900;
   --chart-2: #312ecb;
   --chart-3: #5d69f7;
   --chart-4: #ff9032;
   --chart-5: #7c8ffd;
-  --radius: 0.5rem;
-  --sidebar: #09090b;
+  --radius: 0.375rem;
+  --sidebar: #101012;
   --sidebar-foreground: #f4f4f5;
   --sidebar-primary: #ff5900;
   --sidebar-primary-foreground: #fff7ec;
-  --sidebar-accent: #161618;
+  --sidebar-accent: #141416;
   --sidebar-accent-foreground: #f4f4f5;
-  --sidebar-border: transparent;
+  --sidebar-border: rgb(255 255 255 / 0.1);
   --sidebar-ring: #ff700a;
-  --spacing: 0.3rem;
+  --spacing: 0.25rem;
 }
 
 @layer base {
@@ -121,6 +121,14 @@
   html,
   body {
     @apply h-full bg-background font-sans text-foreground antialiased;
+    letter-spacing: -0.011em;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
   }
 
   #__next {
@@ -138,9 +146,30 @@
   }
 }
 
+.app-canvas {
+  background-color: var(--background);
+  background-image:
+    radial-gradient(
+      1100px 640px at 0% -8%,
+      rgb(49 46 203 / 0.16),
+      transparent 58%
+    ),
+    radial-gradient(
+      820px 520px at 100% 0%,
+      rgb(93 105 247 / 0.07),
+      transparent 52%
+    ),
+    radial-gradient(
+      980px 680px at 100% 112%,
+      rgb(255 89 0 / 0.07),
+      transparent 48%
+    );
+  background-attachment: fixed;
+}
+
 .scrollbar {
   scrollbar-width: thin;
-  scrollbar-color: #2a2a2e #09090b;
+  scrollbar-color: #3a3a40 #101012;
 }
 
 .scrollbar::-webkit-scrollbar {
@@ -148,11 +177,11 @@
 }
 
 .scrollbar::-webkit-scrollbar-thumb {
-  background-color: #2a2a2e;
+  background-color: #3a3a40;
 }
 
 .scrollbar::-webkit-scrollbar-track {
-  background-color: #09090b;
+  background-color: #101012;
 }
 
 .scrollbar::-webkit-scrollbar-button {
@@ -160,8 +189,12 @@
 }
 
 @layer components {
+  :where(.rounded-sm, .rounded-md, .rounded-lg, .rounded-xl).bg-card {
+    border: 1px solid var(--border);
+  }
+
   .btn {
-    @apply inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-lg border border-transparent bg-clip-padding px-3 text-sm font-medium whitespace-nowrap transition-all outline-none select-none focus-visible:ring-3 focus-visible:ring-ring/40 disabled:pointer-events-none disabled:opacity-50;
+    @apply inline-flex h-8 shrink-0 items-center justify-center gap-1.5 rounded-md border border-transparent bg-clip-padding px-2.5 text-sm font-medium whitespace-nowrap transition-colors outline-none select-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-50;
   }
 
   .btn-primary {
@@ -173,7 +206,7 @@
   }
 
   .btn-outline {
-    @apply bg-muted text-foreground hover:bg-elevated;
+    @apply border-border bg-transparent text-foreground hover:bg-muted;
   }
 
   .btn-ghost {
@@ -202,17 +235,17 @@
 
   .input,
   .select {
-    @apply h-8 w-full rounded-lg border border-transparent bg-muted px-3 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/40;
+    @apply h-8 w-full rounded-md border border-border bg-input px-2.5 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30;
   }
 
   .textarea {
-    @apply min-h-24 w-full rounded-lg border border-transparent bg-muted px-3 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:ring-3 focus-visible:ring-ring/40;
+    @apply min-h-24 w-full rounded-md border border-border bg-input px-2.5 py-2 text-sm outline-none transition-colors placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30;
   }
 
   .input-bordered,
   .select-bordered,
   .textarea-bordered {
-    @apply border-transparent bg-muted;
+    @apply border-border bg-input;
   }
 
   .input-sm,
@@ -234,11 +267,11 @@
   }
 
   .card {
-    @apply rounded-xl bg-card text-card-foreground;
+    @apply rounded-lg border border-border bg-card text-card-foreground;
   }
 
   .card-body {
-    @apply p-4;
+    @apply p-3;
   }
 
   .card-title {
@@ -250,11 +283,11 @@
   }
 
   .badge {
-    @apply inline-flex h-5 items-center rounded-full bg-elevated px-2 text-xs;
+    @apply inline-flex h-5 items-center rounded-md border border-border bg-foreground/5 px-1.5 text-xs;
   }
 
   .badge-ghost {
-    @apply bg-muted text-muted-foreground;
+    @apply bg-foreground/5 text-muted-foreground;
   }
 
   .badge-sm {
@@ -262,11 +295,11 @@
   }
 
   .tabs {
-    @apply flex w-fit items-center gap-1 rounded-lg bg-card p-1;
+    @apply flex w-fit items-center gap-0.5 rounded-lg border border-border bg-card p-0.5;
   }
 
   .tab {
-    @apply inline-flex h-8 items-center rounded-md border-0 px-3 text-sm text-muted-foreground;
+    @apply inline-flex h-7 items-center rounded-md border-0 px-2.5 text-sm text-muted-foreground;
   }
 
   .tab-active {
@@ -274,7 +307,7 @@
   }
 
   .checkbox {
-    @apply size-4 rounded-md border border-transparent bg-background;
+    @apply size-4 rounded-sm border border-border bg-input;
   }
 
   .navbar {
@@ -322,11 +355,15 @@
   }
 
   .table :where(th, td) {
-    @apply px-3 py-2.5 align-middle;
+    @apply border-b border-border px-3 py-2 align-middle;
+  }
+
+  .table thead th {
+    @apply text-xs font-medium text-muted-foreground;
   }
 
   .table-sm :where(th, td) {
-    @apply px-2.5 py-2;
+    @apply px-2.5 py-1.5;
   }
 
   .table-pin-rows thead th {

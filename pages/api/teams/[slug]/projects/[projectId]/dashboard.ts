@@ -1,3 +1,4 @@
+import { paginateTranslationDashboard } from '@/domain/translations';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import {
   getEnvironmentService,
@@ -11,18 +12,30 @@ export default createTeamProjectApiHandler({
     resource: 'team_translation',
     action: 'read',
     async handle({ req, res, teamMember }) {
-      const { projectId, environment, page, pageSize, filter, search } =
+      const { projectId, environment, page, pageSize, filter, search, complete } =
         validateWithSchema(translationDashboardQuerySchema, req.query);
-      const [dashboard, environments] = await Promise.all([
-        getTeamTranslationService().dashboard(
+      const [loaded, environments] = await Promise.all([
+        getTeamTranslationService().loadDashboard(
           teamMember.team.id,
           projectId,
-          environment,
-          { page, pageSize, filter, search }
+          environment
         ),
         getEnvironmentService().list(teamMember.team.id, projectId),
       ]);
-      const status = await getVersionService().status(dashboard.environment.id);
+      const status = await getVersionService().statusFromParts(
+        loaded.environment,
+        loaded.project,
+        loaded.keys,
+        loaded.translations
+      );
+      const dashboard = complete
+        ? loaded.dashboard
+        : paginateTranslationDashboard(loaded.dashboard, {
+            page,
+            pageSize,
+            filter,
+            search,
+          });
       res.status(200).json({
         data: {
           ...dashboard,

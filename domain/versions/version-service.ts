@@ -141,18 +141,40 @@ export class VersionService {
 
   async status(environmentId: string): Promise<EnvironmentStatus> {
     const environment = await this.requireEnvironment(environmentId);
-    const [working, live, draft] = await Promise.all([
-      this.buildWorkingSnapshot(environment),
-      this.loadLiveSnapshot(environment),
-      this.repository.findDraft(environmentId),
+    const project = await this.requireProject(environment.projectId);
+    const [keys, translations] = await Promise.all([
+      this.translations.listKeys(project.id),
+      this.translations.listTranslations(project.id, environment.id),
     ]);
-    const diff = diffSnapshots(live, working);
+    return this.statusFromParts(environment, project, keys, translations);
+  }
+
+  /**
+   * Pending-publish summary from a working copy the caller already loaded.
+   * Avoids reading every key and translation a second time.
+   */
+  async statusFromParts(
+    environment: Environment,
+    project: Project,
+    keys: TranslationKey[],
+    translations: Translation[]
+  ): Promise<EnvironmentStatus> {
+    const [flags, live, draft, liveVersion] = await Promise.all([
+      this.flags.buildSnapshot(environment.id),
+      this.loadLiveSnapshot(environment),
+      this.repository.findDraft(environment.id),
+      environment.liveVersionId
+        ? this.repository.getVersion(environment.liveVersionId)
+        : Promise.resolve(null),
+    ]);
+    const diff = diffSnapshots(live, {
+      locales: buildLocaleBundles(project, keys, translations),
+      flags,
+    });
 
     return {
       environment,
-      liveVersion: environment.liveVersionId
-        ? await this.repository.getVersion(environment.liveVersionId)
-        : null,
+      liveVersion,
       draft,
       diff,
       pendingCount: diff.total,

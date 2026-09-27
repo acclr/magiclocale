@@ -63,7 +63,7 @@ const Payments = ({ teamFeatures }) => {
             <KeykitSubscriptions subscriptions={subscriptions} />
           </div>
 
-          <h2 className="card-title mb-2 text-xl font-medium leading-none tracking-tight">
+          <h2 className="card-title mb-2 text-sm font-medium tracking-tight">
             {t('team-retainer-plans')}
           </h2>
           <p className="mb-4 text-sm text-muted-foreground">

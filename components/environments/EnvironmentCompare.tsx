@@ -29,7 +29,7 @@ const EnvironmentCompare = ({
   return (
     <div className="space-y-4">
       <div>
-        <h1 className="text-2xl font-semibold">{t('compare-environments')}</h1>
+        <h1 className="text-lg font-medium tracking-tight">{t('compare-environments')}</h1>
         <p className="text-sm text-muted-foreground">{t('compare-help')}</p>
       </div>
       <div className="flex flex-wrap gap-3">

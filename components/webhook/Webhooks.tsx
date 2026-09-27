@@ -62,7 +62,7 @@ const Webhooks = ({ team }: { team: Team }) => {
       <div className="space-y-3">
         <div className="flex justify-between items-center">
           <div className="space-y-3">
-            <h2 className="text-xl font-medium leading-none tracking-tight">
+            <h2 className="text-sm font-medium tracking-tight">
               {t('webhooks')}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400">
