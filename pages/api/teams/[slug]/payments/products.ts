@@ -23,7 +23,8 @@ export default async function handler(
 
     const teamCatalog = await getBillingCatalog(
       teamMember.team.billingId,
-      'team'
+      'team',
+      teamMember.team.id
     );
     const projects = await getProjectService().list(teamMember.team.id);
     const projectSummaries = await Promise.all(

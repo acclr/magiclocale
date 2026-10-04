@@ -4,8 +4,7 @@ export function sdkSetupSnippets(projectId: string) {
     install: `npm install @keykithq/sdk @keykithq/cli`,
     env: `# .env
 KEYKIT_API_KEY=
-KEYKIT_PROJECT_ID=${projectId}
-KEYKIT_BASE_URL=https://www.keykit.dev`,
+KEYKIT_PROJECT_ID=${projectId}`,
     config: `// keykit.config.ts (keykit.config.js and keykit.config.mjs also work)
 import { defineKeykitConfig } from '@keykithq/sdk';
 

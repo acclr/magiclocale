@@ -1,9 +1,8 @@
 import {
   paginateTranslationDashboard,
   type TranslationFilter,
-  type DashboardRow,
 } from '../../domain/translations';
-import { getLocaleDisplay, localeColor } from '../../domain/translations';
+import { getLocaleDisplay } from '../../domain/translations';
 import useCanAccess from '../../hooks/useCanAccess';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
@@ -16,18 +15,10 @@ import { Error as ErrorDisplay } from '@/components/shared';
 import { CellDraftsProvider } from './CellDrafts';
 import LocaleName from './LocaleName';
 import LocaleSelect from './LocaleSelect';
-import TranslationCell from './TranslationCell';
 import TranslationDrawer from './TranslationDrawer';
+import TranslationGrid from './TranslationGrid';
 import TranslationSaveBar from './TranslationSaveBar';
 import PublishBar from '../versions/PublishBar';
-
-function getLanguageName(locale) {
-  const code = new Intl.Locale(locale).language;
-
-  return new Intl.DisplayNames([code], {
-    type: 'language',
-  }).of(code);
-}
 
 type TranslationWorkspaceProps = {
   slug: string;
@@ -418,182 +409,52 @@ const TranslationWorkspace = ({
           ))}
         </nav>
 
-        <div
-          aria-busy={workspace.isRefreshing}
-          className="relative overflow-hidden rounded-lg bg-card"
-        >
-          {workspace.isRefreshing && (
-            <div className="absolute inset-x-0 top-0 z-20 h-0.5 animate-pulse bg-primary" />
-          )}
-          <div className="relative flex w-full max-w-full overflow-auto">
-            <table className="table-pin-rows table-pin-cols table min-w-max">
-              <thead className="sticky top-0">
-                <tr>
-                  {canEdit && (
-                    <th className="w-10 bg-card px-2 py-2.5">
-                      <input
-                        aria-label={t('select-keys-on-page')}
-                        checked={allPageKeysSelected}
-                        className="checkbox checkbox-sm"
-                        onChange={togglePageKeys}
-                        ref={(element) => {
-                          if (element) {
-                            element.indeterminate = somePageKeysSelected;
-                          }
-                        }}
-                        type="checkbox"
-                      />
-                    </th>
-                  )}
-                  <th className="min-w-64 bg-card px-3 py-2.5">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span>{t('translation-key')}</span>
-                      {canEdit && pagination && pagination.totalKeys > 0 && (
-                        <button
-                          className="btn btn-ghost btn-xs"
-                          onClick={() => {
-                            setSelectedKeyIds([]);
-                            setSelectAllMatching(true);
-                          }}
-                          type="button"
-                        >
-                          {t('select-all-matching-keys', {
-                            count: pagination.totalKeys,
-                          })}
-                        </button>
-                      )}
-                    </div>
-                  </th>
-                  {dashboard.locales.map((projectLocale) => {
-                    const color = localeColor(projectLocale);
-                    const display = getLocaleDisplay(projectLocale);
-                    return (
-                      <th
-                        className="min-w-72 px-3 py-2.5"
-                        key={projectLocale}
-                        style={{
-                          backgroundColor: color.background,
-                        }}
-                        title={display.label}
-                      >
-                        <label className="flex items-center gap-2">
-                          {canEdit && (
-                            <input
-                              checked={selectedLocales.includes(projectLocale)}
-                              className="checkbox checkbox-sm"
-                              onChange={() =>
-                                setSelectedLocales((current) =>
-                                  current.includes(projectLocale)
-                                    ? current.filter(
-                                        (locale) => locale !== projectLocale
-                                      )
-                                    : [...current, projectLocale]
-                                )
-                              }
-                              type="checkbox"
-                            />
-                          )}
-                          <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold">
-                            <LocaleName code={projectLocale} option={display} />
-                            <span className="ml-1">
-                              {getLanguageName(
-                                projectLocale
-                              )?.[0].toUpperCase() +
-                                (getLanguageName(projectLocale)?.slice(1) ??
-                                  '')}
-                            </span>
-                          </span>
-                          {projectLocale === dashboard.project.sourceLocale && (
-                            <span className="badge badge-sm">
-                              {t('source')}
-                            </span>
-                          )}
-                        </label>
-                      </th>
-                    );
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row: DashboardRow) => (
-                  <tr key={row.keyId} className="odd:bg-foreground/5">
-                    {canEdit && (
-                      <td className="w-10 px-2 py-2.5 align-top">
-                        <input
-                          aria-label={t('select-key', { key: row.key })}
-                          checked={
-                            selectAllMatching ||
-                            selectedKeyIds.includes(row.keyId)
-                          }
-                          className="checkbox checkbox-sm"
-                          onChange={() => toggleKey(row.keyId)}
-                          type="checkbox"
-                        />
-                      </td>
-                    )}
-                    <th className="max-w-72 px-3 py-2.5 align-top">
-                      <p className="break-words font-mono text-xs font-normal">
-                        {row.key}
-                      </p>
-                      {/*<p className="mt-2 line-clamp-3 whitespace-normal text-xs font-normal text-muted-foreground">
-                        {row.sourceText}
-                      </p>*/}
-                    </th>
-                    {dashboard.locales.map((projectLocale) => {
-                      const color = localeColor(projectLocale);
-                      return (
-                        <td
-                          className="relative z-0 h-20 overflow-visible p-0 align-top focus-within:z-30"
-                          key={projectLocale}
-                          style={{
-                            backgroundColor: color.background,
-                          }}
-                        >
-                          <TranslationCell
-                            canEdit={canEdit}
-                            cell={row.cells[projectLocale]}
-                            fallbackValue={
-                              projectLocale === dashboard.project.sourceLocale
-                                ? row.sourceText
-                                : undefined
-                            }
-                            keyId={row.keyId}
-                            onOpen={() =>
-                              setSelected({
-                                keyId: row.keyId,
-                                locale: projectLocale,
-                              })
-                            }
-                            onSave={(value, options) =>
-                              workspace.saveManual(
-                                {
-                                  keyId: row.keyId,
-                                  locale: projectLocale,
-                                  value,
-                                },
-                                options
-                              )
-                            }
-                          />
-                        </td>
-                      );
-                    })}
-                  </tr>
-                ))}
-                {!rows.length && (
-                  <tr>
-                    <td
-                      className="py-12 text-center text-muted-foreground"
-                      colSpan={dashboard.locales.length + 1 + (canEdit ? 1 : 0)}
-                    >
-                      {t('no-matching-translations')}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <TranslationGrid
+          canEdit={canEdit}
+          isRefreshing={workspace.isRefreshing}
+          keySelection={
+            canEdit
+              ? {
+                  allSelected: allPageKeysSelected,
+                  someSelected: somePageKeysSelected,
+                  isSelected: (keyId) =>
+                    selectAllMatching || selectedKeyIds.includes(keyId),
+                  toggle: toggleKey,
+                  togglePage: togglePageKeys,
+                  totalMatching: pagination?.totalKeys,
+                  onSelectAllMatching: () => {
+                    setSelectedKeyIds([]);
+                    setSelectAllMatching(true);
+                  },
+                }
+              : undefined
+          }
+          localeSelection={
+            canEdit
+              ? {
+                  selected: selectedLocales,
+                  toggle: (projectLocale) =>
+                    setSelectedLocales((current) =>
+                      current.includes(projectLocale)
+                        ? current.filter((item) => item !== projectLocale)
+                        : [...current, projectLocale]
+                    ),
+                }
+              : undefined
+          }
+          locales={dashboard.locales}
+          onOpenCell={(keyId, projectLocale) =>
+            setSelected({ keyId, locale: projectLocale })
+          }
+          onSaveCell={(keyId, projectLocale, value, options) =>
+            workspace.saveManual(
+              { keyId, locale: projectLocale, value },
+              options
+            )
+          }
+          rows={rows}
+          sourceLocale={dashboard.project.sourceLocale}
+        />
 
         {pagination && pagination.totalKeys > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3">

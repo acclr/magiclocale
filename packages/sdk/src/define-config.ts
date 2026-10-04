@@ -15,7 +15,8 @@ export const KEYKIT_CONFIG_FILES = [
 
 /**
  * Options from `keykit.config.ts` (or `.js` / `.mjs` / `.cjs` / `.json`).
- * Secrets can stay in `KEYKIT_API_KEY`, `KEYKIT_PROJECT_ID`, and `KEYKIT_BASE_URL`.
+ * Secrets can stay in `KEYKIT_API_KEY` and `KEYKIT_PROJECT_ID`.
+ * The API host defaults to `https://www.keykit.dev`.
  */
 export type KeykitProjectConfig = {
   /** Defaults to `KEYKIT_API_KEY`. */
@@ -24,7 +25,7 @@ export type KeykitProjectConfig = {
   ingestToken?: string;
   /** Defaults to `KEYKIT_PROJECT_ID`. */
   projectId?: string;
-  /** Defaults to `KEYKIT_BASE_URL`. */
+  /** Defaults to `https://www.keykit.dev`. Set only to point at another host. */
   baseUrl?: string;
   sourceLocale?: string;
   locale?: string;

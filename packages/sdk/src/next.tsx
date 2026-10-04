@@ -15,7 +15,8 @@ export type KeykitServerTranslator = KeykitTranslateApi;
 /**
  * App Router setup. `keykit.config.ts` and `.keykit/` are picked up
  * automatically. Call this only to override that file. Env vars
- * `KEYKIT_API_KEY`, `KEYKIT_PROJECT_ID`, and `KEYKIT_BASE_URL` fill any gaps.
+ * `KEYKIT_API_KEY` and `KEYKIT_PROJECT_ID` fill any gaps. The API host is
+ * `https://www.keykit.dev` unless `KEYKIT_BASE_URL` points somewhere else.
  *
  * Server and Client Components then call `useTranslate()` from
  * `@keykithq/sdk/react`. Wrap the tree in `KeykitProvider` so client

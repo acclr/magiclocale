@@ -336,6 +336,26 @@ function entitlementFromPlan(
   };
 }
 
+/** Company team. Inclusive even when it has no paid subscription. */
+export const HOUSE_TEAM_SLUG = 'keykit-ab';
+
+export function teamIsInclusive(team: {
+  slug: string;
+  inclusive: boolean;
+}): boolean {
+  return team.inclusive || team.slug === HOUSE_TEAM_SLUG;
+}
+
+/** Enterprise limits, marked subscribed so the dashboard treats the grant as the current plan. */
+export function inclusiveTeamEntitlement(
+  billingScope: BillingScope
+): KeykitEntitlement {
+  return entitlementFromPlan('enterprise', billingScope, {
+    subscribed: true,
+    priceId: null,
+  });
+}
+
 export function customerIdForScope(
   billingScope: BillingScope,
   teamBillingId: string | null | undefined,

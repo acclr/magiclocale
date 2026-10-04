@@ -20,15 +20,16 @@ export default defineKeykitConfig({
 });
 ```
 
-Credentials come from the config file or from the environment:
+The CLI calls `https://www.keykit.dev`. A consuming app does not set a host. `KEYKIT_BASE_URL` or `--base-url` is only for pointing at another API.
+
+Credentials come from `.env`, `.env.local`, the environment, or the config file:
 
 ```bash
 KEYKIT_API_KEY=
 KEYKIT_PROJECT_ID=
-KEYKIT_BASE_URL=https://www.keykit.dev
 ```
 
-A flag overrides the environment, which overrides `keykit.config.ts`.
+A flag overrides the environment, which overrides `keykit.config.ts`. `.env.local` overrides `.env`.
 
 ## pull
 
@@ -42,7 +43,7 @@ Writes `.keykit/catalog.json` and one `.keykit/<locale>.json` per published loca
 npx @keykithq/cli pull --out .keykit --environment production --version 3
 ```
 
-`--out` overrides the folder (`dir` in the config, otherwise `.keykit`). `--base-url`, `--project-id`, and `--token` override the environment and the config file.
+`--out` overrides the folder (`dir` in the config, otherwise `.keykit`). `--project-id` and `--token` override the environment and the config file. `--base-url` overrides the default API host.
 
 ## sync
 

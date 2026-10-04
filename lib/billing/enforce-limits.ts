@@ -29,16 +29,17 @@ export async function countTeamSeatsUsed(teamId: string): Promise<number> {
 }
 
 export async function getTeamEntitlementByBillingId(
-  billingId: string | null | undefined
+  billingId: string | null | undefined,
+  teamId?: string | null
 ): Promise<KeykitEntitlement> {
-  return getTeamEntitlement(billingId ?? null);
+  return getTeamEntitlement(billingId ?? null, teamId);
 }
 
 export async function enforceTeamMemberLimit(
   teamId: string,
   billingId: string | null | undefined
 ): Promise<void> {
-  const entitlement = await getTeamEntitlement(billingId ?? null);
+  const entitlement = await getTeamEntitlement(billingId ?? null, teamId);
   if (entitlement.maxTeamMembers === null) {
     return;
   }
@@ -53,7 +54,7 @@ export async function enforceProjectLimit(
   billingId: string | null | undefined,
   currentProjectCount: number
 ): Promise<void> {
-  const entitlement = await getTeamEntitlement(billingId ?? null);
+  const entitlement = await getTeamEntitlement(billingId ?? null, teamId);
   if (entitlement.maxProjects === null) {
     return;
   }
@@ -126,7 +127,7 @@ export async function enforceConnectedSourceLimit(
   teamId: string,
   billingId: string | null | undefined
 ): Promise<void> {
-  const entitlement = await getTeamEntitlement(billingId ?? null);
+  const entitlement = await getTeamEntitlement(billingId ?? null, teamId);
   const max = entitlement.maxConnectedSources;
   if (max === null) {
     return;

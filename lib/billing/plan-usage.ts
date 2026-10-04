@@ -165,7 +165,8 @@ async function meterLiveRequest(
   );
   const entitlement = await getEntitlementForCustomer(
     stripeCustomerId,
-    billingScope
+    billingScope,
+    project.teamId
   );
   const liveRequests = await incrementLiveRequests(
     planUsageScopeId(billingScope, project.teamId, project.id),

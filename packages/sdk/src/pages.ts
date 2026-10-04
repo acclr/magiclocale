@@ -37,8 +37,9 @@ export { KeykitProvider } from './pages-provider.js';
  * ```
  *
  * Reads `keykit.config.ts` from the project root, then `.keykit/catalog.json`.
- * `KEYKIT_API_KEY`, `KEYKIT_PROJECT_ID`, and `KEYKIT_BASE_URL` still come from
- * the environment when the config file omits them. Set `routing: 'path'` in
+ * `KEYKIT_API_KEY` and `KEYKIT_PROJECT_ID` still come from the environment
+ * when the config file omits them. The API host is `https://www.keykit.dev`
+ * unless `KEYKIT_BASE_URL` points somewhere else. Set `routing: 'path'` in
  * the config file so `/` is the default locale and `/sv` is Swedish.
  * `createKeykit({ ... })` overrides the file for one page.
  */

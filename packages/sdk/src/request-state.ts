@@ -159,7 +159,6 @@ function toBrowserConfig(config: KeykitNextConfig): KeykitConfig {
     delivery: config.delivery,
     baseUrl: config.baseUrl,
     projectId: config.projectId,
-    ingestToken: undefined,
     sourceLocale: config.sourceLocale,
     locale: config.locale,
     catalogs: config.catalogs,

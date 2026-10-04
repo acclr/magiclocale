@@ -6,8 +6,9 @@ export type CreateKeykitOptions = {
   /** Defaults to `KEYKIT_PROJECT_ID` or `NEXT_PUBLIC_KEYKIT_PROJECT_ID`. */
   projectId?: string;
   /**
-   * Defaults to `KEYKIT_BASE_URL` or `NEXT_PUBLIC_KEYKIT_BASE_URL`,
-   * then `https://www.keykit.dev`. Pass `''` to skip the network.
+   * Defaults to `https://www.keykit.dev`. `KEYKIT_BASE_URL` or
+   * `NEXT_PUBLIC_KEYKIT_BASE_URL` point at another host. Pass `''` to skip
+   * the network.
    */
   baseUrl?: string;
   /** Defaults to `KEYKIT_SOURCE_LOCALE` or `en`. */

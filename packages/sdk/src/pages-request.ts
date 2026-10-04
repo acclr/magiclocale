@@ -117,6 +117,7 @@ async function loadLocale(
   }
 }
 
+/** Page props must not carry the API key. `ingestToken` is that same key. */
 function toClientConfig(
   config: KeykitConfig,
   locale: string,
@@ -140,7 +141,6 @@ function toClientConfig(
       delivery: 'static',
       baseUrl: config.baseUrl ?? '',
       projectId: config.projectId ?? '',
-      ingestToken: undefined,
       sourceLocale,
       locale,
       catalogs,
@@ -155,7 +155,6 @@ function toClientConfig(
     ingest: false,
     baseUrl: config.baseUrl,
     projectId: config.projectId,
-    ingestToken: undefined,
     sourceLocale,
     locale,
     ...(config.refreshIntervalMs !== undefined

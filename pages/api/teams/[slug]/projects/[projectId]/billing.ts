@@ -27,7 +27,8 @@ export default createTeamProjectApiHandler({
           teamMember.team.billingId,
           project.billingId
         ),
-        project.billingScope
+        project.billingScope,
+        teamMember.team.id
       );
       res.status(200).json({
         data: {
@@ -59,7 +60,8 @@ export default createTeamProjectApiHandler({
           teamMember.team.billingId,
           project.billingId
         ),
-        project.billingScope
+        project.billingScope,
+        teamMember.team.id
       );
       res.status(200).json({
         data: {

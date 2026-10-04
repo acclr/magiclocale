@@ -12,6 +12,7 @@ import {
   resolveScanOptions,
 } from './sync-command';
 import { normalizeChunkSize } from './sync-batch';
+import { loadProjectEnv, resolveBaseUrl } from './load-env';
 
 function flatten(
   value: unknown,
@@ -35,6 +36,7 @@ function flatten(
 
 async function main() {
   const [, , command, ...args] = process.argv;
+  loadProjectEnv(argValue(args, '--root') ?? process.cwd());
   if (command === 'rewrite') {
     const file = argValue(args, '--file');
     const root = argValue(args, '--root') ?? process.cwd();
@@ -53,11 +55,10 @@ async function main() {
     const setup = await resolveKeykitSetup();
     const outDir = argValue(args, '--out') ?? setup.directory;
     const catalog = await pullTranslationCatalog({
-      baseUrl: requiredSetting(
-        args,
-        '--base-url',
-        setup.config.baseUrl,
-        'KEYKIT_BASE_URL'
+      baseUrl: resolveBaseUrl(
+        argValue(args, '--base-url'),
+        process.env.KEYKIT_BASE_URL,
+        setup.config.baseUrl
       ),
       projectId: requiredSetting(
         args,
@@ -120,11 +121,10 @@ async function main() {
     await executeSync({
       root,
       directory: setup.directory,
-      baseUrl: requiredSetting(
-        args,
-        '--base-url',
-        setup.config.baseUrl,
-        'KEYKIT_BASE_URL'
+      baseUrl: resolveBaseUrl(
+        argValue(args, '--base-url'),
+        process.env.KEYKIT_BASE_URL,
+        setup.config.baseUrl
       ),
       projectId: requiredSetting(
         args,
@@ -182,8 +182,9 @@ do not commit it.
 pull writes .keykit/catalog.json plus one JSON file per locale for
 @keykithq/sdk static delivery. It reads keykit.config.ts when present.
 Flags override the environment, which overrides the config file.
-Credentials can also come from KEYKIT_BASE_URL, KEYKIT_PROJECT_ID, and
-KEYKIT_API_KEY.
+The API is https://www.keykit.dev. Set KEYKIT_BASE_URL or --base-url
+only to point at another host. KEYKIT_PROJECT_ID and KEYKIT_API_KEY
+come from the environment, .env, .env.local, or keykit.config.
 
 The backend never writes customer filesystems. Apply Keykit migrations
 locally, then commit the result.`);

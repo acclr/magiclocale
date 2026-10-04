@@ -18,7 +18,10 @@ export default async function handler(
 
     const teamMember = await throwIfNoTeamAccess(req, res);
     throwIfNotAllowed(teamMember, 'team', 'read');
-    const entitlement = await getTeamEntitlement(teamMember.team.billingId);
+    const entitlement = await getTeamEntitlement(
+      teamMember.team.billingId,
+      teamMember.team.id
+    );
     res.json({ data: entitlement });
   } catch (error: any) {
     const message = error.message || 'Something went wrong';

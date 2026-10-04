@@ -17,8 +17,9 @@ Add credentials to `.env`. The API key stays on the server.
 ```bash
 KEYKIT_API_KEY=
 KEYKIT_PROJECT_ID=
-KEYKIT_BASE_URL=https://www.keykit.dev
 ```
+
+Requests go to `https://www.keykit.dev`. Set `KEYKIT_BASE_URL` only to point at another host.
 
 `NEXT_PUBLIC_KEYKIT_API_KEY` is only needed when the browser calls Keykit directly. If it does, add that site under **Project settings → Allowed browser origins**.
 

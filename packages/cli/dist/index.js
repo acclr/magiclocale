@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // src/index.ts
-import { readFileSync as readFileSync4 } from "fs";
-import { resolve as resolve3 } from "path";
+import { readFileSync as readFileSync5 } from "fs";
+import { resolve as resolve4 } from "path";
 import { resolveKeykitSetup } from "@keykithq/sdk/project-config";
 
 // src/pull.ts
@@ -143,12 +143,12 @@ function scanSourceTree(root, options = {}) {
   return scanProject(root, options).keys;
 }
 function scanProject(root, options = {}) {
-  const projectRoot = resolve2(root);
+  const projectRoot2 = resolve2(root);
   const exclude = excludeRules(options.exclude);
   const found = /* @__PURE__ */ new Map();
   let fileCount = 0;
-  for (const target of scanTargets(projectRoot, options.include)) {
-    for (const file of walk2(target, projectRoot, exclude)) {
+  for (const target of scanTargets(projectRoot2, options.include)) {
+    for (const file of walk2(target, projectRoot2, exclude)) {
       fileCount += 1;
       collectKeys(file, found);
     }
@@ -296,7 +296,7 @@ function isTerminal(error) {
   return /\(401\)|\(403\)|\(402\)|\(422\)/.test(error.message);
 }
 function delay(milliseconds) {
-  return new Promise((resolve4) => setTimeout(resolve4, milliseconds));
+  return new Promise((resolve5) => setTimeout(resolve5, milliseconds));
 }
 async function readError2(response) {
   try {
@@ -370,8 +370,8 @@ function createSyncSession(input = process.stdin, onChange) {
       if (!paused) {
         return "continue";
       }
-      return new Promise((resolve4) => {
-        waiters.push(resolve4);
+      return new Promise((resolve5) => {
+        waiters.push(resolve5);
       });
     },
     detach() {
@@ -479,7 +479,7 @@ async function runChunkedSync(options) {
   return { sent, stopped: "done", synced };
 }
 function delay2(milliseconds) {
-  return new Promise((resolve4) => setTimeout(resolve4, milliseconds));
+  return new Promise((resolve5) => setTimeout(resolve5, milliseconds));
 }
 
 // src/sync-state.ts
@@ -711,6 +711,78 @@ function readScanConfig(config) {
   return config.scan;
 }
 
+// src/load-env.ts
+import { existsSync as existsSync2, readFileSync as readFileSync4 } from "fs";
+import { dirname, join as join5, resolve as resolve3 } from "path";
+var KEYKIT_DEFAULT_BASE_URL = "https://www.keykit.dev";
+var CONFIG_NAMES = [
+  "keykit.config.ts",
+  "keykit.config.mts",
+  "keykit.config.js",
+  "keykit.config.mjs",
+  "keykit.config.cjs",
+  "keykit.config.json"
+];
+function loadProjectEnv(start = process.cwd()) {
+  const dir = projectRoot(start);
+  const values = {
+    ...parseEnvFile(join5(dir, ".env")),
+    ...parseEnvFile(join5(dir, ".env.local"))
+  };
+  for (const [key, value] of Object.entries(values)) {
+    if (process.env[key] === void 0) {
+      process.env[key] = value;
+    }
+  }
+}
+function resolveBaseUrl(flag, fromEnv, fromConfig) {
+  const value = [flag, fromEnv, fromConfig].find((entry) => entry?.trim());
+  return value?.trim() || KEYKIT_DEFAULT_BASE_URL;
+}
+function parseEnvFile(file) {
+  if (!existsSync2(file)) {
+    return {};
+  }
+  const values = {};
+  const text = readFileSync4(file, "utf8").replace(/^\uFEFF/, "");
+  for (const line of text.split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) {
+      continue;
+    }
+    const body = trimmed.startsWith("export ") ? trimmed.slice("export ".length).trim() : trimmed;
+    const separator = body.indexOf("=");
+    if (separator <= 0) {
+      continue;
+    }
+    const key = body.slice(0, separator).trim();
+    const value = unquote(body.slice(separator + 1).trim());
+    if (key) {
+      values[key] = value;
+    }
+  }
+  return values;
+}
+function projectRoot(start) {
+  let dir = resolve3(start);
+  for (; ; ) {
+    if (existsSync2(join5(dir, "package.json")) || existsSync2(join5(dir, ".env")) || existsSync2(join5(dir, ".env.local")) || CONFIG_NAMES.some((name) => existsSync2(join5(dir, name)))) {
+      return dir;
+    }
+    const parent = dirname(dir);
+    if (parent === dir) {
+      return resolve3(start);
+    }
+    dir = parent;
+  }
+}
+function unquote(value) {
+  if (value.startsWith('"') && value.endsWith('"') && value.length >= 2 || value.startsWith("'") && value.endsWith("'") && value.length >= 2) {
+    return value.slice(1, -1);
+  }
+  return value;
+}
+
 // src/index.ts
 function flatten(value, prefix = "", out = []) {
   if (typeof value === "string") {
@@ -729,14 +801,15 @@ function flatten(value, prefix = "", out = []) {
 }
 async function main() {
   const [, , command, ...args] = process.argv;
+  loadProjectEnv(argValue(args, "--root") ?? process.cwd());
   if (command === "rewrite") {
     const file = argValue(args, "--file");
     const root = argValue(args, "--root") ?? process.cwd();
     if (!file) {
       throw new Error("Usage: keykit rewrite --file migration.json --root .");
     }
-    const plan = JSON.parse(readFileSync4(resolve3(file), "utf8"));
-    const changed = rewriteSourceTree(resolve3(root), plan);
+    const plan = JSON.parse(readFileSync5(resolve4(file), "utf8"));
+    const changed = rewriteSourceTree(resolve4(root), plan);
     console.log(
       `Rewrote ${changed} file(s). Upload completion in the Keykit migrations UI.`
     );
@@ -746,11 +819,10 @@ async function main() {
     const setup = await resolveKeykitSetup();
     const outDir = argValue(args, "--out") ?? setup.directory;
     const catalog = await pullTranslationCatalog({
-      baseUrl: requiredSetting(
-        args,
-        "--base-url",
-        setup.config.baseUrl,
-        "KEYKIT_BASE_URL"
+      baseUrl: resolveBaseUrl(
+        argValue(args, "--base-url"),
+        process.env.KEYKIT_BASE_URL,
+        setup.config.baseUrl
       ),
       projectId: requiredSetting(
         args,
@@ -780,11 +852,11 @@ async function main() {
     const requestedRoot = argValue(args, "--root");
     const setup = await resolveKeykitSetup(
       {},
-      requestedRoot ? resolve3(requestedRoot) : process.cwd()
+      requestedRoot ? resolve4(requestedRoot) : process.cwd()
     );
-    const root = resolve3(requestedRoot ?? setup.root);
+    const root = resolve4(requestedRoot ?? setup.root);
     const scanOptions = resolveScanOptions(
-      root === resolve3(setup.root) ? setup.config : {},
+      root === resolve4(setup.root) ? setup.config : {},
       argValues(args, "--include"),
       argValues(args, "--exclude")
     );
@@ -804,11 +876,10 @@ async function main() {
     await executeSync({
       root,
       directory: setup.directory,
-      baseUrl: requiredSetting(
-        args,
-        "--base-url",
-        setup.config.baseUrl,
-        "KEYKIT_BASE_URL"
+      baseUrl: resolveBaseUrl(
+        argValue(args, "--base-url"),
+        process.env.KEYKIT_BASE_URL,
+        setup.config.baseUrl
       ),
       projectId: requiredSetting(
         args,
@@ -834,7 +905,7 @@ async function main() {
     if (!file) {
       throw new Error("Usage: keykit flatten-json --file messages.json");
     }
-    const parsed = JSON.parse(readFileSync4(resolve3(file), "utf8"));
+    const parsed = JSON.parse(readFileSync5(resolve4(file), "utf8"));
     console.log(JSON.stringify(flatten(parsed), null, 2));
     return;
   }
@@ -861,8 +932,9 @@ do not commit it.
 pull writes .keykit/catalog.json plus one JSON file per locale for
 @keykithq/sdk static delivery. It reads keykit.config.ts when present.
 Flags override the environment, which overrides the config file.
-Credentials can also come from KEYKIT_BASE_URL, KEYKIT_PROJECT_ID, and
-KEYKIT_API_KEY.
+The API is https://www.keykit.dev. Set KEYKIT_BASE_URL or --base-url
+only to point at another host. KEYKIT_PROJECT_ID and KEYKIT_API_KEY
+come from the environment, .env, .env.local, or keykit.config.
 
 The backend never writes customer filesystems. Apply Keykit migrations
 locally, then commit the result.`);

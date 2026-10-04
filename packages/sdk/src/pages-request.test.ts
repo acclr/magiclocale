@@ -39,6 +39,9 @@ describe('resolveKeykitPage', () => {
         },
       },
     });
+    if ('props' in result) {
+      expect(result.props.keykit.config).not.toHaveProperty('ingestToken');
+    }
   });
 
   it('treats / and /en as the default locale and /dk as Danish', async () => {

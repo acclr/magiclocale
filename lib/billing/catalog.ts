@@ -16,9 +16,14 @@ const CATALOG_PLAN_ORDER: KeykitPlanId[] = ['free', 'premium', 'enterprise'];
 
 export async function getBillingCatalog(
   customerId: string | null | undefined,
-  billingScope: BillingScope
+  billingScope: BillingScope,
+  teamId?: string | null
 ) {
-  const entitlement = await getEntitlementForCustomer(customerId, billingScope);
+  const entitlement = await getEntitlementForCustomer(
+    customerId,
+    billingScope,
+    teamId
+  );
   const priceIds = await getResolvedKeykitStripePriceIds();
   const subscriptions = customerId ? await getByCustomerId(customerId) : [];
 

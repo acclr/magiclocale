@@ -7,7 +7,10 @@ import {
   PREMIUM_INCLUDED_ACTIVE_KEYS,
   connectedSourceLimitMessage,
   countsAsActiveTranslationKey,
+  HOUSE_TEAM_SLUG,
+  inclusiveTeamEntitlement,
   liveRequestLimitMessage,
+  teamIsInclusive,
   overageBlocks,
   planUsagePeriod,
   planUsageScopeId,
@@ -165,5 +168,31 @@ describe('plan usage identity', () => {
       '2026-02'
     );
     expect(planUsagePeriod(new Date(Date.UTC(2026, 9, 4)))).toBe('2026-10');
+  });
+});
+
+describe('inclusive house team', () => {
+  it('grants the company team and any team marked inclusive', () => {
+    expect(teamIsInclusive({ slug: HOUSE_TEAM_SLUG, inclusive: false })).toBe(
+      true
+    );
+    expect(teamIsInclusive({ slug: 'other', inclusive: true })).toBe(true);
+    expect(teamIsInclusive({ slug: 'other', inclusive: false })).toBe(false);
+  });
+
+  it('resolves as Enterprise with no key, seat, or request caps', () => {
+    expect(inclusiveTeamEntitlement('team')).toMatchObject({
+      planId: 'enterprise',
+      subscribed: true,
+      priceId: null,
+      maxTeamMembers: null,
+      maxProjects: null,
+      maxLocales: null,
+      maxSourceKeysPerProject: null,
+      includedActiveKeys: null,
+      maxConnectedSources: null,
+      maxLiveRequestsPerMonth: null,
+      activeKeyOverageCentsPerThousand: null,
+    });
   });
 });

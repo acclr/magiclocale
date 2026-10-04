@@ -2,7 +2,9 @@ import 'server-only';
 
 import {
   customerIdForScope,
+  inclusiveTeamEntitlement,
   resolveKeykitPlan,
+  teamIsInclusive,
   type BillingScope,
   type KeykitEntitlement,
   type KeykitPlanId,
@@ -64,10 +66,39 @@ export async function getResolvedKeykitStripePriceIds(): Promise<
   return ids;
 }
 
+async function loadTeamAccess(
+  teamId?: string | null,
+  billingId?: string | null
+) {
+  if (teamId) {
+    return readThrough(`team-access:${teamId}`, () =>
+      prisma.team.findUnique({
+        where: { id: teamId },
+        select: { slug: true, inclusive: true },
+      })
+    );
+  }
+  if (billingId) {
+    return readThrough(`team-access:billing:${billingId}`, () =>
+      prisma.team.findFirst({
+        where: { billingId },
+        select: { slug: true, inclusive: true },
+      })
+    );
+  }
+  return null;
+}
+
 export async function getEntitlementForCustomer(
   billingId: string | null | undefined,
-  billingScope: BillingScope
+  billingScope: BillingScope,
+  teamId?: string | null
 ): Promise<KeykitEntitlement> {
+  const team = await loadTeamAccess(teamId, billingId);
+  if (team && teamIsInclusive(team)) {
+    return inclusiveTeamEntitlement(billingScope);
+  }
+
   const subscriptions = billingId
     ? await readThrough(`subscriptions:${billingId}`, () =>
         prisma.subscription.findMany({
@@ -88,18 +119,20 @@ export async function getEntitlementForCustomer(
 }
 
 export async function getTeamEntitlement(
-  billingId: string | null
+  billingId: string | null,
+  teamId?: string | null
 ): Promise<KeykitEntitlement> {
-  return getEntitlementForCustomer(billingId, 'team');
+  return getEntitlementForCustomer(billingId, 'team', teamId);
 }
 
 export async function getProjectEntitlement(
-  project: Pick<Project, 'billingScope' | 'billingId'>,
+  project: Pick<Project, 'billingScope' | 'billingId' | 'teamId'>,
   teamBillingId: string | null
 ): Promise<KeykitEntitlement> {
   const billingScope = project.billingScope ?? 'team';
   return getEntitlementForCustomer(
     customerIdForScope(billingScope, teamBillingId, project.billingId),
-    billingScope
+    billingScope,
+    project.teamId
   );
 }
