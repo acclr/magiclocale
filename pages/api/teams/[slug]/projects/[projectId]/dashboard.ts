@@ -1,5 +1,5 @@
 import { paginateTranslationDashboard } from '@/domain/translations';
-import { readThrough, invalidateProjectReads } from '@/lib/cache/read-through';
+import { readThrough } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import {
   getEnvironmentService,

@@ -1,9 +1,8 @@
-import type { GetServerSidePropsContext } from 'next';
 import type { NextPageWithLayout } from 'types';
 
 const Dashboard: NextPageWithLayout = () => null;
 
-export async function getServerSideProps(_context: GetServerSidePropsContext) {
+export async function getServerSideProps() {
   return {
     redirect: {
       destination: '/teams',
