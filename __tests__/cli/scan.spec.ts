@@ -53,4 +53,35 @@ describe('keykit scan', () => {
       scanSourceTree(root, { exclude: ['legacy'] }).map((item) => item.key)
     ).toEqual(['home.title']);
   });
+
+  it('finds t calls whose arguments wrap across lines', () => {
+    const root = mkdtempSync(join(tmpdir(), 'keykit-scan-'));
+    writeFileSync(
+      join(root, 'page.tsx'),
+      [
+        't("home.docs", "Documentation");',
+        't(',
+        '  "home.intro",',
+        '  "Looking for a starting point or more instructions? Head over to",',
+        ');',
+        '',
+      ].join('\n')
+    );
+
+    expect(scanSourceTree(root)).toEqual([
+      {
+        key: 'home.docs',
+        sourceText: 'Documentation',
+        file: join(root, 'page.tsx'),
+        line: 1,
+      },
+      {
+        key: 'home.intro',
+        sourceText:
+          'Looking for a starting point or more instructions? Head over to',
+        file: join(root, 'page.tsx'),
+        line: 2,
+      },
+    ]);
+  });
 });
