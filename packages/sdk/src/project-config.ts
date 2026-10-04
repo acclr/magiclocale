@@ -4,6 +4,7 @@ import { createJiti } from 'jiti';
 import { catalogsFromFile } from './config';
 import type { CreateKeykitOptions } from './create-keykit';
 import {
+  defineKeykitConfig,
   KEYKIT_CONFIG_FILES,
   KEYKIT_DIRECTORY,
   type KeykitProjectConfig,
@@ -108,10 +109,15 @@ async function readConfigFile(file: string): Promise<KeykitProjectConfig> {
 
   let loaded: unknown;
   try {
-    // Resolve imports from the config file so `@keykithq/sdk` comes from the app.
+    // Next inlines this package into the server bundle, so a raw
+    // keykit.config.ts on disk cannot resolve `@keykithq/sdk`. The helper is
+    // an identity function; provide it here instead of loading the package.
     loaded = await createJiti(file, {
       moduleCache: false,
       fsCache: false,
+      virtualModules: {
+        '@keykithq/sdk': { defineKeykitConfig },
+      },
     }).import(file, { default: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

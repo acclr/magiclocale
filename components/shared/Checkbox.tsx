@@ -27,7 +27,12 @@ const CheckboxComponent = ({
           defaultChecked={Boolean(defaultChecked)}
           onCheckedChange={(checked) => {
             onChange({
-              target: { name, value, checked: Boolean(checked) },
+              target: {
+                name,
+                value,
+                type: 'checkbox',
+                checked: Boolean(checked),
+              },
             } as React.ChangeEvent<HTMLInputElement>);
           }}
         />

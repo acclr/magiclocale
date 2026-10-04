@@ -56,6 +56,29 @@ describe('resolveKeykitSetup', () => {
     });
   });
 
+  it('loads defineKeykitConfig without resolving @keykithq/sdk from disk', async () => {
+    const root = mkdtempSync(join(tmpdir(), 'keykit-config-'));
+    writeFileSync(
+      join(root, 'keykit.config.ts'),
+      `import { defineKeykitConfig } from '@keykithq/sdk';
+export default defineKeykitConfig({
+  delivery: 'static',
+  locales: ['en', 'sv'],
+  defaultLocale: 'sv',
+});
+`,
+      'utf8'
+    );
+
+    const setup = await resolveKeykitSetup({}, root);
+
+    expect(setup.config).toMatchObject({
+      delivery: 'static',
+      locales: ['en', 'sv'],
+      defaultLocale: 'sv',
+    });
+  });
+
   it('lets explicit options override the config file', async () => {
     const root = mkdtempSync(join(tmpdir(), 'keykit-config-'));
     writeFileSync(
