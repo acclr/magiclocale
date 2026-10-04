@@ -90,6 +90,13 @@ export class KeyCatalogService {
     });
   }
 
+  async deprecateMissingTranslations(
+    projectId: string,
+    keys: readonly string[]
+  ): Promise<string[]> {
+    return this.repository.deprecateMissingTranslations(projectId, keys);
+  }
+
   async upsertDefinition(input: {
     projectId: string;
     type: KeyType;

@@ -1,6 +1,5 @@
 import { Card } from '@/components/shared';
 import { Error, Loading } from '@/components/shared';
-import { TeamTab } from '@/components/team';
 import env from '@/lib/env';
 import { inferSSRProps } from '@/lib/inferSSRProps';
 import { getViewerToken } from '@/lib/retraced';
@@ -32,7 +31,6 @@ const Events: NextPageWithLayout<inferSSRProps<typeof getServerSideProps>> = ({
   auditLogToken,
   retracedHost,
   error,
-  teamFeatures,
 }) => {
   const { t } = useTranslation('common');
   const { canAccess } = useCanAccess();
@@ -51,20 +49,17 @@ const Events: NextPageWithLayout<inferSSRProps<typeof getServerSideProps>> = ({
   }
 
   return (
-    <>
-      <TeamTab activeTab="audit-logs" team={team} teamFeatures={teamFeatures} />
-      <Card>
-        <Card.Body>
-          {canAccess('team_audit_log', ['read']) && auditLogToken && (
-            <RetracedEventsBrowser
-              host={`${retracedHost}/viewer/v1`}
-              auditLogToken={auditLogToken}
-              header={t('audit-logs')}
-            />
-          )}
-        </Card.Body>
-      </Card>
-    </>
+    <Card>
+      <Card.Body>
+        {canAccess('team_audit_log', ['read']) && auditLogToken && (
+          <RetracedEventsBrowser
+            host={`${retracedHost}/viewer/v1`}
+            auditLogToken={auditLogToken}
+            header={t('audit-logs')}
+          />
+        )}
+      </Card.Body>
+    </Card>
   );
 };
 

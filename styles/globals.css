@@ -435,6 +435,7 @@
   }
 
   .table-pin-rows thead th {
-    @apply sticky top-0 z-10;
+    /* Above focused grid cells (z-30) so header controls keep their clicks. */
+    @apply sticky top-0 z-40;
   }
 }

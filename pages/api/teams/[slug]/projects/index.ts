@@ -1,6 +1,7 @@
 import { readThrough, invalidateReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { enforceProjectLimit } from '@/lib/billing/enforce-limits';
+import { summarizeProjectList } from '@/data/translations/project-list-summary';
 import { getProjectService } from '@/lib/translations';
 import { createTranslationProjectSchema, validateWithSchema } from '@/lib/zod';
 
@@ -12,7 +13,8 @@ export default createTeamProjectApiHandler({
       const projects = await readThrough(`projects:${teamMember.team.id}`, () =>
         getProjectService().list(teamMember.team.id)
       );
-      res.status(200).json({ data: projects });
+      const summaries = await summarizeProjectList(projects, teamMember.role);
+      res.status(200).json({ data: summaries });
     },
   },
   POST: {

@@ -97,6 +97,10 @@ export default async function handler(
           };
 
     const catalog = getKeyCatalogService();
+    const deprecated =
+      parsed.removed.length > 0
+        ? await catalog.deprecateMissingTranslations(projectId, parsed.removed)
+        : [];
     let detectedFlags = 0;
     for (const item of flags) {
       await catalog.recordDetection({
@@ -111,6 +115,7 @@ export default async function handler(
     invalidateProjectReads(projectId);
     return res.status(200).json({
       ...result,
+      deprecated,
       detectedFlags,
       environment: environment.slug,
     });

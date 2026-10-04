@@ -1,3 +1,4 @@
+import { validateVariables } from '../../domain/keys';
 import type { DashboardCell } from '../../domain/translations';
 import type { CellSaveOptions } from './CellDrafts';
 import { useCellDrafts } from './CellDrafts';
@@ -24,6 +25,7 @@ type TranslationCellProps = {
   keyId: string;
   cell: DashboardCell;
   fallbackValue?: string;
+  sourceText?: string;
   canEdit: boolean;
   onOpen: () => void;
   onSave: (value: string, options?: CellSaveOptions) => Promise<unknown>;
@@ -51,6 +53,7 @@ const TranslationCell = ({
   keyId,
   cell,
   fallbackValue = '',
+  sourceText = '',
   canEdit,
   onOpen,
   onSave,
@@ -143,6 +146,7 @@ const TranslationCell = ({
   };
   const statusLabel = statusLabels[normalized];
 
+  const variableIssues = validateVariables(sourceText, value);
   const StatusIcon = icons[normalized];
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -198,7 +202,32 @@ const TranslationCell = ({
         rows={2}
         value={value}
       />
-      <div className="flex p-0.5 justify-start opacity-30 group-hover:opacity-100 min-w-7 flex-col w-max items-center">
+      <div
+        className={cn(
+          'flex min-w-7 w-max flex-col items-center justify-start p-0.5',
+          variableIssues.length > 0
+            ? 'opacity-100'
+            : 'opacity-30 group-hover:opacity-100'
+        )}
+      >
+        {variableIssues.length > 0 && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span className="px-1 font-mono text-[10px] leading-none text-amber-500">
+                {'{ }'}
+              </span>
+            </TooltipTrigger>
+            <TooltipContent className="max-w-64 space-y-1">
+              {variableIssues.map((issue) => (
+                <p key={`${issue.kind}-${issue.name}`}>
+                  {issue.kind === 'missing'
+                    ? t('variable-missing', { name: issue.token })
+                    : t('variable-unexpected', { name: issue.token })}
+                </p>
+              ))}
+            </TooltipContent>
+          </Tooltip>
+        )}
         {!isDirty && (
           <>
             <Tooltip>

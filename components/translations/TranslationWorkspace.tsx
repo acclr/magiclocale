@@ -3,7 +3,10 @@ import {
   type TranslationFilter,
 } from '../../domain/translations';
 import { getLocaleDisplay } from '../../domain/translations';
+import useBulkSelection from '../../hooks/useBulkSelection';
 import useCanAccess from '../../hooks/useCanAccess';
+import useToggleList from '../../hooks/useToggleList';
+import useTranslationQueue from '../../hooks/useTranslationQueue';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -12,13 +15,14 @@ import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import { Error as ErrorDisplay } from '@/components/shared';
+import { WorkspaceToolbarPortal } from '@/components/shared/shell/WorkspaceToolbarSlot';
 import { CellDraftsProvider } from './CellDrafts';
-import LocaleName from './LocaleName';
 import LocaleSelect from './LocaleSelect';
 import TranslationDrawer from './TranslationDrawer';
 import TranslationGrid from './TranslationGrid';
-import TranslationSaveBar from './TranslationSaveBar';
-import PublishBar from '../versions/PublishBar';
+import CollapsibleSearch from './workflow/CollapsibleSearch';
+import NextStepButton from './workflow/NextStepButton';
+import TranslateMenu from './workflow/TranslateMenu';
 
 type TranslationWorkspaceProps = {
   slug: string;
@@ -64,10 +68,6 @@ const TranslationWorkspace = ({
   } | null>(null);
   const [locale, setLocale] = useState('');
   const [fillLocale, setFillLocale] = useState('');
-  const [fromLocale, setFromLocale] = useState('');
-  const [selectedLocales, setSelectedLocales] = useState<string[]>([]);
-  const [selectedKeyIds, setSelectedKeyIds] = useState<string[]>([]);
-  const [selectAllMatching, setSelectAllMatching] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const dashboard = workspace.dashboard;
   const view = useMemo(
@@ -95,102 +95,31 @@ const TranslationWorkspace = ({
     setPage(1);
   }, [search, filter, pageSize]);
 
-  useEffect(() => {
-    setSelectedKeyIds([]);
-    setSelectAllMatching(false);
-  }, [search, filter, pageSize, projectId, environment]);
-
-  useEffect(() => {
-    if (dashboard?.project.sourceLocale) {
-      setFromLocale(dashboard.project.sourceLocale);
-    }
-  }, [dashboard?.project.id, dashboard?.project.sourceLocale]);
+  const keySelection = useBulkSelection({
+    pageIds: rows.map((row) => row.keyId),
+    totalMatching: pagination?.totalKeys ?? 0,
+    resetKey: [search, filter, pageSize, projectId, environment].join('|'),
+  });
+  const localeSelection = useToggleList<string>();
+  const translationQueue = useTranslationQueue({
+    queueTranslations: workspace.queueTranslations,
+    keys: keySelection,
+    locales: localeSelection.items,
+    filter,
+    search: deferredSearch,
+    onQueued: (result) =>
+      toast.success(
+        result.failed
+          ? `${t('translation-queue-complete')}: ${result.filled} filled, ${result.skipped} skipped, ${result.failed} failed`
+          : `${t('translation-queue-complete')}: ${result.filled} filled, ${result.skipped} skipped`
+      ),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : 'Request failed'),
+  });
 
   const selectedRow = selected
     ? dashboard?.rows.find((row) => row.keyId === selected.keyId)
     : undefined;
-
-  const pageKeyIds = rows.map((row) => row.keyId);
-  const allPageKeysSelected =
-    selectAllMatching ||
-    (pageKeyIds.length > 0 &&
-      pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId)));
-  const somePageKeysSelected =
-    !selectAllMatching &&
-    pageKeyIds.some((keyId) => selectedKeyIds.includes(keyId)) &&
-    !pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId));
-  const keySelectionCount = selectAllMatching
-    ? (pagination?.totalKeys ?? 0)
-    : selectedKeyIds.length;
-  const hasKeySelection = selectAllMatching || selectedKeyIds.length > 0;
-  const canQueue =
-    canEdit && hasKeySelection && selectedLocales.length > 0 && !isRunning;
-
-  const togglePageKeys = () => {
-    if (selectAllMatching) {
-      setSelectAllMatching(false);
-      setSelectedKeyIds([]);
-      return;
-    }
-    if (pageKeyIds.every((keyId) => selectedKeyIds.includes(keyId))) {
-      setSelectedKeyIds((current) =>
-        current.filter((keyId) => !pageKeyIds.includes(keyId))
-      );
-      return;
-    }
-    setSelectedKeyIds((current) =>
-      Array.from(new Set([...current, ...pageKeyIds]))
-    );
-  };
-
-  const toggleKey = (keyId: string) => {
-    if (selectAllMatching) {
-      setSelectAllMatching(false);
-      setSelectedKeyIds(pageKeyIds.filter((id) => id !== keyId));
-      return;
-    }
-    setSelectedKeyIds((current) =>
-      current.includes(keyId)
-        ? current.filter((item) => item !== keyId)
-        : [...current, keyId]
-    );
-  };
-
-  const queueSelected = async (mode: 'fill-missing' | 'retranslate') => {
-    if (mode === 'retranslate') {
-      const confirmed = window.confirm(
-        t('confirm-queue-retranslate', {
-          keys: String(keySelectionCount),
-          locales: selectedLocales.join(', '),
-          from: fromLocale.trim(),
-        })
-      );
-      if (!confirmed) {
-        return;
-      }
-    }
-    await run(
-      async () => {
-        const result = await workspace.queueTranslations({
-          scope: selectAllMatching ? 'all-matching' : 'selected-keys',
-          keyIds: selectAllMatching ? undefined : selectedKeyIds,
-          locales: selectedLocales,
-          mode,
-          sourceLocale: mode === 'retranslate' ? fromLocale.trim() : undefined,
-          filter,
-          search: deferredSearch,
-        });
-        setSelectedKeyIds([]);
-        setSelectAllMatching(false);
-        return {
-          filled: result.filled,
-          skipped: result.skipped,
-          failed: result.failed,
-        };
-      },
-      t('translation-queue-complete', { queued: String(keySelectionCount) })
-    );
-  };
 
   if (!dashboard && workspace.isLoading) {
     return <WorkspaceSkeleton />;
@@ -239,44 +168,37 @@ const TranslationWorkspace = ({
 
   return (
     <CellDraftsProvider>
-      <div className="space-y-4 pb-28">
-        <PublishBar
+      <WorkspaceToolbarPortal>
+        <CollapsibleSearch onChange={setSearch} value={search} />
+        {canEdit && keySelection.count > 0 ? (
+          <TranslateMenu
+            allMatching={keySelection.allMatching}
+            keyCount={keySelection.count}
+            locales={dashboard.locales}
+            onClear={() => {
+              keySelection.clear();
+              localeSelection.clear();
+            }}
+            onMatchingScopeChange={keySelection.setMatchingScope}
+            onQueue={(mode, fromLocale) =>
+              void translationQueue.queue(mode, fromLocale)
+            }
+            onToggleLocale={localeSelection.toggle}
+            pendingMode={translationQueue.pendingMode}
+            selectedLocales={localeSelection.items}
+            sourceLocale={dashboard.project.sourceLocale}
+            totalMatching={keySelection.totalMatching}
+          />
+        ) : null}
+        <NextStepButton
           canPublish={canAccess('team_version', ['publish'])}
           environmentName={dashboard.environment.name}
+          onDraftsSaved={workspace.refresh}
           onPublish={(message) => workspace.publish(message)}
           publishState={dashboard.publishState}
         />
-
-        <header className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <div className="flex flex-row items-center text-lg font-medium tracking-tight">
-              <h1 className="mr-2.5">{dashboard.project.name}</h1>
-              <LocaleName
-                code={dashboard.project.sourceLocale}
-                variant="full"
-              />
-            </div>
-          </div>
-
-          <div className="min-w-64 ml-auto">
-            <input
-              className="input input-bordered input-sm"
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder={t('search-translations')}
-              type="search"
-              value={search}
-            />
-          </div>
-          <button
-            className="btn btn-ghost btn-sm"
-            disabled={workspace.isRefreshing}
-            onClick={workspace.refresh}
-            type="button"
-          >
-            {t('refresh')}
-          </button>
-        </header>
-
+      </WorkspaceToolbarPortal>
+      <div className="space-y-4">
         <div className="hidden flex flex-wrap items-end gap-3 rounded-lg bg-card p-3">
           {canUpdateProject && (
             <form className="flex items-end gap-2" onSubmit={addLocale}>
@@ -344,50 +266,6 @@ const TranslationWorkspace = ({
           )}
         </div>
 
-        {canEdit && (
-          <div className="flex hidden flex-wrap items-end gap-3 rounded-lg bg-card p-3">
-            <p className="w-full text-sm text-muted-foreground">
-              {t('retranslate-help')}
-            </p>
-            <label className="form-control min-w-64">
-              <span className="label-text mb-1">{t('retranslate-from')}</span>
-              <LocaleSelect
-                format="any"
-                onChange={setFromLocale}
-                required
-                value={fromLocale}
-              />
-            </label>
-            <button
-              className="btn btn-outline btn-sm"
-              disabled={
-                !selectedLocales.length || !fromLocale.trim() || isRunning
-              }
-              onClick={() => {
-                if (
-                  !window.confirm(
-                    t('confirm-retranslate', {
-                      locales: selectedLocales.join(', '),
-                      from: fromLocale.trim(),
-                    })
-                  )
-                ) {
-                  return;
-                }
-                void run(
-                  () =>
-                    workspace.retranslate(selectedLocales, fromLocale.trim()),
-                  'Retranslated'
-                );
-              }}
-              type="button"
-            >
-              {t('retranslate-selected')}
-              {selectedLocales.length ? ` (${selectedLocales.length})` : ''}
-            </button>
-          </div>
-        )}
-
         <nav className="w-full tabs tabs-bordered overflow-x-auto">
           {filters.map((item) => (
             <button
@@ -415,30 +293,19 @@ const TranslationWorkspace = ({
           keySelection={
             canEdit
               ? {
-                  allSelected: allPageKeysSelected,
-                  someSelected: somePageKeysSelected,
-                  isSelected: (keyId) =>
-                    selectAllMatching || selectedKeyIds.includes(keyId),
-                  toggle: toggleKey,
-                  togglePage: togglePageKeys,
-                  totalMatching: pagination?.totalKeys,
-                  onSelectAllMatching: () => {
-                    setSelectedKeyIds([]);
-                    setSelectAllMatching(true);
-                  },
+                  allSelected: keySelection.allPageSelected,
+                  someSelected: keySelection.somePageSelected,
+                  isSelected: keySelection.isSelected,
+                  toggle: keySelection.toggle,
+                  togglePage: keySelection.togglePage,
                 }
               : undefined
           }
           localeSelection={
             canEdit
               ? {
-                  selected: selectedLocales,
-                  toggle: (projectLocale) =>
-                    setSelectedLocales((current) =>
-                      current.includes(projectLocale)
-                        ? current.filter((item) => item !== projectLocale)
-                        : [...current, projectLocale]
-                    ),
+                  isSelected: localeSelection.has,
+                  toggle: localeSelection.toggle,
                 }
               : undefined
           }
@@ -470,7 +337,6 @@ const TranslationWorkspace = ({
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <label className="flex items-center gap-2 text-sm">
-                <span>{t('rows-per-page')}</span>
                 <select
                   className="select select-bordered select-sm"
                   onChange={(event) => {
@@ -478,6 +344,7 @@ const TranslationWorkspace = ({
                     setPage(1);
                   }}
                   value={pageSize}
+                  aria-label={`${pageSize} / ${t('page')}`}
                 >
                   {PAGE_SIZE_OPTIONS.map((size) => (
                     <option key={size} value={size}>
@@ -528,59 +395,6 @@ const TranslationWorkspace = ({
             sourceLocale={dashboard.project.sourceLocale}
           />
         )}
-        {canEdit && hasKeySelection && (
-          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-base-300 bg-base-100/95 px-4 py-3 backdrop-blur">
-            <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3">
-              <div className="text-sm">
-                <p className="font-medium">
-                  {t('translation-queue-selection', {
-                    keys: keySelectionCount,
-                    locales: selectedLocales.length
-                      ? selectedLocales.join(', ')
-                      : t('translation-queue-no-locales'),
-                  })}
-                </p>
-                {selectAllMatching && (
-                  <p className="text-muted-foreground">
-                    {t('translation-queue-all-matching')}
-                  </p>
-                )}
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  className="btn btn-ghost btn-sm"
-                  onClick={() => {
-                    setSelectedKeyIds([]);
-                    setSelectAllMatching(false);
-                  }}
-                  type="button"
-                >
-                  {t('clear-selection')}
-                </button>
-                <button
-                  className="btn btn-primary btn-sm"
-                  disabled={!canQueue}
-                  onClick={() => void queueSelected('fill-missing')}
-                  type="button"
-                >
-                  {t('queue-translations')}
-                </button>
-                {dashboard.locales.length > 1 && (
-                  <button
-                    className="btn btn-outline btn-sm"
-                    disabled={!canQueue || !fromLocale.trim()}
-                    onClick={() => void queueSelected('retranslate')}
-                    type="button"
-                  >
-                    {t('queue-retranslate')}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        <TranslationSaveBar onRefresh={workspace.refresh} />
       </div>
     </CellDraftsProvider>
   );

@@ -4,6 +4,8 @@ import { extname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 export type ScannedSourceKey = {
   key: string;
   sourceText: string;
+  /** `{name}` and `{{name}}` slots in `sourceText`, in source order. */
+  variables: string[];
   file: string;
   line: number;
 };
@@ -34,6 +36,10 @@ const TRANSLATE_PATTERNS = [
   /\bt\s*\(\s*[`'"]([^`'"]+)[`'"]\s*,\s*[`'"]([^`'"]*)[`'"]/g,
 ];
 
+/** Same `{name}` / `{{name}}` syntax as the SDK interpolator. */
+const VARIABLE_PATTERN =
+  /\{\{\s*([a-zA-Z_][\w]*)\s*\}\}|\{(?!\{)\s*([a-zA-Z_][\w]*)\s*\}/g;
+
 /** Always skipped, including when a parent directory is included. */
 export const DEFAULT_SKIP_DIRECTORIES = [
   'node_modules',
@@ -54,7 +60,10 @@ export function scanSourceTree(
   return scanProject(root, options).keys;
 }
 
-export function scanProject(root: string, options: ScanOptions = {}): ScanResult {
+export function scanProject(
+  root: string,
+  options: ScanOptions = {}
+): ScanResult {
   const projectRoot = resolve(root);
   const exclude = excludeRules(options.exclude);
   const found = new Map<string, ScannedSourceKey>();
@@ -75,6 +84,33 @@ export function scanProject(root: string, options: ScanOptions = {}): ScanResult
   };
 }
 
+/** Whether `file` is a source file that `scanProject` would read with these options. */
+export function isScannablePath(
+  root: string,
+  file: string,
+  options: ScanOptions = {}
+): boolean {
+  const projectRoot = resolve(root);
+  const full = resolve(projectRoot, file);
+  if (!SOURCE_EXTENSIONS.has(extname(full))) {
+    return false;
+  }
+  const fromRoot = relative(projectRoot, full);
+  if (!fromRoot || fromRoot.startsWith('..') || isAbsolute(fromRoot)) {
+    return false;
+  }
+  if (shouldSkip(full, projectRoot, excludeRules(options.exclude))) {
+    return false;
+  }
+  if (!options.include?.length) {
+    return true;
+  }
+  return options.include.some((entry) => {
+    const target = relative(resolve(projectRoot, entry), full);
+    return !target || (!target.startsWith('..') && !isAbsolute(target));
+  });
+}
+
 function collectKeys(file: string, found: Map<string, ScannedSourceKey>): void {
   const content = readFileSync(file, 'utf8');
   for (const pattern of TRANSLATE_PATTERNS) {
@@ -90,12 +126,29 @@ function collectKeys(file: string, found: Map<string, ScannedSourceKey>): void {
         found.set(key, {
           key,
           sourceText,
+          variables: variablesIn(sourceText),
           file,
           line: lineNumberAt(content, match.index),
         });
       }
     }
   }
+}
+
+function variablesIn(sourceText: string): string[] {
+  const names: string[] = [];
+  const seen = new Set<string>();
+  const pattern = new RegExp(VARIABLE_PATTERN.source, 'g');
+  let match: RegExpExecArray | null;
+  while ((match = pattern.exec(sourceText)) !== null) {
+    const name = match[1] ?? match[2];
+    if (seen.has(name)) {
+      continue;
+    }
+    seen.add(name);
+    names.push(name);
+  }
+  return names;
 }
 
 /** 1-based line of `index`, counting `\n` so CRLF files stay aligned. */
@@ -110,7 +163,10 @@ function lineNumberAt(content: string, index: number): number {
   return line;
 }
 
-function scanTargets(root: string, include: readonly string[] | undefined): string[] {
+function scanTargets(
+  root: string,
+  include: readonly string[] | undefined
+): string[] {
   if (!include?.length) {
     return [root];
   }
@@ -137,7 +193,11 @@ function excludeRules(extra: readonly string[] | undefined): ExcludeRules {
   const names = new Set(DEFAULT_SKIP_DIRECTORIES);
   const prefixes: string[] = [];
   for (const entry of extra ?? []) {
-    const normalized = entry.trim().replace(/\\/g, '/').replace(/^\.\/+/, '').replace(/\/+$/, '');
+    const normalized = entry
+      .trim()
+      .replace(/\\/g, '/')
+      .replace(/^\.\/+/, '')
+      .replace(/\/+$/, '');
     if (!normalized || normalized === '.') {
       continue;
     }
@@ -150,7 +210,11 @@ function excludeRules(extra: readonly string[] | undefined): ExcludeRules {
   return { names, prefixes };
 }
 
-function walk(directory: string, root: string, exclude: ExcludeRules): string[] {
+function walk(
+  directory: string,
+  root: string,
+  exclude: ExcludeRules
+): string[] {
   if (!statSync(directory).isDirectory()) {
     return shouldSkip(directory, root, exclude) ||
       !SOURCE_EXTENSIONS.has(extname(directory))
@@ -174,7 +238,11 @@ function walk(directory: string, root: string, exclude: ExcludeRules): string[] 
   return files;
 }
 
-function shouldSkip(full: string, root: string, exclude: ExcludeRules): boolean {
+function shouldSkip(
+  full: string,
+  root: string,
+  exclude: ExcludeRules
+): boolean {
   const rel = relative(root, full).split(sep).join('/');
   if (!rel || rel === '.') {
     return false;

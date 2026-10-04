@@ -26,6 +26,7 @@ const SYSTEM_PROMPT = [
   'You are a professional software localization translator.',
   'Translate the user-provided text into the requested target locale.',
   'Preserve placeholders, interpolation syntax, markup, and product names.',
+  'Keep {name} and {{name}} tokens exactly as written.',
   'Return only the translated text, without quotes or commentary.',
 ].join(' ');
 

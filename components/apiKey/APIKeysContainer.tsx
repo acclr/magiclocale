@@ -1,11 +1,9 @@
 import { Error, Loading } from '@/components/shared';
-import { TeamTab } from '@/components/team';
 import useTeam from 'hooks/useTeam';
 import { useTranslation } from '@/hooks/useTranslation';
 import APIKeys from './APIKeys';
-import { TeamFeature } from 'types';
 
-const APIKeysContainer = ({ teamFeatures }: { teamFeatures: TeamFeature }) => {
+const APIKeysContainer = () => {
   const { t } = useTranslation('common');
 
   const { isLoading, isError, team } = useTeam();
@@ -22,12 +20,7 @@ const APIKeysContainer = ({ teamFeatures }: { teamFeatures: TeamFeature }) => {
     return <Error message={t('team-not-found')} />;
   }
 
-  return (
-    <>
-      <TeamTab activeTab="api-keys" team={team} teamFeatures={teamFeatures} />
-      <APIKeys team={team} />
-    </>
-  );
+  return <APIKeys team={team} />;
 };
 
 export default APIKeysContainer;

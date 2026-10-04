@@ -48,13 +48,20 @@ describe('key catalog helpers', () => {
 
   it('validates interpolation variables', () => {
     expect(extractVariables('Hello {{name}}')).toEqual(['name']);
+    expect(extractVariables('Edit the {fileName} file')).toEqual(['fileName']);
     expect(validateVariables('Hello {{name}}', 'Hej')).toEqual([
-      { kind: 'missing', name: 'name' },
+      { kind: 'missing', name: 'name', token: '{{name}}' },
     ]);
     expect(validateVariables('Hello {{name}}', 'Hej {{username}}')).toEqual([
-      { kind: 'missing', name: 'name' },
-      { kind: 'unexpected', name: 'username' },
+      { kind: 'missing', name: 'name', token: '{{name}}' },
+      { kind: 'unexpected', name: 'username', token: '{{username}}' },
     ]);
+    expect(
+      validateVariables(
+        'Start with editing the {fileName} file',
+        'Börja med att redigera {fileName}'
+      )
+    ).toEqual([]);
   });
 
   it('parses fielded search', () => {

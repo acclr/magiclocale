@@ -67,6 +67,27 @@ Run `sync` again to continue. Completed keys are remembered in `.keykit/sync-sta
 npx @keykithq/cli sync --include app --include components --chunk 25 --delay 200
 ```
 
+### Watch mode
+
+```bash
+npx @keykithq/cli sync --watch
+```
+
+Run it in a second terminal next to `next dev`. It syncs once at start-up, then re-scans whenever a source file in scope is saved and uploads only new or changed keys. Saves that land within 400 ms of each other go out as one sync. Change that window with `--debounce <ms>`. If a request fails, the watcher logs the failure and retries on the next save.
+
+Watch mode never marks keys deprecated, because a key vanishes for a moment whenever you cut and paste or rename it. Run a plain `sync` when you want removed keys deprecated, for example before a release.
+
+Add it as a script so it is one command away:
+
+```json
+{
+  "scripts": {
+    "dev": "next dev",
+    "keykit:watch": "keykit sync --watch"
+  }
+}
+```
+
 `scan.include` and `scan.exclude` in `keykit.config.ts` set the default scope. Omit them to scan the whole project. `node_modules`, `dist`, `.next`, `build`, and `vendor` are always skipped.
 
 ## scan

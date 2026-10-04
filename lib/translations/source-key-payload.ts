@@ -7,7 +7,7 @@ const MAX_SOURCE_TEXT_LENGTH = 10_000;
 const MAX_FILE_LENGTH = 500;
 
 export type SourceKeyPayloadResult =
-  | { success: true; keys: IncomingSourceKey[] }
+  | { success: true; keys: IncomingSourceKey[]; removed: string[] }
   | { success: false; error: string };
 
 export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
@@ -15,7 +15,12 @@ export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
     return { success: false, error: 'Body must contain a keys array.' };
   }
 
-  if (input.keys.length === 0) {
+  const removed = parseRemovedKeys(input.removed);
+  if (!removed.success) {
+    return removed;
+  }
+
+  if (input.keys.length === 0 && removed.keys.length === 0) {
     return { success: false, error: 'At least one key is required.' };
   }
 
@@ -23,6 +28,13 @@ export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
     return {
       success: false,
       error: `A batch may contain at most ${MAX_KEYS_PER_BATCH} keys.`,
+    };
+  }
+
+  if (removed.keys.length > MAX_KEYS_PER_BATCH) {
+    return {
+      success: false,
+      error: `A batch may contain at most ${MAX_KEYS_PER_BATCH} removed keys.`,
     };
   }
 
@@ -73,7 +85,44 @@ export function parseSourceKeyPayload(input: unknown): SourceKeyPayloadResult {
     });
   }
 
-  return { success: true, keys: Array.from(deduplicated.values()) };
+  return {
+    success: true,
+    keys: Array.from(deduplicated.values()),
+    removed: removed.keys,
+  };
+}
+
+function parseRemovedKeys(
+  value: unknown
+): { success: true; keys: string[] } | { success: false; error: string } {
+  if (value === undefined) {
+    return { success: true, keys: [] };
+  }
+  if (!Array.isArray(value)) {
+    return { success: false, error: 'removed must be an array of key names.' };
+  }
+  const keys: string[] = [];
+  const seen = new Set<string>();
+  for (const item of value) {
+    if (typeof item !== 'string' || item.trim().length === 0) {
+      return {
+        success: false,
+        error: 'Every removed key must be a non-empty string.',
+      };
+    }
+    if (item.length > MAX_KEY_LENGTH) {
+      return {
+        success: false,
+        error: `Keys may not exceed ${MAX_KEY_LENGTH} characters.`,
+      };
+    }
+    const key = item.trim();
+    if (!seen.has(key)) {
+      seen.add(key);
+      keys.push(key);
+    }
+  }
+  return { success: true, keys };
 }
 
 function parseType(value: unknown): KeyType {

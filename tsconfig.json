@@ -28,7 +28,10 @@
       "@keykithq/sdk/pages": ["packages/sdk/dist/pages.d.ts"],
       "@keykithq/sdk/project-config": ["packages/sdk/dist/project-config.d.ts"],
       "@keykithq/sdk/routing": ["packages/sdk/dist/locale-path"],
-      "@databuddy/sdk/react": ["node_modules/@databuddy/sdk/dist/react"]
+      "@databuddy/sdk/react": ["node_modules/@databuddy/sdk/dist/react"],
+      "@radix-ui/themes/components/data-list": [
+        "node_modules/@radix-ui/themes/dist/esm/components/data-list"
+      ]
     },
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", "next-auth.d.ts"],

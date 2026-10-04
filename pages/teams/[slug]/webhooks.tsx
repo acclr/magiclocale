@@ -1,5 +1,4 @@
 import { Error, Loading } from '@/components/shared';
-import { TeamTab } from '@/components/team';
 import { Webhooks } from '@/components/webhook';
 import useTeam from 'hooks/useTeam';
 import { GetServerSidePropsContext } from 'next';
@@ -7,7 +6,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
 import env from '@/lib/env';
 
-const WebhookList = ({ teamFeatures }) => {
+const WebhookList = () => {
   const { t } = useTranslation('common');
   const { isLoading, isError, team } = useTeam();
 
@@ -23,12 +22,7 @@ const WebhookList = ({ teamFeatures }) => {
     return <Error message={t('team-not-found')} />;
   }
 
-  return (
-    <>
-      <TeamTab activeTab="webhooks" team={team} teamFeatures={teamFeatures} />
-      <Webhooks team={team} />
-    </>
-  );
+  return <Webhooks team={team} />;
 };
 
 export async function getServerSideProps({

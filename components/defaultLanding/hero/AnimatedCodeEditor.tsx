@@ -163,7 +163,7 @@ const AnimatedCodeEditor = ({
       </pre>
 
       <div className="flex h-7 items-center justify-between gap-4 border-t border-border bg-surface px-4 font-mono text-[11px] text-muted-foreground">
-        <span>main · TypeScript JSX</span>
+        <span>TSX</span>
         <span className="truncate">{status}</span>
       </div>
     </div>

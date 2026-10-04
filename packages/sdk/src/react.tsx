@@ -11,13 +11,18 @@ import {
   type ReactNode,
 } from 'react';
 import { KeykitClient } from './client';
-import { createTranslateApi } from './translate-api';
+import {
+  createTranslateApi,
+  type KeykitTranslateApi,
+  type TranslateFn,
+} from './translate-api';
 import type { KeykitConfig, TranslationBundle } from './types';
 
 export type KeykitContextValue = {
   locale: string;
   isLoading: boolean;
-  translate: (key: string, defaultText: string) => string;
+  t: KeykitTranslateApi['t'];
+  translate: TranslateFn;
   setLocale: (locale: string) => Promise<void>;
   refresh: () => Promise<void>;
   isEnabled: (key: string, fallback?: boolean) => boolean;
@@ -41,9 +46,7 @@ export type KeykitProviderProps = {
    * Return `false` to store the locale cookie and fetch that locale's bundle.
    * Any other return value means the callback fully handled the change.
    */
-  onSetLocale?: (
-    locale: string
-  ) => Promise<boolean | void> | boolean | void;
+  onSetLocale?: (locale: string) => Promise<boolean | void> | boolean | void;
   children: ReactNode;
 };
 
@@ -93,7 +96,7 @@ export function KeykitProvider({
     };
   }, [client, onServerRefresh]);
 
-  const translate = useCallback(
+  const lookup = useCallback(
     (key: string, defaultText: string) => client.translate(key, defaultText),
     [client]
   );
@@ -148,10 +151,19 @@ export function KeykitProvider({
   );
   const value = useMemo<KeykitContextValue>(() => {
     void revision;
+    const api = createTranslateApi({
+      locale,
+      translate: lookup,
+      sourceCatalog: config.sourceCatalog,
+      isLoading,
+      setLocale,
+      refresh,
+    });
     return {
       locale,
       isLoading,
-      translate,
+      t: api.t,
+      translate: api.translate,
       setLocale,
       refresh,
       isEnabled,
@@ -166,10 +178,10 @@ export function KeykitProvider({
     isEnabled,
     isLoading,
     locale,
+    lookup,
     refresh,
     revision,
     setLocale,
-    translate,
   ]);
 
   return (
@@ -186,20 +198,11 @@ export function useKeykit(): KeykitContextValue {
 }
 
 export function useTranslate() {
-  const { translate, locale, isLoading, setLocale, refresh, sourceCatalog } =
-    useKeykit();
+  const { t, translate, locale, isLoading, setLocale, refresh } = useKeykit();
 
   return useMemo(
-    () =>
-      createTranslateApi({
-        locale,
-        translate,
-        sourceCatalog,
-        isLoading,
-        setLocale,
-        refresh,
-      }),
-    [isLoading, locale, refresh, setLocale, sourceCatalog, translate]
+    () => ({ t, translate, locale, isLoading, setLocale, refresh }),
+    [isLoading, locale, refresh, setLocale, t, translate]
   );
 }
 

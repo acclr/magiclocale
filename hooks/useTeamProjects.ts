@@ -1,6 +1,6 @@
 import { defaultHeaders } from '@/lib/common';
 import fetcher from '@/lib/fetcher';
-import type { Project } from '../domain/translations';
+import type { Project, ProjectListItem } from '../domain/translations';
 import type { ApiResponse } from 'types';
 import useSWR from 'swr';
 
@@ -32,7 +32,9 @@ async function createProjectRequest(
 
 const useTeamProjects = (slug: string) => {
   const url = `/api/teams/${slug}/projects`;
-  const { data, error, isLoading, mutate } = useSWR<ApiResponse<Project[]>>(
+  const { data, error, isLoading, mutate } = useSWR<
+    ApiResponse<ProjectListItem[]>
+  >(
     slug ? url : null,
     fetcher
   );

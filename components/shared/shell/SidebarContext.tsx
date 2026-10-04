@@ -8,20 +8,15 @@ import {
   useState,
 } from 'react';
 
-import { getSidebarOffset } from './sidebar';
-
-type MobileSidebarView = 'primary' | 'project';
+import { getPrimarySidebarWidth } from './sidebar';
 
 type SidebarContextValue = {
   collapsed: boolean;
-  isProjectRoute: boolean;
   mobileOpen: boolean;
-  mobileView: MobileSidebarView;
   contentOffset: number;
   toggleCollapsed: () => void;
   setMobileOpen: (open: boolean) => void;
   openMobileSidebar: () => void;
-  setMobileView: (view: MobileSidebarView) => void;
 };
 
 const SidebarContext = createContext<SidebarContextValue | null>(null);
@@ -32,25 +27,9 @@ export function SidebarLayoutProvider({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const projectId =
-    typeof router.query.projectId === 'string' ? router.query.projectId : null;
-  const asPathHasProject = /\/projects\/[^/?]+/.test(router.asPath);
-  const isProjectRoute =
-    (router.isReady && Boolean(projectId)) || asPathHasProject;
-
   const pathname = router.asPath.split('?')[0];
-  const [collapsed, setCollapsed] = useState(asPathHasProject);
+  const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [mobileView, setMobileView] = useState<MobileSidebarView>('primary');
-
-  useEffect(() => {
-    if (!router.isReady) {
-      return;
-    }
-
-    setCollapsed(Boolean(projectId));
-    setMobileView(projectId ? 'project' : 'primary');
-  }, [projectId, router.isReady]);
 
   useEffect(() => {
     setMobileOpen(false);
@@ -61,30 +40,19 @@ export function SidebarLayoutProvider({
   }, []);
 
   const openMobileSidebar = useCallback(() => {
-    setMobileView(isProjectRoute ? 'project' : 'primary');
     setMobileOpen(true);
-  }, [isProjectRoute]);
+  }, []);
 
   const value = useMemo(
     () => ({
       collapsed,
-      isProjectRoute,
       mobileOpen,
-      mobileView,
-      contentOffset: getSidebarOffset({ collapsed, isProjectRoute }),
+      contentOffset: getPrimarySidebarWidth(collapsed),
       toggleCollapsed,
       setMobileOpen,
       openMobileSidebar,
-      setMobileView,
     }),
-    [
-      collapsed,
-      isProjectRoute,
-      mobileOpen,
-      mobileView,
-      openMobileSidebar,
-      toggleCollapsed,
-    ]
+    [collapsed, mobileOpen, openMobileSidebar, toggleCollapsed]
   );
 
   return (

@@ -1,13 +1,14 @@
 import type { DashboardRow } from '../../domain/translations';
 import { localeColor } from '../../domain/translations';
-import { extractVariables, validateVariables } from '../../domain/keys';
+import { extractVariableTokens, validateVariables } from '../../domain/keys';
 import type { TranslationWorkspaceActions } from '../../hooks/useTranslationWorkspace';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
 import LocaleName from './LocaleName';
 import StatusBadge from './StatusBadge';
+import { VariableText } from './VariableText';
 
 type TranslationDrawerProps = {
   row: DashboardRow;
@@ -34,7 +35,8 @@ const TranslationDrawer = ({
   const [isPending, setIsPending] = useState(false);
   const isSourceLocale = locale === sourceLocale;
   const variableIssues = validateVariables(row.sourceText, value);
-  const sourceVariables = extractVariables(row.sourceText);
+  const sourceVariables = extractVariableTokens(row.sourceText);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     setValue(cell.value ?? '');
@@ -71,6 +73,19 @@ const TranslationDrawer = ({
     } finally {
       setIsPending(false);
     }
+  };
+
+  const insertVariable = (token: string) => {
+    const textarea = textareaRef.current;
+    const start = textarea?.selectionStart ?? value.length;
+    const end = textarea?.selectionEnd ?? value.length;
+    const next = `${value.slice(0, start)}${token}${value.slice(end)}`;
+    setValue(next);
+    const cursor = start + token.length;
+    requestAnimationFrame(() => {
+      textarea?.focus();
+      textarea?.setSelectionRange(cursor, cursor);
+    });
   };
 
   const acceptSuggestion = async () => {
@@ -130,8 +145,28 @@ const TranslationDrawer = ({
                 <LocaleName code={sourceLocale} />)
               </p>
               <p className="mt-2 rounded-lg bg-muted p-3 text-sm">
-                {row.sourceText}
+                <VariableText text={row.sourceText} />
               </p>
+              {sourceVariables.length ? (
+                <div className="mt-3 space-y-2">
+                  <div className="flex flex-wrap gap-1.5">
+                    {sourceVariables.map((variable) => (
+                      <button
+                        className="rounded-full bg-primary/10 px-2 py-0.5 font-mono text-xs text-primary hover:bg-primary/20"
+                        disabled={!canEdit || isPending}
+                        key={variable.name}
+                        onClick={() => insertVariable(variable.token)}
+                        type="button"
+                      >
+                        {variable.token}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    {t('variable-placeholders-help')}
+                  </p>
+                </div>
+              ) : null}
             </div>
 
             <label className="form-control">
@@ -149,6 +184,7 @@ const TranslationDrawer = ({
                 className="textarea textarea-bordered min-h-32"
                 disabled={!canEdit || isPending}
                 onChange={(event) => setValue(event.target.value)}
+                ref={textareaRef}
                 value={value}
               />
               {cell.aiLocked && (
@@ -157,19 +193,13 @@ const TranslationDrawer = ({
                 </span>
               )}
             </label>
-            {sourceVariables.length ? (
-              <p className="text-xs text-muted-foreground">
-                {t('variables')}:{' '}
-                {sourceVariables.map((name) => `{{${name}}}`).join(', ')}
-              </p>
-            ) : null}
             {variableIssues.length ? (
               <div className="alert alert-warning text-sm">
                 {variableIssues.map((issue) => (
                   <p key={`${issue.kind}-${issue.name}`}>
                     {issue.kind === 'missing'
-                      ? t('variable-missing', { name: issue.name })
-                      : t('variable-unexpected', { name: issue.name })}
+                      ? t('variable-missing', { name: issue.token })
+                      : t('variable-unexpected', { name: issue.token })}
                   </p>
                 ))}
               </div>

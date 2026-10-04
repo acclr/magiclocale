@@ -7,7 +7,6 @@ import {
   CreditCardIcon,
   FingerPrintIcon,
   KeyIcon,
-  RectangleStackIcon,
   UsersIcon,
 } from '@heroicons/react/24/outline';
 import env from '@/lib/env';
@@ -43,7 +42,10 @@ const TeamNavigation = ({
     });
   }
 
-  if (slug && canAccess('team_member', ['create', 'update', 'read', 'delete'])) {
+  if (
+    slug &&
+    canAccess('team_member', ['create', 'update', 'read', 'delete'])
+  ) {
     settingsItems.push({
       name: t('members'),
       href: `/teams/${slug}/members`,
@@ -130,14 +132,7 @@ const TeamNavigation = ({
     });
   }
 
-  const menus: MenuItem[] = [
-    {
-      name: t('teams'),
-      href: '/teams',
-      icon: RectangleStackIcon,
-      active: activePathname === '/teams',
-    },
-  ];
+  const menus: MenuItem[] = [];
 
   if (slug) {
     menus.push({

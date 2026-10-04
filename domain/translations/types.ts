@@ -20,6 +20,21 @@ export type Project = {
   allowedOrigins: string[];
 };
 
+export type ProjectKeyCounts = {
+  total: number;
+  active: number;
+  deprecated: number;
+};
+
+export type TeamProjectRole = 'OWNER' | 'ADMIN' | 'MEMBER';
+
+/** Project list payload: catalog counts and the viewer's team role. */
+export type ProjectListItem = Project & {
+  createdAt: string;
+  role: TeamProjectRole;
+  keyCounts: ProjectKeyCounts;
+};
+
 export type CreateProjectInput = {
   teamId: string;
   name: string;

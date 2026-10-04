@@ -1,13 +1,20 @@
-import type { LocaleFormat, Project } from '../../domain/translations';
+import type { LocaleFormat, ProjectListItem } from '../../domain/translations';
 import { defaultLocaleForFormat } from '../../domain/translations';
 import useTeamProjects from '../../hooks/useTeamProjects';
 import Link from 'next/link';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
+import {
+  Item as DataListItem,
+  Label as DataListLabel,
+  Root as DataListRoot,
+  Value as DataListValue,
+} from '@radix-ui/themes/components/data-list';
+import '@radix-ui/themes/components.css';
 
 import { Error as ErrorDisplay, Loading } from '@/components/shared';
-import LocaleName from './LocaleName';
+import LocaleFlagStack from './LocaleFlagStack';
 import LocaleSelect from './LocaleSelect';
 import { Separator } from '../ui/separator';
 
@@ -15,6 +22,25 @@ type ProjectListProps = {
   slug: string;
   canCreate: boolean;
 };
+
+const roleLabel: Record<ProjectListItem['role'], string> = {
+  OWNER: 'role-owner',
+  ADMIN: 'role-admin',
+  MEMBER: 'role-member',
+};
+
+function formatCreatedDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+
+  return date.toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
+}
 
 const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
   const { t } = useTranslation('common');
@@ -56,14 +82,9 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-lg font-medium tracking-tight">
-            {t('translation-projects')}
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            {t('translation-projects-description')}
-          </p>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          {t('translation-projects-description')}
+        </p>
         {canCreate && (
           <button
             className="btn btn-primary btn-sm"
@@ -160,32 +181,60 @@ const ProjectList = ({ slug, canCreate }: ProjectListProps) => {
 
       {projects?.length ? (
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {projects.map((project: Project) => (
-            <Link
-              className="card bg-card transition-colors hover:border-foreground/20 hover:bg-muted"
-              href={`/teams/${slug}/projects/${project.id}`}
-              key={project.id}
-            >
-              <div className="card-body">
-                <h2 className="card-title text-sm">{project.name}</h2>
-
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {project.billingScope === 'project'
-                    ? t('billing-scope-project')
-                    : t('billing-scope-team')}
-                </p>
-                <Separator
-                  orientation="horizontal"
-                  className="my-2.5 bg-foreground/5"
-                />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {project.locales.map((locale) => (
-                    <LocaleName code={locale} key={locale} />
-                  ))}
+          {projects.map((project: ProjectListItem) => {
+            const created = formatCreatedDate(project.createdAt);
+            return (
+              <Link
+                className="group card bg-card transition-colors hover:border-foreground/20 hover:bg-muted"
+                href={`/teams/${slug}/projects/${project.id}`}
+                key={project.id}
+              >
+                <div className="card-body gap-4">
+                  <div className="w-full flex justify-between items-center">
+                    <h2 className="truncate text-base font-medium">
+                      {project.name}
+                    </h2>
+                    <LocaleFlagStack
+                      locales={project.locales}
+                      sourceLocale={project.sourceLocale}
+                    />
+                  </div>
+                  <Separator orientation="horizontal" className="mt-3 mb-3" />
+                  <DataListRoot
+                    className="[&>*]text-[11px] grid! grid-cols-3! flex-row! [--default-font-family:inherit] [--font-weight-normal:400] [--gray-a11:var(--muted-foreground)] [--space-3:0.65rem]"
+                    orientation="vertical"
+                    size="1"
+                  >
+                    {[
+                      {
+                        label: t('created'),
+                        value: created,
+                      },
+                      {
+                        label: t('keys'),
+                        value: t('project-key-count', {
+                          count: project.keyCounts.total,
+                        }),
+                      },
+                      {
+                        label: t('role'),
+                        value: t(roleLabel[project.role]),
+                      },
+                    ].map((item) => (
+                      <DataListItem className="flex-1 w-full" key={item.label}>
+                        <DataListLabel className="text-sm!">
+                          {item.label}
+                        </DataListLabel>
+                        <DataListValue className="text-sm!">
+                          {item.value}
+                        </DataListValue>
+                      </DataListItem>
+                    ))}
+                  </DataListRoot>
                 </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            );
+          })}
         </div>
       ) : (
         <div className="rounded-lg border border-border bg-card p-10 text-center">

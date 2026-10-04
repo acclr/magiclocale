@@ -1,6 +1,6 @@
 import { Error, Loading } from '@/components/shared';
 import { AccessControl } from '@/components/shared/AccessControl';
-import { RemoveTeam, TeamSettings, TeamTab } from '@/components/team';
+import { RemoveTeam, TeamSettings } from '@/components/team';
 import TeamPlanSettings from '@/components/team/TeamPlanSettings';
 import env from '@/lib/env';
 import useTeam from 'hooks/useTeam';
@@ -26,16 +26,13 @@ const Settings = ({ teamFeatures }: { teamFeatures: TeamFeature }) => {
   }
 
   return (
-    <>
-      <TeamTab activeTab="settings" team={team} teamFeatures={teamFeatures} />
-      <div className="space-y-6">
-        <TeamSettings team={team} />
-        <TeamPlanSettings slug={team.slug} />
-        <AccessControl resource="team" actions={['delete']}>
-          <RemoveTeam team={team} allowDelete={teamFeatures.deleteTeam} />
-        </AccessControl>
-      </div>
-    </>
+    <div className="space-y-6">
+      <TeamSettings team={team} />
+      <TeamPlanSettings slug={team.slug} />
+      <AccessControl resource="team" actions={['delete']}>
+        <RemoveTeam team={team} allowDelete={teamFeatures.deleteTeam} />
+      </AccessControl>
+    </div>
   );
 };
 

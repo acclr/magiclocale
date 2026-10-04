@@ -35,6 +35,14 @@ export interface KeyCatalogRepository {
     toKey: string
   ): Promise<KeyMeta>;
   recordDetection(input: DetectedKeyInput): Promise<KeyMeta>;
+  /**
+   * Marks translation keys that disappeared from a full source scan.
+   * Archived keys stay archived. Returns the names that changed.
+   */
+  deprecateMissingTranslations(
+    projectId: string,
+    keys: readonly string[]
+  ): Promise<string[]>;
   touchDetections(input: {
     projectId: string;
     type: KeyType;

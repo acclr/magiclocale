@@ -29,6 +29,20 @@ describe('parseSourceKeyPayload', () => {
           usage: null,
         },
       ],
+      removed: [],
+    });
+  });
+
+  it('accepts a removal-only batch from a full project scan', () => {
+    expect(
+      parseSourceKeyPayload({
+        keys: [],
+        removed: [' home.heading.lead ', 'home.heading.tail', 'home.heading.lead'],
+      })
+    ).toEqual({
+      success: true,
+      keys: [],
+      removed: ['home.heading.lead', 'home.heading.tail'],
     });
   });
 

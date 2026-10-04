@@ -3,6 +3,7 @@ export * from './change-recorder';
 export * from './dashboard-projector';
 export * from './locale-catalog';
 export * from './locale-color';
+export * from './project-list-summary';
 export * from './project-service';
 export * from './repository';
 export * from './team-translation-service';

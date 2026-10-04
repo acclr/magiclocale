@@ -5,12 +5,14 @@ type EnvironmentSwitcherProps = {
   environments: Environment[];
   currentSlug?: string;
   onChange: (slug: string) => void;
+  compact?: boolean;
 };
 
 const EnvironmentSwitcher = ({
   environments,
   currentSlug,
   onChange,
+  compact = false,
 }: EnvironmentSwitcherProps) => {
   const { t } = useTranslation('common');
   const selected =
@@ -23,10 +25,20 @@ const EnvironmentSwitcher = ({
   }
 
   return (
-    <label className="flex w-full flex-col gap-1 text-sm">
-      <span className="text-muted-foreground">{t('environment')}</span>
+    <label
+      className={
+        compact ? 'flex items-center' : 'flex w-full flex-col gap-1 text-sm'
+      }
+    >
+      <span className={compact ? 'sr-only' : 'text-muted-foreground'}>
+        {t('environment')}
+      </span>
       <select
-        className="h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+        className={
+          compact
+            ? 'h-8 max-w-44 rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
+            : 'h-8 w-full rounded-md border border-input bg-transparent px-2.5 text-sm outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50'
+        }
         value={selected?.slug ?? 'production'}
         onChange={(event) => onChange(event.target.value)}
       >

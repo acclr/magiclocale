@@ -1,3 +1,4 @@
+import { extractVariableTokens } from '../../domain/keys';
 import type { DashboardRow } from '../../domain/translations';
 import { getLocaleDisplay, localeColor } from '../../domain/translations';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -6,6 +7,7 @@ import { cn } from 'cn';
 import type { CellSaveOptions } from './CellDrafts';
 import LocaleName from './LocaleName';
 import TranslationCell from './TranslationCell';
+import { VariableToken } from './VariableText';
 
 export type GridKeySelection = {
   allSelected: boolean;
@@ -13,12 +15,10 @@ export type GridKeySelection = {
   isSelected: (keyId: string) => boolean;
   toggle: (keyId: string) => void;
   togglePage: () => void;
-  totalMatching?: number;
-  onSelectAllMatching?: () => void;
 };
 
 export type GridLocaleSelection = {
-  selected: string[];
+  isSelected: (locale: string) => boolean;
   toggle: (locale: string) => void;
 };
 
@@ -91,107 +91,126 @@ const TranslationGrid = ({
                 </th>
               )}
               <th className="min-w-64 bg-card px-3 py-2.5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span>{t('translation-key')}</span>
-                  {keySelection?.onSelectAllMatching &&
-                    Boolean(keySelection.totalMatching) && (
-                      <button
-                        className="btn btn-ghost btn-xs"
-                        onClick={keySelection.onSelectAllMatching}
-                        type="button"
-                      >
-                        {t('select-all-matching-keys', {
-                          count: keySelection.totalMatching,
-                        })}
-                      </button>
-                    )}
-                </div>
+                <span>{t('translation-key')}</span>
               </th>
               {locales.map((projectLocale) => {
                 const color = localeColor(projectLocale);
                 const display = getLocaleDisplay(projectLocale);
+                const isTarget = projectLocale !== sourceLocale;
+                const localeSelected =
+                  isTarget && localeSelection?.isSelected(projectLocale);
                 return (
                   <th
-                    className="min-w-72 px-3 py-2.5"
+                    className={cn(
+                      'min-w-72 px-3 py-2.5',
+                      localeSelected && 'ring-2 ring-accent ring-inset'
+                    )}
                     key={projectLocale}
                     style={{ backgroundColor: color.background }}
                     title={display.label}
                   >
-                    <label className="flex items-center gap-2">
-                      {localeSelection && (
-                        <input
-                          checked={localeSelection.selected.includes(
-                            projectLocale
-                          )}
-                          className="checkbox checkbox-sm"
-                          onChange={() => localeSelection.toggle(projectLocale)}
-                          type="checkbox"
-                        />
-                      )}
-                      <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold">
-                        <LocaleName code={projectLocale} option={display} />
-                        <span className="ml-1">
-                          {getLanguageName(projectLocale)}
+                    <div className="flex items-center gap-2">
+                      {isTarget && localeSelection ? (
+                        <label className="flex cursor-pointer items-center gap-2">
+                          <input
+                            aria-label={t('select-locale', {
+                              locale: display.label,
+                            })}
+                            checked={Boolean(localeSelected)}
+                            className="checkbox checkbox-sm"
+                            onChange={() =>
+                              localeSelection.toggle(projectLocale)
+                            }
+                            type="checkbox"
+                          />
+                          <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold">
+                            <LocaleName code={projectLocale} option={display} />
+                            <span className="ml-1">
+                              {getLanguageName(projectLocale)}
+                            </span>
+                          </span>
+                        </label>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-xs font-semibold">
+                          <LocaleName code={projectLocale} option={display} />
+                          <span className="ml-1">
+                            {getLanguageName(projectLocale)}
+                          </span>
                         </span>
-                      </span>
+                      )}
                       {projectLocale === sourceLocale && (
                         <span className="badge badge-sm">{t('source')}</span>
                       )}
-                    </label>
+                    </div>
                   </th>
                 );
               })}
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => (
-              <tr
-                key={row.keyId}
-                className={cn('odd:bg-foreground/5', rowClassName?.(row))}
-              >
-                {keySelection && (
-                  <td className="w-10 px-2 py-2.5 align-top">
-                    <input
-                      aria-label={t('select-key', { key: row.key })}
-                      checked={keySelection.isSelected(row.keyId)}
-                      className="checkbox checkbox-sm"
-                      onChange={() => keySelection.toggle(row.keyId)}
-                      type="checkbox"
-                    />
-                  </td>
-                )}
-                <th className="max-w-72 px-3 py-2.5 align-top">
-                  <p className="break-words font-mono text-xs font-normal">
-                    {row.key}
-                  </p>
-                </th>
-                {locales.map((projectLocale) => {
-                  const color = localeColor(projectLocale);
-                  return (
-                    <td
-                      className="relative z-0 h-20 overflow-visible p-0 align-top focus-within:z-30"
-                      key={projectLocale}
-                      style={{ backgroundColor: color.background }}
-                    >
-                      <TranslationCell
-                        canEdit={canEdit}
-                        cell={row.cells[projectLocale]}
-                        fallbackValue={
-                          projectLocale === sourceLocale
-                            ? row.sourceText
-                            : undefined
-                        }
-                        keyId={row.keyId}
-                        onOpen={() => onOpenCell(row.keyId, projectLocale)}
-                        onSave={(value, options) =>
-                          onSaveCell(row.keyId, projectLocale, value, options)
-                        }
+            {rows.map((row) => {
+              const variables = extractVariableTokens(row.sourceText);
+              return (
+                <tr
+                  key={row.keyId}
+                  className={cn('odd:bg-foreground/5', rowClassName?.(row))}
+                >
+                  {keySelection && (
+                    <td className="w-10 px-2 py-2.5 align-top">
+                      <input
+                        aria-label={t('select-key', { key: row.key })}
+                        checked={keySelection.isSelected(row.keyId)}
+                        className="checkbox checkbox-sm"
+                        onChange={() => keySelection.toggle(row.keyId)}
+                        type="checkbox"
                       />
                     </td>
-                  );
-                })}
-              </tr>
-            ))}
+                  )}
+                  <th className="max-w-72 px-3 py-2.5 align-top">
+                    <p className="break-words font-mono text-xs font-normal">
+                      {row.key}
+                    </p>
+                    {variables.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {variables.map((variable) => (
+                          <VariableToken
+                            className="text-[10px]"
+                            key={variable.name}
+                            token={variable.token}
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </th>
+                  {locales.map((projectLocale) => {
+                    const color = localeColor(projectLocale);
+                    return (
+                      <td
+                        className="relative z-0 h-20 overflow-visible p-0 align-top focus-within:z-30"
+                        key={projectLocale}
+                        style={{ backgroundColor: color.background }}
+                      >
+                        <TranslationCell
+                          canEdit={canEdit}
+                          cell={row.cells[projectLocale]}
+                          fallbackValue={
+                            projectLocale === sourceLocale
+                              ? row.sourceText
+                              : undefined
+                          }
+                          sourceText={row.sourceText}
+                          keyId={row.keyId}
+                          onOpen={() => onOpenCell(row.keyId, projectLocale)}
+                          onSave={(value, options) =>
+                            onSaveCell(row.keyId, projectLocale, value, options)
+                          }
+                        />
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
             {!rows.length && (
               <tr>
                 <td

@@ -10,8 +10,10 @@ import {
   DEFAULT_CHUNK_SIZE,
   executeSync,
   resolveScanOptions,
+  type SyncCommandOptions,
 } from './sync-command';
 import { normalizeChunkSize } from './sync-batch';
+import { DEFAULT_WATCH_DEBOUNCE_MS, startSyncWatcher } from './sync-watch';
 import { loadProjectEnv, resolveBaseUrl } from './load-env';
 
 function flatten(
@@ -118,7 +120,7 @@ async function main() {
       DEFAULT_CHUNK_DELAY_MS,
       '--delay'
     );
-    await executeSync({
+    const syncOptions: SyncCommandOptions = {
       root,
       directory: setup.directory,
       baseUrl: resolveBaseUrl(
@@ -145,7 +147,19 @@ async function main() {
       scan: scanOptions,
       chunkSize,
       delayMs,
-    });
+    };
+    if (args.includes('--watch')) {
+      await watchAndSync(
+        syncOptions,
+        parseNonNegativeInteger(
+          argValue(args, '--debounce'),
+          DEFAULT_WATCH_DEBOUNCE_MS,
+          '--debounce'
+        )
+      );
+      return;
+    }
+    await executeSync(syncOptions);
     return;
   }
 
@@ -162,14 +176,22 @@ async function main() {
   console.log(`Keykit CLI
   scan [--root .] [--include path] [--exclude path]
   sync [--root .] [--include path] [--exclude path] [--chunk 25] [--delay 200]
+       [--watch] [--debounce 400]
   pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json
 
 sync uploads t() and translate() calls while you are developing.
 It sends them in chunks (25 keys per request by default) and waits
-between requests. In a terminal, p pauses, c continues, and q saves
-progress so the next sync continues. Page views do not upload keys.
+between requests. A scan of the whole project also marks keys that
+disappeared from source as deprecated. --include and --exclude limit
+the scan, so those runs do not deprecate keys outside that scope.
+In a terminal, p pauses, c continues, and q saves progress so the next
+sync continues. Page views do not upload keys.
+
+sync --watch stays running next to your dev server. It syncs once,
+then uploads new and changed keys after you save. It never marks keys
+deprecated; run a plain sync for that.
 
 scan and sync read scan.include and scan.exclude from keykit.config.ts.
 Repeat --include or --exclude, or pass a comma-separated list.
@@ -188,6 +210,49 @@ come from the environment, .env, .env.local, or keykit.config.
 
 The backend never writes customer filesystems. Apply Keykit migrations
 locally, then commit the result.`);
+}
+
+async function watchAndSync(
+  options: SyncCommandOptions,
+  debounceMs: number
+): Promise<void> {
+  // Keys disappear for a moment while a file is being edited, so watch mode
+  // never deprecates. A manual `keykit sync` does that.
+  const watchOptions: SyncCommandOptions = {
+    ...options,
+    interactive: false,
+    deprecateRemoved: false,
+    quietWhenUnchanged: true,
+  };
+  const run = () => executeSync(watchOptions);
+  const report = (error: Error) =>
+    console.error(`${error.message} Watching for the next change.`);
+
+  try {
+    await executeSync({ ...watchOptions, quietWhenUnchanged: false });
+  } catch (error) {
+    report(error instanceof Error ? error : new Error(String(error)));
+  }
+
+  const watcher = startSyncWatcher({
+    root: options.root,
+    scan: options.scan,
+    run,
+    debounceMs,
+    onError: report,
+  });
+  console.log(
+    'Watching for t() and translate() changes. Ctrl+C stops. Run keykit sync to mark removed keys deprecated.'
+  );
+
+  await new Promise<void>((resolveStop) => {
+    const stop = () => {
+      watcher.close();
+      void watcher.idle().then(resolveStop);
+    };
+    process.once('SIGINT', stop);
+    process.once('SIGTERM', stop);
+  });
 }
 
 function argValue(args: string[], name: string): string | undefined {

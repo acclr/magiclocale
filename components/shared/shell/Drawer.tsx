@@ -2,14 +2,12 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import { useTranslation } from '@/hooks/useTranslation';
 
 import PrimarySidebar from './PrimarySidebar';
-import ProjectSidebar from './ProjectSidebar';
 import { useSidebarLayout } from './SidebarContext';
-import { getPrimarySidebarWidth, PROJECT_SIDEBAR_WIDTH } from './sidebar';
+import { getPrimarySidebarWidth } from './sidebar';
 
 const Drawer = () => {
   const { t } = useTranslation('common');
-  const { collapsed, isProjectRoute, mobileOpen, mobileView, setMobileOpen } =
-    useSidebarLayout();
+  const { collapsed, mobileOpen, setMobileOpen } = useSidebarLayout();
   const primaryWidth = getPrimarySidebarWidth(collapsed);
 
   return (
@@ -36,11 +34,7 @@ const Drawer = () => {
                 </button>
               </div>
               <div className="flex w-full grow flex-col overflow-hidden bg-background pb-4">
-                {mobileView === 'project' && isProjectRoute ? (
-                  <ProjectSidebar variant="mobile" />
-                ) : (
-                  <PrimarySidebar variant="mobile" />
-                )}
+                <PrimarySidebar variant="mobile" />
               </div>
             </div>
           </div>
@@ -53,15 +47,6 @@ const Drawer = () => {
       >
         <PrimarySidebar />
       </div>
-
-      {isProjectRoute && (
-        <div
-          className="hidden shrink-0 border-r border-sidebar-border bg-sidebar text-sidebar-accent-foreground transition-[left] duration-200 lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:flex-col"
-          style={{ left: primaryWidth, width: PROJECT_SIDEBAR_WIDTH }}
-        >
-          <ProjectSidebar />
-        </div>
-      )}
     </>
   );
 };

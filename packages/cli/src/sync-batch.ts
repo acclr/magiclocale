@@ -69,6 +69,37 @@ export function pendingKeys(
   return keys.filter((item) => synced[item.key] !== item.sourceText);
 }
 
+/**
+ * Checkpoint entries that a full project scan no longer finds.
+ * A scoped scan must not use this: keys outside the scope are still in use.
+ */
+export function removedKeys(
+  keys: readonly ScannedSourceKey[],
+  synced: Record<string, string> | undefined
+): string[] {
+  if (!synced) {
+    return [];
+  }
+  const present = new Set(keys.map((item) => item.key));
+  return Object.keys(synced)
+    .filter((key) => !present.has(key))
+    .sort();
+}
+
+export function withoutKeys(
+  synced: Record<string, string>,
+  removed: readonly string[]
+): Record<string, string> {
+  if (removed.length === 0) {
+    return synced;
+  }
+  const next = { ...synced };
+  for (const key of removed) {
+    delete next[key];
+  }
+  return next;
+}
+
 export function toIngestKey(item: ScannedSourceKey, root: string): IngestKey {
   const file = relative(root, item.file).split(sep).join('/').slice(0, 500);
   return {

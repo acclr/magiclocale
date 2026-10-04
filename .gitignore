@@ -17,6 +17,7 @@ yarn.lock
 # production
 /build
 /packages/sdk/dist
+*.tgz
 
 # misc
 .DS_Store

@@ -169,7 +169,11 @@ export function projectTranslationDashboard(
   });
 
   for (const row of rows) {
-    if (row.lifecycle === 'unused' || row.usageCount === 0) {
+    if (
+      row.lifecycle !== 'deprecated' &&
+      row.lifecycle !== 'archived' &&
+      (row.lifecycle === 'unused' || row.usageCount === 0)
+    ) {
       counts.unused += 1;
     }
     if (row.lifecycle === 'deprecated') {
@@ -285,6 +289,9 @@ export function filterDashboardRows(
   const parsed = parseSearchQuery(query.search);
   return rows.filter((row) => {
     if (query.filter === 'unused') {
+      if (row.lifecycle === 'deprecated' || row.lifecycle === 'archived') {
+        return false;
+      }
       if (row.lifecycle !== 'unused' && row.usageCount !== 0) {
         return false;
       }

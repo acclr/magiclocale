@@ -297,6 +297,87 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
     return toMeta(row);
   }
 
+  async deprecateMissingTranslations(
+    projectId: string,
+    keys: readonly string[]
+  ): Promise<string[]> {
+    const names = Array.from(
+      new Set(keys.map((key) => key.trim()).filter(Boolean))
+    );
+    if (names.length === 0) {
+      return [];
+    }
+
+    const translationKeys = await this.client.translationKey.findMany({
+      where: { projectId, key: { in: names } },
+      select: { key: true },
+    });
+    const known = new Set(translationKeys.map((row) => row.key));
+    const targets = names.filter((key) => known.has(key));
+    if (targets.length === 0) {
+      return [];
+    }
+
+    const existing = await this.client.keyMeta.findMany({
+      where: {
+        projectId,
+        type: 'TRANSLATION',
+        key: { in: targets },
+      },
+      select: { id: true, key: true, lifecycle: true },
+    });
+    const byKey = new Map(existing.map((meta) => [meta.key, meta]));
+    const updateIds: string[] = [];
+    const createKeys: string[] = [];
+    const changed: string[] = [];
+
+    for (const key of targets) {
+      const meta = byKey.get(key);
+      if (!meta) {
+        createKeys.push(key);
+        changed.push(key);
+        continue;
+      }
+      if (meta.lifecycle === 'DEPRECATED' || meta.lifecycle === 'ARCHIVED') {
+        continue;
+      }
+      updateIds.push(meta.id);
+      changed.push(key);
+    }
+
+    if (changed.length === 0) {
+      return [];
+    }
+
+    await this.client.$transaction([
+      ...(updateIds.length > 0
+        ? [
+            this.client.sourceUsage.deleteMany({
+              where: { keyMetaId: { in: updateIds } },
+            }),
+            this.client.keyMeta.updateMany({
+              where: { id: { in: updateIds } },
+              data: { lifecycle: 'DEPRECATED' },
+            }),
+          ]
+        : []),
+      ...(createKeys.length > 0
+        ? [
+            this.client.keyMeta.createMany({
+              data: createKeys.map((key) => ({
+                projectId,
+                type: 'TRANSLATION' as const,
+                key,
+                namespace: namespaceFromKey(key),
+                lifecycle: 'DEPRECATED' as const,
+              })),
+            }),
+          ]
+        : []),
+    ]);
+    return changed;
+  }
+
   async touchDetections(input: {
     projectId: string;
     type: KeyType;
@@ -375,8 +456,8 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
       data: {
         lastDetectedAt: new Date(),
         lifecycle:
-          meta.lifecycle === 'deprecated' || meta.lifecycle === 'archived'
-            ? lifecycleToPrisma[meta.lifecycle]
+          meta.lifecycle === 'archived'
+            ? 'ARCHIVED'
             : 'ACTIVE',
       },
       include: { _count: { select: { usages: true } } },

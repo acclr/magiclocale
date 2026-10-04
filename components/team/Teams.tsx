@@ -51,14 +51,7 @@ const Teams = () => {
     <WithLoadingAndError isLoading={isLoading} error={isError}>
       <div className="space-y-3">
         <div className="flex justify-between items-center">
-          <div className="space-y-3">
-            <h2 className="text-sm font-medium tracking-tight">
-              {t('all-teams')}
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              {t('team-listed')}
-            </p>
-          </div>
+          <p className="text-sm text-muted-foreground">{t('team-listed')}</p>
           <Button
             color="primary"
             size="md"

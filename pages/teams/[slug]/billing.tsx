@@ -7,7 +7,6 @@ import env from '@/lib/env';
 import useTeam from 'hooks/useTeam';
 import fetcher from '@/lib/fetcher';
 import useCanAccess from 'hooks/useCanAccess';
-import { TeamTab } from '@/components/team';
 import Help from '@/components/billing/Help';
 import { Error, Loading } from '@/components/shared';
 import LinkToPortal from '@/components/billing/LinkToPortal';
@@ -15,7 +14,7 @@ import KeykitPricing from '@/components/billing/KeykitPricing';
 import KeykitSubscriptions from '@/components/billing/KeykitSubscriptions';
 import BillingProjectList from '@/components/billing/BillingProjectList';
 
-const Payments = ({ teamFeatures }) => {
+const Payments = () => {
   const { t } = useTranslation('common');
   const { canAccess } = useCanAccess();
   const { isLoading, isError, team } = useTeam();
@@ -44,12 +43,6 @@ const Payments = ({ teamFeatures }) => {
     <>
       {canAccess('team_payments', ['read']) && (
         <>
-          <TeamTab
-            activeTab="payments"
-            team={team}
-            teamFeatures={teamFeatures}
-          />
-
           <p className="mb-4 max-w-3xl text-sm text-muted-foreground">
             {t('team-billing-intro')}
           </p>

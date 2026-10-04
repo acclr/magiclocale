@@ -1,4 +1,4 @@
-import { extractVariables } from '@/domain/keys';
+import { extractVariableTokens } from '@/domain/keys';
 import { useTranslation } from '@/hooks/useTranslation';
 import { defaultHeaders } from '@/lib/common';
 import Link from 'next/link';
@@ -50,7 +50,7 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
   }
 
   const { meta, usages, sourceText } = detail.detail;
-  const variables = extractVariables(sourceText || description || '');
+  const variables = extractVariableTokens(sourceText || description || '');
 
   const restore = async (changeId: string) => {
     const response = await fetch(historyUrl, {
@@ -77,7 +77,9 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
       </button>
       <div>
         <p className="text-xs uppercase text-muted-foreground">{meta.type}</p>
-        <h1 className="font-mono text-lg font-medium tracking-tight">{meta.key}</h1>
+        <h1 className="font-mono text-lg font-medium tracking-tight">
+          {meta.key}
+        </h1>
         <p className="text-sm text-muted-foreground">
           {t('namespace')}: {meta.namespace ?? '—'} · {t('lifecycle')}:{' '}
           {meta.lifecycle} · {t('usages')}: {meta.usageCount}
@@ -123,7 +125,7 @@ const KeyDetail = ({ slug, projectId, keyMetaId, canEdit }: KeyDetailProps) => {
         {variables.length ? (
           <p className="text-xs text-muted-foreground">
             {t('variables')}:{' '}
-            {variables.map((name) => `{{${name}}}`).join(', ')}
+            {variables.map((variable) => variable.token).join(', ')}
           </p>
         ) : null}
         {canEdit ? (

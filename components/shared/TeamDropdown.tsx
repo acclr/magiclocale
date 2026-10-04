@@ -2,8 +2,6 @@ import {
   ChevronUpDownIcon,
   CubeIcon,
   FolderIcon,
-  FolderPlusIcon,
-  RectangleStackIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import useCurrentTeamSlug from 'hooks/useCurrentTeamSlug';
@@ -26,6 +24,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { PlusIcon } from 'lucide-react';
 
 const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
   const { teams } = useTeams();
@@ -44,12 +43,20 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
     {
       id: 'teams',
       name: t('teams'),
-      items: (teams || []).map((team) => ({
-        id: team.id,
-        name: team.name,
-        href: `/teams/${team.slug}/products`,
-        icon: FolderIcon,
-      })),
+      items: [
+        ...(teams || []).map((team) => ({
+          id: team.id,
+          name: team.name,
+          href: `/teams/${team.slug}/products`,
+          icon: FolderIcon,
+        })),
+        {
+          id: 'new-team',
+          name: t('new-team'),
+          href: '/teams?newTeam=true',
+          icon: PlusIcon,
+        },
+      ],
     },
     ...(currentTeam && projects?.length
       ? [
@@ -74,24 +81,6 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
           name: data?.user?.name,
           href: '/settings/account',
           icon: UserCircleIcon,
-        },
-      ],
-    },
-    {
-      id: 'actions',
-      name: '',
-      items: [
-        {
-          id: 'all-teams',
-          name: t('teams'),
-          href: '/teams',
-          icon: RectangleStackIcon,
-        },
-        {
-          id: 'new-team',
-          name: t('new-team'),
-          href: '/teams?newTeam=true',
-          icon: FolderPlusIcon,
         },
       ],
     },

@@ -128,6 +128,7 @@ var TRANSLATE_PATTERNS = [
   /\btranslate\s*\(\s*[`'"]([^`'"]+)[`'"]\s*,\s*[`'"]([^`'"]*)[`'"]/g,
   /\bt\s*\(\s*[`'"]([^`'"]+)[`'"]\s*,\s*[`'"]([^`'"]*)[`'"]/g
 ];
+var VARIABLE_PATTERN = /\{\{\s*([a-zA-Z_][\w]*)\s*\}\}|\{(?!\{)\s*([a-zA-Z_][\w]*)\s*\}/g;
 var DEFAULT_SKIP_DIRECTORIES = [
   "node_modules",
   ".git",
@@ -160,6 +161,27 @@ function scanProject(root, options = {}) {
     )
   };
 }
+function isScannablePath(root, file, options = {}) {
+  const projectRoot2 = resolve2(root);
+  const full = resolve2(projectRoot2, file);
+  if (!SOURCE_EXTENSIONS2.has(extname2(full))) {
+    return false;
+  }
+  const fromRoot = relative(projectRoot2, full);
+  if (!fromRoot || fromRoot.startsWith("..") || isAbsolute(fromRoot)) {
+    return false;
+  }
+  if (shouldSkip(full, projectRoot2, excludeRules(options.exclude))) {
+    return false;
+  }
+  if (!options.include?.length) {
+    return true;
+  }
+  return options.include.some((entry) => {
+    const target = relative(resolve2(projectRoot2, entry), full);
+    return !target || !target.startsWith("..") && !isAbsolute(target);
+  });
+}
 function collectKeys(file, found) {
   const content = readFileSync2(file, "utf8");
   for (const pattern of TRANSLATE_PATTERNS) {
@@ -175,12 +197,28 @@ function collectKeys(file, found) {
         found.set(key, {
           key,
           sourceText,
+          variables: variablesIn(sourceText),
           file,
           line: lineNumberAt(content, match.index)
         });
       }
     }
   }
+}
+function variablesIn(sourceText) {
+  const names = [];
+  const seen = /* @__PURE__ */ new Set();
+  const pattern = new RegExp(VARIABLE_PATTERN.source, "g");
+  let match;
+  while ((match = pattern.exec(sourceText)) !== null) {
+    const name = match[1] ?? match[2];
+    if (seen.has(name)) {
+      continue;
+    }
+    seen.add(name);
+    names.push(name);
+  }
+  return names;
 }
 function lineNumberAt(content, index) {
   let line = 1;
@@ -278,7 +316,10 @@ async function pushSourceKeys(options) {
           Authorization: `Bearer ${options.token}`,
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ keys: options.keys })
+        body: JSON.stringify({
+          keys: options.keys,
+          ...options.removed && options.removed.length > 0 ? { removed: options.removed } : {}
+        })
       });
       if (response.ok) {
         return;
@@ -418,6 +459,23 @@ function pendingKeys(keys, synced) {
     return [...keys];
   }
   return keys.filter((item) => synced[item.key] !== item.sourceText);
+}
+function removedKeys(keys, synced) {
+  if (!synced) {
+    return [];
+  }
+  const present = new Set(keys.map((item) => item.key));
+  return Object.keys(synced).filter((key) => !present.has(key)).sort();
+}
+function withoutKeys(synced, removed) {
+  if (removed.length === 0) {
+    return synced;
+  }
+  const next = { ...synced };
+  for (const key of removed) {
+    delete next[key];
+  }
+  return next;
 }
 function toIngestKey(item, root) {
   const file = relative2(root, item.file).split(sep2).join("/").slice(0, 500);
@@ -591,14 +649,30 @@ async function executeSync(options) {
   const scope = options.scan.include && options.scan.include.length > 0 ? options.scan.include.join(", ") : "entire project";
   const checkpoint = readSyncCheckpoint(options.directory, options.projectId);
   const queued = pendingKeys(scan.keys, checkpoint.synced);
-  if (queued.length === 0) {
+  const removed = options.deprecateRemoved === false ? [] : keysMissingFromScan(scan, options.scan, checkpoint.synced);
+  if (queued.length === 0 && removed.length === 0) {
+    if (options.quietWhenUnchanged) {
+      return;
+    }
     console.log(
       scan.keys.length === 0 ? `No translation keys found in ${scope} (${scan.fileCount} files).` : `Scanned ${scan.keys.length} keys in ${scan.fileCount} files. Nothing new to sync.`
     );
     return;
   }
+  if (queued.length === 0) {
+    const deprecated = await reportRemovedKeys(options, removed);
+    writeSyncCheckpoint(options.directory, {
+      version: 1,
+      projectId: options.projectId,
+      synced: withoutKeys(checkpoint.synced, removed)
+    });
+    console.log(
+      `Scanned ${scan.keys.length} keys in ${scan.fileCount} files. Nothing new to sync. ${deprecatedSummary(deprecated)}`
+    );
+    return;
+  }
   const unchanged = scan.keys.length - queued.length;
-  const interactive = queued.length > options.chunkSize && Boolean(process.stdout.isTTY);
+  const interactive = queued.length > options.chunkSize && (options.interactive ?? Boolean(process.stdout.isTTY));
   const display = interactive ? createSyncDisplay() : null;
   const session = interactive ? createSyncSession(process.stdin, (event) => {
     if (event === "pause") {
@@ -676,6 +750,21 @@ async function executeSync(options) {
       projectId: options.projectId,
       synced: result.synced
     });
+    if (result.stopped === "done" && removed.length > 0) {
+      const deprecated = await reportRemovedKeys(options, removed);
+      writeSyncCheckpoint(options.directory, {
+        version: 1,
+        projectId: options.projectId,
+        synced: withoutKeys(result.synced, removed)
+      });
+      const summary2 = `Synced ${result.sent} keys. ${deprecatedSummary(deprecated)}`;
+      if (display) {
+        display.finish(summary2);
+      } else {
+        console.log(summary2);
+      }
+      return;
+    }
     if (result.stopped === "error") {
       const message = result.error?.message ?? "Keykit sync failed.";
       const summary2 = `Synced ${result.sent} of ${queued.length} keys. ${message} Run keykit sync again to continue.`;
@@ -716,6 +805,110 @@ function readScanConfig(config) {
   }
   return config.scan;
 }
+function keysMissingFromScan(scan, scanOptions, synced) {
+  const include = scanOptions.include ?? [];
+  const exclude = scanOptions.exclude ?? [];
+  if (include.length > 0 || exclude.length > 0 || scan.fileCount === 0) {
+    return [];
+  }
+  return removedKeys(scan.keys, synced);
+}
+async function reportRemovedKeys(options, removed) {
+  const deprecated = [];
+  for (let index = 0; index < removed.length; index += options.chunkSize) {
+    const batch = removed.slice(index, index + options.chunkSize);
+    await pushSourceKeys({
+      baseUrl: options.baseUrl,
+      projectId: options.projectId,
+      token: options.token,
+      environment: options.environment,
+      keys: [],
+      removed: batch,
+      fetch: options.fetch
+    });
+    deprecated.push(...batch);
+  }
+  return deprecated;
+}
+function deprecatedSummary(keys) {
+  const preview = keys.slice(0, 8).join(", ");
+  const extra = keys.length > 8 ? `, and ${keys.length - 8} more` : "";
+  return `Marked ${keys.length} removed ${keys.length === 1 ? "key" : "keys"} as deprecated: ${preview}${extra}.`;
+}
+
+// src/sync-watch.ts
+import { watch as fsWatch } from "fs";
+var DEFAULT_WATCH_DEBOUNCE_MS = 400;
+function startSyncWatcher(options) {
+  const debounceMs = options.debounceMs ?? DEFAULT_WATCH_DEBOUNCE_MS;
+  const watch = options.watch ?? nodeFileWatcher;
+  const setTimer = options.setTimer ?? setTimeout;
+  const clearTimer = options.clearTimer ?? ((handle) => clearTimeout(handle));
+  const onError = options.onError ?? ((error) => console.error(error.message));
+  let timer = null;
+  let running = null;
+  let queued = false;
+  let closed = false;
+  const runPass = async () => {
+    do {
+      queued = false;
+      try {
+        await options.run();
+      } catch (error) {
+        onError(error instanceof Error ? error : new Error(String(error)));
+      }
+    } while (queued && !closed);
+  };
+  const trigger = () => {
+    timer = null;
+    if (closed) {
+      return;
+    }
+    if (running) {
+      queued = true;
+      return;
+    }
+    running = runPass().finally(() => {
+      running = null;
+    });
+  };
+  const schedule = () => {
+    if (timer !== null) {
+      clearTimer(timer);
+    }
+    timer = setTimer(trigger, debounceMs);
+  };
+  const watcher = watch(options.root, (file) => {
+    if (closed) {
+      return;
+    }
+    if (file !== null && !isScannablePath(options.root, file, options.scan)) {
+      return;
+    }
+    schedule();
+  });
+  return {
+    async idle() {
+      while (running) {
+        await running;
+      }
+    },
+    close() {
+      closed = true;
+      if (timer !== null) {
+        clearTimer(timer);
+        timer = null;
+      }
+      watcher.close();
+    }
+  };
+}
+var nodeFileWatcher = (root, onChange) => {
+  const watcher = fsWatch(root, { recursive: true }, (_event, file) => {
+    onChange(file ? file.toString() : null);
+  });
+  return { close: () => watcher.close() };
+};
 
 // src/load-env.ts
 import { existsSync as existsSync2, readFileSync as readFileSync4 } from "fs";
@@ -879,7 +1072,7 @@ async function main() {
       DEFAULT_CHUNK_DELAY_MS,
       "--delay"
     );
-    await executeSync({
+    const syncOptions = {
       root,
       directory: setup.directory,
       baseUrl: resolveBaseUrl(
@@ -903,7 +1096,19 @@ async function main() {
       scan: scanOptions,
       chunkSize,
       delayMs
-    });
+    };
+    if (args.includes("--watch")) {
+      await watchAndSync(
+        syncOptions,
+        parseNonNegativeInteger(
+          argValue(args, "--debounce"),
+          DEFAULT_WATCH_DEBOUNCE_MS,
+          "--debounce"
+        )
+      );
+      return;
+    }
+    await executeSync(syncOptions);
     return;
   }
   if (command === "flatten-json") {
@@ -918,14 +1123,22 @@ async function main() {
   console.log(`Keykit CLI
   scan [--root .] [--include path] [--exclude path]
   sync [--root .] [--include path] [--exclude path] [--chunk 25] [--delay 200]
+       [--watch] [--debounce 400]
   pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json
 
 sync uploads t() and translate() calls while you are developing.
 It sends them in chunks (25 keys per request by default) and waits
-between requests. In a terminal, p pauses, c continues, and q saves
-progress so the next sync continues. Page views do not upload keys.
+between requests. A scan of the whole project also marks keys that
+disappeared from source as deprecated. --include and --exclude limit
+the scan, so those runs do not deprecate keys outside that scope.
+In a terminal, p pauses, c continues, and q saves progress so the next
+sync continues. Page views do not upload keys.
+
+sync --watch stays running next to your dev server. It syncs once,
+then uploads new and changed keys after you save. It never marks keys
+deprecated; run a plain sync for that.
 
 scan and sync read scan.include and scan.exclude from keykit.config.ts.
 Repeat --include or --exclude, or pass a comma-separated list.
@@ -944,6 +1157,39 @@ come from the environment, .env, .env.local, or keykit.config.
 
 The backend never writes customer filesystems. Apply Keykit migrations
 locally, then commit the result.`);
+}
+async function watchAndSync(options, debounceMs) {
+  const watchOptions = {
+    ...options,
+    interactive: false,
+    deprecateRemoved: false,
+    quietWhenUnchanged: true
+  };
+  const run = () => executeSync(watchOptions);
+  const report = (error) => console.error(`${error.message} Watching for the next change.`);
+  try {
+    await executeSync({ ...watchOptions, quietWhenUnchanged: false });
+  } catch (error) {
+    report(error instanceof Error ? error : new Error(String(error)));
+  }
+  const watcher = startSyncWatcher({
+    root: options.root,
+    scan: options.scan,
+    run,
+    debounceMs,
+    onError: report
+  });
+  console.log(
+    "Watching for t() and translate() changes. Ctrl+C stops. Run keykit sync to mark removed keys deprecated."
+  );
+  await new Promise((resolveStop) => {
+    const stop = () => {
+      watcher.close();
+      void watcher.idle().then(resolveStop);
+    };
+    process.once("SIGINT", stop);
+    process.once("SIGTERM", stop);
+  });
 }
 function argValue(args, name) {
   const index = args.indexOf(name);

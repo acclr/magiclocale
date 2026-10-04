@@ -4,6 +4,8 @@ export type PushSourceKeysOptions = {
   token: string;
   environment?: string;
   keys: unknown[];
+  /** Previously synced keys that a full project scan no longer finds. */
+  removed?: readonly string[];
   fetch?: typeof fetch;
   maxRetries?: number;
   retryDelayMs?: number;
@@ -32,7 +34,12 @@ export async function pushSourceKeys(options: PushSourceKeysOptions): Promise<vo
           Authorization: `Bearer ${options.token}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ keys: options.keys }),
+        body: JSON.stringify({
+          keys: options.keys,
+          ...(options.removed && options.removed.length > 0
+            ? { removed: options.removed }
+            : {}),
+        }),
       });
       if (response.ok) {
         return;

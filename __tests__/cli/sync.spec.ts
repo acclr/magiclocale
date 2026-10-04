@@ -4,18 +4,47 @@ import { join } from 'node:path';
 import {
   chunkItems,
   pendingKeys,
+  removedKeys,
   runChunkedSync,
   toIngestKey,
+  withoutKeys,
 } from '../../packages/cli/src/sync-batch';
-import { readSyncCheckpoint, writeSyncCheckpoint } from '../../packages/cli/src/sync-state';
+import {
+  readSyncCheckpoint,
+  writeSyncCheckpoint,
+} from '../../packages/cli/src/sync-state';
 import { formatSyncFrame } from '../../packages/cli/src/sync-ui';
 import type { ScannedSourceKey } from '../../packages/cli/src/scan';
 
 const keys: ScannedSourceKey[] = [
-  { key: 'a', sourceText: 'A', file: join('app', 'a.tsx'), line: 1 },
-  { key: 'b', sourceText: 'B', file: join('app', 'b.tsx'), line: 2 },
-  { key: 'c', sourceText: 'C', file: join('app', 'c.tsx'), line: 3 },
-  { key: 'd', sourceText: 'D', file: join('app', 'd.tsx'), line: 4 },
+  {
+    key: 'a',
+    sourceText: 'A',
+    variables: [],
+    file: join('app', 'a.tsx'),
+    line: 1,
+  },
+  {
+    key: 'b',
+    sourceText: 'B',
+    variables: [],
+    file: join('app', 'b.tsx'),
+    line: 2,
+  },
+  {
+    key: 'c',
+    sourceText: 'C',
+    variables: [],
+    file: join('app', 'c.tsx'),
+    line: 3,
+  },
+  {
+    key: 'd',
+    sourceText: 'D',
+    variables: [],
+    file: join('app', 'd.tsx'),
+    line: 4,
+  },
 ];
 
 describe('keykit sync batches', () => {
@@ -25,11 +54,18 @@ describe('keykit sync batches', () => {
   });
 
   it('skips keys whose source text is already synced', () => {
-    expect(pendingKeys(keys, { a: 'A', b: 'Old' }).map((item) => item.key)).toEqual([
-      'b',
-      'c',
-      'd',
+    expect(
+      pendingKeys(keys, { a: 'A', b: 'Old' }).map((item) => item.key)
+    ).toEqual(['b', 'c', 'd']);
+  });
+
+  it('lists checkpoint keys that a full scan no longer finds', () => {
+    expect(removedKeys(keys, { a: 'A', 'home.heading.lead': 'Lead', b: 'B' })).toEqual([
+      'home.heading.lead',
     ]);
+    expect(withoutKeys({ a: 'A', 'home.heading.lead': 'Lead' }, ['home.heading.lead'])).toEqual({
+      a: 'A',
+    });
   });
 
   it('sends one request per chunk and stops before the next chunk when aborted', async () => {
@@ -84,6 +120,7 @@ describe('keykit sync batches', () => {
     const item: ScannedSourceKey = {
       key: 'home.title',
       sourceText: 'Welcome',
+      variables: [],
       file: join(root, 'app', 'page.tsx'),
       line: 8,
     };
@@ -103,11 +140,14 @@ describe('keykit sync batches', () => {
       synced: { a: 'A' },
     });
 
-    expect(readSyncCheckpoint(directory, 'proj_acme').synced).toEqual({ a: 'A' });
+    expect(readSyncCheckpoint(directory, 'proj_acme').synced).toEqual({
+      a: 'A',
+    });
     expect(readSyncCheckpoint(directory, 'proj_other').synced).toEqual({});
-    expect(JSON.parse(readFileSync(join(directory, 'sync-state.json'), 'utf8')).projectId).toBe(
-      'proj_acme'
-    );
+    expect(
+      JSON.parse(readFileSync(join(directory, 'sync-state.json'), 'utf8'))
+        .projectId
+    ).toBe('proj_acme');
   });
 
   it('renders a progress frame with the chunk size', () => {
