@@ -162,29 +162,35 @@ function scanProject(root, options = {}) {
 }
 function collectKeys(file, found) {
   const content = readFileSync2(file, "utf8");
-  const lines = content.split(/\r?\n/);
-  for (let index = 0; index < lines.length; index += 1) {
-    const line = lines[index];
-    for (const pattern of TRANSLATE_PATTERNS) {
-      pattern.lastIndex = 0;
-      let match;
-      while ((match = pattern.exec(line)) !== null) {
-        const key = match[1].trim();
-        const sourceText = match[2];
-        if (!key || !sourceText.trim()) {
-          continue;
-        }
-        if (!found.has(key)) {
-          found.set(key, {
-            key,
-            sourceText,
-            file,
-            line: index + 1
-          });
-        }
+  for (const pattern of TRANSLATE_PATTERNS) {
+    pattern.lastIndex = 0;
+    let match;
+    while ((match = pattern.exec(content)) !== null) {
+      const key = match[1].trim();
+      const sourceText = match[2];
+      if (!key || !sourceText.trim()) {
+        continue;
+      }
+      if (!found.has(key)) {
+        found.set(key, {
+          key,
+          sourceText,
+          file,
+          line: lineNumberAt(content, match.index)
+        });
       }
     }
   }
+}
+function lineNumberAt(content, index) {
+  let line = 1;
+  const end = Math.min(index, content.length);
+  for (let cursor = 0; cursor < end; cursor += 1) {
+    if (content.charCodeAt(cursor) === 10) {
+      line += 1;
+    }
+  }
+  return line;
 }
 function scanTargets(root, include) {
   if (!include?.length) {
