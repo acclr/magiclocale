@@ -1,3 +1,4 @@
+import { isSourceKeyLimitError } from './http-error';
 import type { ResolvedKeykitConfig, SourceKey } from './types';
 import type { SourceKeyTransport } from './transport';
 
@@ -6,6 +7,7 @@ export class SourceKeyRegistry {
   private readonly acknowledged = new Map<string, string>();
   private timer: ReturnType<typeof setTimeout> | null = null;
   private activeFlush: Promise<void> | null = null;
+  private ingestBlocked = false;
 
   constructor(
     private readonly transport: SourceKeyTransport,
@@ -16,6 +18,9 @@ export class SourceKeyRegistry {
   ) {}
 
   enqueue(key: string, sourceText: string, usage?: SourceKey['usage']): void {
+    if (this.ingestBlocked) {
+      return;
+    }
     validateSourceKey(key, sourceText);
     const normalizedKey = key.trim();
     const fingerprint = `${sourceText}:${usageFingerprint(usage)}`;
@@ -37,6 +42,9 @@ export class SourceKeyRegistry {
   }
 
   enqueueFlag(key: string, usage?: SourceKey['usage']): void {
+    if (this.ingestBlocked) {
+      return;
+    }
     if (typeof key !== 'string' || key.trim().length === 0) {
       throw new Error('Keykit flag key must not be empty.');
     }
@@ -104,13 +112,21 @@ export class SourceKeyRegistry {
           );
         }
       } catch (error) {
+        const normalized = asError(error);
+        if (isSourceKeyLimitError(normalized)) {
+          this.ingestBlocked = true;
+          this.pending.clear();
+          this.clearTimer();
+          this.config.onError(normalized);
+          return;
+        }
         for (const item of batch) {
           const mapKey = `${item.type ?? 'translation'}:${item.key}`;
           if (!this.pending.has(mapKey)) {
             this.pending.set(mapKey, item);
           }
         }
-        throw asError(error);
+        throw normalized;
       }
     }
   }
@@ -126,9 +142,13 @@ export class SourceKeyRegistry {
         return;
       } catch (error) {
         lastError = asError(error);
-        if (attempt < this.config.maxRetries) {
-          await wait(this.config.retryDelayMs * 2 ** attempt);
+        if (
+          isSourceKeyLimitError(lastError) ||
+          attempt >= this.config.maxRetries
+        ) {
+          break;
         }
+        await wait(this.config.retryDelayMs * 2 ** attempt);
       }
     }
     throw lastError ?? new Error('Keykit ingest failed.');

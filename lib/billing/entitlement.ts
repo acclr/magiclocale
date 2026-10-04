@@ -8,6 +8,7 @@ import {
   type KeykitPlanId,
 } from '../../domain/billing';
 import type { Project } from '../../domain/translations';
+import { readThrough } from '@/lib/cache/read-through';
 import { prisma } from '../prisma';
 import { stripe } from '../stripe';
 import { resolveStripePriceId } from './stripe-price';
@@ -68,9 +69,11 @@ export async function getEntitlementForCustomer(
   billingScope: BillingScope
 ): Promise<KeykitEntitlement> {
   const subscriptions = billingId
-    ? await prisma.subscription.findMany({
-        where: { customerId: billingId, active: true },
-      })
+    ? await readThrough(`subscriptions:${billingId}`, () =>
+        prisma.subscription.findMany({
+          where: { customerId: billingId, active: true },
+        })
+      )
     : [];
   const now = Date.now();
   const livePriceIds = subscriptions

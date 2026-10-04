@@ -50,7 +50,8 @@ function MyApp({ Component, pageProps, router }: AppPropsWithLayout) {
               background: '#161618',
               color: '#f4f4f5',
               borderRadius: '16px',
-              boxShadow: '0 18px 50px rgb(0 0 0 / 0.45)',
+              border: '1px solid rgb(255 255 255 / 0.1)',
+              boxShadow: 'none',
             },
           }}
         />

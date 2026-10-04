@@ -1,23 +1,25 @@
-import KeyExplorer from '@/components/keys/KeyExplorer';
-import { GetServerSidePropsContext } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
-import { useRouter } from 'next/router';
+import type { GetServerSidePropsContext } from 'next';
 import type { NextPageWithLayout } from 'types';
 
-const ProjectKeysPage: NextPageWithLayout = () => {
-  const { query } = useRouter();
-  const { slug, projectId } = query as { slug: string; projectId: string };
-  return slug && projectId ? (
-    <KeyExplorer projectId={projectId} slug={slug} />
-  ) : null;
-};
+const ProjectKeysPage: NextPageWithLayout = () => null;
 
 export async function getServerSideProps({
-  locale,
+  query,
 }: GetServerSidePropsContext) {
+  const slug = typeof query.slug === 'string' ? query.slug : '';
+  const projectId = typeof query.projectId === 'string' ? query.projectId : '';
+  const env = typeof query.env === 'string' ? query.env : '';
+  const envQuery =
+    env && env !== 'production' ? `?env=${encodeURIComponent(env)}` : '';
+
+  if (!slug || !projectId) {
+    return { notFound: true };
+  }
+
   return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
+    redirect: {
+      destination: `/teams/${slug}/projects/${projectId}${envQuery}`,
+      permanent: false,
     },
   };
 }

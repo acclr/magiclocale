@@ -1,5 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from 'next';
 
+import { invalidateProjectReads } from '@/lib/cache/read-through';
 import { PublicSdkAuthError } from '@/lib/api/public-sdk-auth';
 import { authenticatePublicSdkApiRequest } from '@/lib/api/public-sdk-auth-prisma';
 import { applyPublicSdkCors } from '@/lib/api/public-sdk-cors-prisma';
@@ -59,27 +60,24 @@ export default async function handler(
 
     const incomingNames = translations.map((item) => item.key);
     if (incomingNames.length > 0) {
-      const existing = await prisma.translationKey.findMany({
-        where: { projectId, key: { in: incomingNames } },
-        select: { key: true },
+      const teamBillingId = await prisma.team.findUnique({
+        where: { id: auth.project.teamId },
+        select: { billingId: true },
       });
-      const known = new Set(existing.map((row) => row.key));
-      const hasNewKey = incomingNames.some((key) => !known.has(key));
-      if (hasNewKey) {
-        const teamBillingId = await prisma.team.findUnique({
-          where: { id: auth.project.teamId },
-          select: { billingId: true },
-        });
-        const project = await getProjectService().get(
-          auth.project.teamId,
-          projectId
-        );
-        const entitlement = await getProjectEntitlement(
-          project,
-          teamBillingId?.billingId ?? null
-        );
-        await enforceSourceKeyCapacity(projectId, entitlement, incomingNames);
-      }
+      const project = await getProjectService().get(
+        auth.project.teamId,
+        projectId
+      );
+      const entitlement = await getProjectEntitlement(
+        project,
+        teamBillingId?.billingId ?? null
+      );
+      await enforceSourceKeyCapacity(
+        project,
+        entitlement,
+        incomingNames,
+        teamBillingId?.billingId ?? null
+      );
     }
 
     const result =
@@ -110,6 +108,7 @@ export default async function handler(
       detectedFlags += 1;
     }
 
+    invalidateProjectReads(projectId);
     return res.status(200).json({
       ...result,
       detectedFlags,

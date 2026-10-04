@@ -1,16 +1,13 @@
-import DashboardHome from '@/components/dashboard/DashboardHome';
-import { GetServerSidePropsContext } from 'next';
-import { serverSideTranslations } from 'next-i18next/serverSideTranslations';
+import type { GetServerSidePropsContext } from 'next';
 import type { NextPageWithLayout } from 'types';
 
-const Dashboard: NextPageWithLayout = () => {
-  return <DashboardHome />;
-};
+const Dashboard: NextPageWithLayout = () => null;
 
-export async function getStaticProps({ locale }: GetServerSidePropsContext) {
+export async function getServerSideProps(_context: GetServerSidePropsContext) {
   return {
-    props: {
-      ...(locale ? await serverSideTranslations(locale, ['common']) : {}),
+    redirect: {
+      destination: '/teams',
+      permanent: false,
     },
   };
 }

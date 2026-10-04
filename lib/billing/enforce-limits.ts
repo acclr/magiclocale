@@ -2,14 +2,23 @@ import 'server-only';
 
 import {
   canAddWithinLimit,
+  connectedSourceLimitMessage,
+  customerIdForScope,
   projectLimitMessage,
   sourceKeyLimitMessage,
   teamMemberLimitMessage,
+  type BillingScope,
   type KeykitEntitlement,
 } from '../../domain/billing';
 import { ApiError } from '../errors';
 import { prisma } from '../prisma';
+import {
+  countActiveTranslationKeys,
+  countIncomingAlreadyActive,
+  projectIdsForBillingScope,
+} from './active-keys';
 import { getTeamEntitlement } from './entitlement';
+import { recordActiveKeyOverage } from './plan-usage';
 
 export async function countTeamSeatsUsed(teamId: string): Promise<number> {
   const [members, invitations] = await Promise.all([
@@ -53,31 +62,77 @@ export async function enforceProjectLimit(
   }
 }
 
+type CapacityProject = {
+  id: string;
+  teamId: string;
+  billingScope: BillingScope;
+  billingId: string | null;
+};
+
+/**
+ * Active keys are one pool for the billing scope.
+ * Free hard-stops at the included count. Pro allows the keys and bills overage.
+ * Unlimited plans (included null) are not metered here.
+ */
 export async function enforceSourceKeyCapacity(
-  projectId: string,
+  project: CapacityProject,
   entitlement: KeykitEntitlement,
-  incomingKeyNames: string[]
+  incomingKeyNames: string[],
+  teamBillingId: string | null
 ): Promise<void> {
-  const max = entitlement.maxSourceKeysPerProject;
-  if (max === null || incomingKeyNames.length === 0) {
+  if (incomingKeyNames.length === 0) {
+    return;
+  }
+
+  const included = entitlement.includedActiveKeys;
+  if (included === null) {
     return;
   }
 
   const uniqueIncoming = Array.from(new Set(incomingKeyNames));
-  const existing = await prisma.translationKey.findMany({
-    where: { projectId, key: { in: uniqueIncoming } },
-    select: { key: true },
-  });
-  const existingKeys = new Set(existing.map((row) => row.key));
-  const newKeys = uniqueIncoming.filter((key) => !existingKeys.has(key)).length;
-  if (newKeys === 0) {
+  const billingScope = entitlement.billingScope ?? project.billingScope;
+  const projectIds = await projectIdsForBillingScope(project, billingScope);
+  const currentActive = await countActiveTranslationKeys(projectIds);
+  const alreadyActive = await countIncomingAlreadyActive(
+    project.id,
+    uniqueIncoming
+  );
+  const next = currentActive + (uniqueIncoming.length - alreadyActive);
+  const overageCents = entitlement.activeKeyOverageCentsPerThousand;
+
+  if (overageCents === null) {
+    if (next > included) {
+      throw new ApiError(402, sourceKeyLimitMessage(included));
+    }
     return;
   }
-  const currentTotal = await prisma.translationKey.count({
-    where: { projectId },
-  });
 
-  if (currentTotal + newKeys > max) {
-    throw new ApiError(402, sourceKeyLimitMessage(max));
+  await recordActiveKeyOverage({
+    billingScope,
+    teamId: project.teamId,
+    projectId: project.id,
+    nextActiveKeys: next,
+    includedActiveKeys: included,
+    centsPerThousand: overageCents,
+    stripeCustomerId: customerIdForScope(
+      billingScope,
+      teamBillingId,
+      project.billingId
+    ),
+  });
+}
+
+export async function enforceConnectedSourceLimit(
+  teamId: string,
+  billingId: string | null | undefined
+): Promise<void> {
+  const entitlement = await getTeamEntitlement(billingId ?? null);
+  const max = entitlement.maxConnectedSources;
+  if (max === null) {
+    return;
+  }
+  const count = await prisma.apiKey.count({ where: { teamId } });
+  if (count >= max) {
+    throw new ApiError(402, connectedSourceLimitMessage(max));
   }
 }

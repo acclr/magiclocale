@@ -40,7 +40,7 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
 
   return {
     delivery,
-    baseUrl: (config.baseUrl ?? '').replace(/\/+$/, ''),
+    baseUrl: canonicalBaseUrl(config.baseUrl ?? ''),
     projectId: config.projectId ?? '',
     ingestToken: config.ingestToken ?? '',
     sourceLocale,
@@ -72,6 +72,7 @@ export function resolveConfig(config: KeykitConfig): ResolvedKeykitConfig {
       }),
     sourceCatalog: config.sourceCatalog,
     canIngest,
+    ingest: config.ingest !== false && canIngest,
     canPull,
   };
 }
@@ -90,10 +91,19 @@ function resolveDelivery(
   if (config.delivery) {
     return config.delivery;
   }
-  if (hasCatalogs && !config.ingestToken?.trim()) {
+  if (hasCatalogs) {
     return 'static';
   }
   return 'live';
+}
+
+/** `keykit.dev` redirects to `www`, and that redirect has no CORS headers. */
+function canonicalBaseUrl(baseUrl: string): string {
+  const trimmed = baseUrl.trim().replace(/\/+$/, '');
+  if (trimmed === 'https://keykit.dev' || trimmed === 'http://keykit.dev') {
+    return 'https://www.keykit.dev';
+  }
+  return trimmed;
 }
 
 function assertNonEmpty(value: string, name: string): void {

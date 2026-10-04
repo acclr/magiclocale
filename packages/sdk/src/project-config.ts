@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
-import { createJiti, type Jiti } from 'jiti';
+import { createJiti } from 'jiti';
 import { catalogsFromFile } from './config';
 import type { CreateKeykitOptions } from './create-keykit';
 import {
@@ -24,11 +24,8 @@ const parsedFiles = new Map<
   { mtimeMs: number; config: KeykitProjectConfig }
 >();
 
-let jiti: Jiti | null = null;
-
 export function clearKeykitProjectConfigCache(): void {
   parsedFiles.clear();
-  jiti = null;
 }
 
 export function findKeykitConfigFile(
@@ -111,7 +108,11 @@ async function readConfigFile(file: string): Promise<KeykitProjectConfig> {
 
   let loaded: unknown;
   try {
-    loaded = await getJiti().import(file, { default: true });
+    // Resolve imports from the config file so `@keykithq/sdk` comes from the app.
+    loaded = await createJiti(file, {
+      moduleCache: false,
+      fsCache: false,
+    }).import(file, { default: true });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`Could not load ${file}. ${message}`, { cause: error });
@@ -160,16 +161,6 @@ function applyCatalog(config: KeykitProjectConfig, directory: string): void {
   ) {
     config.sourceCatalog = config.catalogs[sourceLocale];
   }
-}
-
-function getJiti(): Jiti {
-  if (!jiti) {
-    jiti = createJiti(import.meta.url, {
-      moduleCache: false,
-      fsCache: false,
-    });
-  }
-  return jiti;
 }
 
 function omitUndefined<T extends Record<string, unknown>>(value: T): Partial<T> {

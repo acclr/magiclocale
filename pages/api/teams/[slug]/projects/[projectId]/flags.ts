@@ -1,4 +1,5 @@
 import { canAddFlag, flagLimitMessage } from '@/domain/billing';
+import { readThrough, invalidateProjectReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import { ApiError } from '@/lib/errors';
@@ -25,10 +26,10 @@ export default createTeamProjectApiHandler({
         environmentQuerySchema,
         req.query
       );
-      const result = await getFlagService().list(
-        teamMember.team.id,
-        projectId,
-        environment
+      const result = await readThrough(
+        `flags:${projectId}:${environment ?? ''}`,
+        () =>
+          getFlagService().list(teamMember.team.id, projectId, environment)
       );
       res.status(200).json({ data: result });
     },
@@ -67,6 +68,7 @@ export default createTeamProjectApiHandler({
         },
         { maxFlags: entitlement.maxFlags }
       );
+      invalidateProjectReads(projectId);
       res.status(201).json({ data: flag });
     },
   },

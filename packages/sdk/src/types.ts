@@ -121,6 +121,11 @@ export type KeykitConfig = {
   batchSize?: number;
   maxRetries?: number;
   retryDelayMs?: number;
+  /**
+   * Upload keys from this process. Page renders leave this off.
+   * Register keys with `keykit sync` while developing.
+   */
+  ingest?: boolean;
   fetch?: FetchLike;
   onError?: (error: Error) => void;
   /** English (source locale) strings for `t('key')` when the second argument is omitted. */
@@ -148,6 +153,9 @@ export type ResolvedKeykitConfig = {
   fetch: FetchLike;
   onError: (error: Error) => void;
   sourceCatalog?: Record<string, string>;
+  /** Credentials are present and this process is allowed to upload keys. */
   canIngest: boolean;
+  /** This client should enqueue keys for upload. */
+  ingest: boolean;
   canPull: boolean;
 };

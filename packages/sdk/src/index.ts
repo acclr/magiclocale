@@ -73,6 +73,7 @@ export {
 export type { LocaleMatch, LocaleRouting } from './locale-path';
 export { evaluateFlag, isEnabledValue } from './evaluate';
 export { loadTranslationBundle } from './load-bundle';
+export { KeykitHttpError, isSourceKeyLimitError } from './http-error';
 export type {
   FetchLike,
   FlagEvaluationContext,

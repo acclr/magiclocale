@@ -5,6 +5,13 @@ import { resolveKeykitSetup } from '@keykithq/sdk/project-config';
 import { pullTranslationCatalog } from './pull';
 import { rewriteSourceTree, type RewritePlan } from './rewrite';
 import { scanSourceTree } from './scan';
+import {
+  DEFAULT_CHUNK_DELAY_MS,
+  DEFAULT_CHUNK_SIZE,
+  executeSync,
+  resolveScanOptions,
+} from './sync-command';
+import { normalizeChunkSize } from './sync-batch';
 
 function flatten(
   value: unknown,
@@ -84,10 +91,61 @@ async function main() {
     return;
   }
 
-  if (command === 'scan') {
-    const root = argValue(args, '--root') ?? process.cwd();
-    const keys = scanSourceTree(resolve(root));
-    console.log(JSON.stringify(keys, null, 2));
+  if (command === 'scan' || command === 'sync') {
+    const requestedRoot = argValue(args, '--root');
+    const setup = await resolveKeykitSetup(
+      {},
+      requestedRoot ? resolve(requestedRoot) : process.cwd()
+    );
+    const root = resolve(requestedRoot ?? setup.root);
+    const scanOptions = resolveScanOptions(
+      root === resolve(setup.root) ? setup.config : {},
+      argValues(args, '--include'),
+      argValues(args, '--exclude')
+    );
+    if (command === 'scan') {
+      const keys = scanSourceTree(root, scanOptions);
+      console.log(JSON.stringify(keys, null, 2));
+      return;
+    }
+
+    const chunkSize = normalizeChunkSize(
+      parsePositiveInteger(argValue(args, '--chunk'), DEFAULT_CHUNK_SIZE, '--chunk')
+    );
+    const delayMs = parseNonNegativeInteger(
+      argValue(args, '--delay'),
+      DEFAULT_CHUNK_DELAY_MS,
+      '--delay'
+    );
+    await executeSync({
+      root,
+      directory: setup.directory,
+      baseUrl: requiredSetting(
+        args,
+        '--base-url',
+        setup.config.baseUrl,
+        'KEYKIT_BASE_URL'
+      ),
+      projectId: requiredSetting(
+        args,
+        '--project-id',
+        setup.config.projectId,
+        'KEYKIT_PROJECT_ID'
+      ),
+      token: requiredSetting(
+        args,
+        '--token',
+        setup.config.apiKey ?? setup.config.ingestToken,
+        'KEYKIT_API_KEY'
+      ),
+      environment:
+        argValue(args, '--environment') ??
+        setup.config.environment ??
+        process.env.KEYKIT_ENVIRONMENT,
+      scan: scanOptions,
+      chunkSize,
+      delayMs,
+    });
     return;
   }
 
@@ -102,10 +160,24 @@ async function main() {
   }
 
   console.log(`Keykit CLI
-  scan --root .
+  scan [--root .] [--include path] [--exclude path]
+  sync [--root .] [--include path] [--exclude path] [--chunk 25] [--delay 200]
   pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json
+
+sync uploads t() and translate() calls while you are developing.
+It sends them in chunks (25 keys per request by default) and waits
+between requests. In a terminal, p pauses, c continues, and q saves
+progress so the next sync continues. Page views do not upload keys.
+
+scan and sync read scan.include and scan.exclude from keykit.config.ts.
+Repeat --include or --exclude, or pass a comma-separated list.
+Omit them to scan the whole project. node_modules, dist, .next, and
+other build folders are always skipped.
+
+Progress is stored in .keykit/sync-state.json. That file is local;
+do not commit it.
 
 pull writes .keykit/catalog.json plus one JSON file per locale for
 @keykithq/sdk static delivery. It reads keykit.config.ts when present.
@@ -120,6 +192,56 @@ locally, then commit the result.`);
 function argValue(args: string[], name: string): string | undefined {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : undefined;
+}
+
+function argValues(args: string[], name: string): string[] {
+  const values: string[] = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== name) {
+      continue;
+    }
+    const value = args[index + 1];
+    if (!value || value.startsWith('--')) {
+      continue;
+    }
+    for (const part of value.split(',')) {
+      const trimmed = part.trim();
+      if (trimmed) {
+        values.push(trimmed);
+      }
+    }
+  }
+  return values;
+}
+
+function parsePositiveInteger(
+  value: string | undefined,
+  fallback: number,
+  flag: string
+): number {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${flag} must be a positive integer.`);
+  }
+  return parsed;
+}
+
+function parseNonNegativeInteger(
+  value: string | undefined,
+  fallback: number,
+  flag: string
+): number {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${flag} must be a non-negative integer.`);
+  }
+  return parsed;
 }
 
 function requiredSetting(

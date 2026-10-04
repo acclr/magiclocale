@@ -352,6 +352,7 @@
   "plan-not-subscribed": "not subscribed yet",
   "plan-price-free": "Free",
   "plan-included": "Included",
+  "plan-coming-soon": "Coming soon",
   "plan-member-limit": "Up to {{count}} team members",
   "plan-member-unlimited": "Unlimited team members",
   "plan-language-limit": "Up to {{count}} languages per project",

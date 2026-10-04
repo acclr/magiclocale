@@ -74,11 +74,15 @@ function SaveButton() {
     </button>
   );
 }`,
-    cli: `npx @keykithq/cli pull
+    cli: `npx @keykithq/cli sync
+# uploads t() / translate() calls in chunks while you develop
+# p pauses, c continues, q saves progress
+
+npx @keykithq/cli pull
 # writes .keykit/catalog.json and .keykit/<locale>.json
 
-npx @keykithq/cli scan --root .
-# lists t() / translate() calls that have not run yet
+npx @keykithq/cli scan --include app
+# lists keys without uploading them
 
 npx @keykithq/cli rewrite --file migration.json --root .
 # applies a key rename downloaded from Keykit

@@ -6,7 +6,7 @@ const appUrl = ensureAuthUrlEnv();
 const env = {
   databaseUrl: `${process.env.DATABASE_URL}`,
   appUrl,
-  redirectIfAuthenticated: '/dashboard',
+  redirectIfAuthenticated: '/teams',
   securityHeadersEnabled: process.env.SECURITY_HEADERS_ENABLED ?? false,
 
   // SMTP (e.g. Resend: smtp.resend.com, user resend, password = API key)

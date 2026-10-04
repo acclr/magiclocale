@@ -2,6 +2,11 @@ import { KeykitProvider, useKeykit } from '@keykithq/sdk/react';
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
+  publishSourceKeyLimit,
+  sourceKeyLimitNotice,
+} from '@/lib/keykit-source-key-limit';
+
+import {
   DashboardI18nContext,
   type DashboardI18n,
 } from '@/lib/dashboard-i18n-context';
@@ -58,6 +63,14 @@ function ConnectedDashboardI18n({ children }: { children: ReactNode }) {
   );
 }
 
+function reportKeykitError(error: Error): void {
+  console.warn('[Keykit]', error.message);
+  const notice = sourceKeyLimitNotice(error);
+  if (notice) {
+    publishSourceKeyLimit(notice);
+  }
+}
+
 export function DashboardLocaleProvider({ children }: { children: ReactNode }) {
   const [dashboard, setDashboard] = useState<DashboardLocalePageProps | null>(
     null
@@ -81,7 +94,7 @@ export function DashboardLocaleProvider({ children }: { children: ReactNode }) {
 
   return (
     <KeykitProvider
-      config={dashboard.config}
+      config={{ ...dashboard.config, onError: reportKeykitError }}
       initialLocale={dashboard.locale}
       initialBundle={dashboard.initialBundle ?? undefined}
     >

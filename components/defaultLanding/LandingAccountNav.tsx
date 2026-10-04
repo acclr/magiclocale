@@ -20,7 +20,7 @@ const LandingAccountNav = () => {
 
     return (
       <>
-        <Link href="/dashboard" className={pillClass}>
+        <Link href="/teams" className={pillClass}>
           {translate('landing.nav.dashboard', 'Dashboard')}
         </Link>
         <span

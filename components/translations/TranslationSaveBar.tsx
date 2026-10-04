@@ -44,7 +44,7 @@ const TranslationSaveBar = ({ onRefresh }: TranslationSaveBarProps) => {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 p-4">
-      <div className="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-xl bg-card shadow-pill px-4 py-3">
+      <div className="pointer-events-auto mx-auto flex max-w-3xl flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-card px-4 py-3">
         <div>
           <p className="font-medium">
             {t('unsaved-translations', { count: drafts.dirtyCount })}

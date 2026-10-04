@@ -3,6 +3,7 @@ import { getCurrentUserWithTeam, throwIfNoTeamAccess } from 'models/team';
 import { throwIfNotAllowed } from 'models/user';
 import type { NextApiRequest, NextApiResponse } from 'next';
 import { recordMetric } from '@/lib/metrics';
+import { enforceConnectedSourceLimit } from '@/lib/billing/enforce-limits';
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
 import { createApiKeySchema, validateWithSchema } from '@/lib/zod';
@@ -74,6 +75,8 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
       );
     }
   }
+
+  await enforceConnectedSourceLimit(user.team.id, user.team.billingId);
 
   const apiKey = await createApiKey({
     name,

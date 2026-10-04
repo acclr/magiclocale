@@ -39,6 +39,14 @@ export type KeykitProjectConfig = {
   sourceCatalog?: Record<string, string>;
   /** Folder for `keykit pull`. Defaults to `.keykit`. */
   dir?: string;
+  /**
+   * Where `keykit scan` and `keykit sync` look for `t()` / `translate()` calls.
+   * Omit `include` to scan the whole project.
+   */
+  scan?: {
+    include?: readonly string[];
+    exclude?: readonly string[];
+  };
   /** Pages Router: read the locale from the URL (`/`, `/en`, `/sv`). */
   routing?: 'path';
   pages?: readonly string[];

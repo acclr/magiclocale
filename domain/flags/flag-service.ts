@@ -1,3 +1,4 @@
+import { invalidateProjectReads } from '../../lib/cache/read-through';
 import type { EnvironmentService } from '../environments/environment-service';
 import type { Environment } from '../environments/types';
 import { noopKeyCatalogWriter, type KeyCatalogWriter } from '../keys/ports';
@@ -135,6 +136,7 @@ export class FlagService {
       description: flag.description,
     });
 
+    invalidateProjectReads(project.id);
     return flag;
   }
 
@@ -163,6 +165,7 @@ export class FlagService {
       description: updated.description,
       lifecycle: updated.archived ? 'archived' : 'active',
     });
+    invalidateProjectReads(project.id);
     return updated;
   }
 
@@ -174,6 +177,7 @@ export class FlagService {
     const project = await this.projectService.get(teamId, projectId);
     const flag = await this.requireProjectFlag(project.id, flagId);
     await this.repository.deleteFlag(flag.id);
+    invalidateProjectReads(project.id);
   }
 
   async setConfig(
@@ -207,6 +211,7 @@ export class FlagService {
     });
     await this.record(flag, config, updated, actor, reason);
     await this.cascadeInherited(flag, environment, updated, actor);
+    invalidateProjectReads(project.id);
     return { flag, config: updated };
   }
 
@@ -263,6 +268,7 @@ export class FlagService {
       await this.repository.updateConfig(config.id, { inherited: false });
     }
     await this.record(flag, config, updated, actor, reason);
+    invalidateProjectReads(project.id);
     return { flag, config: updated };
   }
 
@@ -308,6 +314,7 @@ export class FlagService {
       false
     );
     await this.record(flag, targetConfig, copied, actor, reason);
+    invalidateProjectReads(project.id);
     return { flag, config: copied };
   }
 
@@ -338,6 +345,7 @@ export class FlagService {
       true
     );
     await this.record(flag, targetConfig, copied, actor);
+    invalidateProjectReads(project.id);
     return { flag, config: copied };
   }
 

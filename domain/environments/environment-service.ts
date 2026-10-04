@@ -1,3 +1,4 @@
+import { invalidateProjectReads } from '../../lib/cache/read-through';
 import type { ProjectService } from '../translations/project-service';
 import type { EnvironmentRepository } from './repository';
 import {
@@ -112,13 +113,15 @@ export class EnvironmentService {
       throw new Error(`Environment already exists: ${slug}`);
     }
 
-    return this.repository.createEnvironment({
+    const created = await this.repository.createEnvironment({
       projectId: project.id,
       slug,
       name: input.name?.trim() || this.titleCase(slug),
       isProduction: false,
       parentEnvironmentId: input.parentEnvironmentId ?? null,
     });
+    invalidateProjectReads(project.id);
+    return created;
   }
 
   async setParent(
@@ -138,9 +141,11 @@ export class EnvironmentService {
       );
       await this.assertNoCycle(environment.id, parent.id);
     }
-    return this.repository.updateEnvironment(environment.id, {
+    const updated = await this.repository.updateEnvironment(environment.id, {
       parentEnvironmentId,
     });
+    invalidateProjectReads(environment.projectId);
+    return updated;
   }
 
   async rename(
@@ -154,9 +159,11 @@ export class EnvironmentService {
     if (!normalized) {
       throw new Error('Environment name is required');
     }
-    return this.repository.updateEnvironment(environment.id, {
+    const updated = await this.repository.updateEnvironment(environment.id, {
       name: normalized,
     });
+    invalidateProjectReads(environment.projectId);
+    return updated;
   }
 
   async delete(
@@ -169,6 +176,7 @@ export class EnvironmentService {
       throw new Error('The production environment cannot be deleted');
     }
     await this.repository.deleteEnvironment(environment.id);
+    invalidateProjectReads(environment.projectId);
   }
 
   async requireProjectEnvironment(

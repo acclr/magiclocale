@@ -6,6 +6,7 @@ type CacheEntry = {
 export type TtlCache = {
   get<T>(key: string): T | undefined;
   set<T>(key: string, value: T, ttlMs: number): void;
+  deletePrefix(prefix: string): void;
 };
 
 export function createTtlCache(maxEntries = 200): TtlCache {
@@ -31,6 +32,13 @@ export function createTtlCache(maxEntries = 200): TtlCache {
         }
       }
       store.set(key, { expiresAt: Date.now() + ttlMs, value });
+    },
+    deletePrefix(prefix: string): void {
+      for (const key of Array.from(store.keys())) {
+        if (key.startsWith(prefix)) {
+          store.delete(key);
+        }
+      }
     },
   };
 }

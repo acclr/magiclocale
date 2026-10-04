@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { KeykitClient } from './client';
+import { KeykitHttpError } from './http-error';
 import type { FetchLike } from './types';
 
 function createClient(fetch: FetchLike, overrides = {}) {
@@ -103,6 +104,31 @@ describe('KeykitClient', () => {
     vi.useRealTimers();
   });
 
+  it('warns once when ingest reaches the source key limit', async () => {
+    const onError = vi.fn();
+    const fetch = vi.fn<FetchLike>().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          error:
+            'This project has reached the 500 source key limit on your plan. Upgrade to Pro or Enterprise for a higher active-key allowance.',
+        }),
+        { status: 402, headers: { 'Content-Type': 'application/json' } }
+      )
+    );
+    const client = createClient(fetch, { maxRetries: 2, onError });
+    client.translate('demo.limit', 'Limited');
+    await expect(client.flush()).resolves.toBeUndefined();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    expect(onError.mock.calls[0]?.[0]).toBeInstanceOf(KeykitHttpError);
+    expect(onError.mock.calls[0]?.[0].message).toContain('source key limit');
+    client.translate('demo.another', 'Another');
+    await client.flush();
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(onError).toHaveBeenCalledTimes(1);
+    client.dispose();
+  });
+
   it('requeues a failed batch so a later flush can recover it', async () => {
     const fetch = vi
       .fn<FetchLike>()
@@ -170,6 +196,35 @@ describe('KeykitClient', () => {
     expect(client.translate('demo.welcome', 'Welcome')).toBe('Hej');
     await client.refreshTranslations();
     expect(client.translate('demo.welcome', 'Welcome')).toBe('Hejsan');
+    client.dispose();
+  });
+
+  it('does not upload keys when ingest is disabled', async () => {
+    const fetch = vi.fn<FetchLike>().mockResolvedValue(ok());
+    const client = createClient(fetch, { ingest: false });
+    expect(client.translate('demo.welcome', 'Welcome')).toBe('Welcome');
+    await client.flush();
+    expect(fetch).not.toHaveBeenCalled();
+    client.dispose();
+  });
+
+  it('reads static catalogs without calling translations, flags, or sync', async () => {
+    const fetch = vi.fn<FetchLike>().mockResolvedValue(ok());
+    const client = createClient(fetch, {
+      delivery: 'static',
+      locale: 'en',
+      sourceLocale: 'en',
+      catalogs: {
+        en: { 'demo.welcome': 'Welcome' },
+        sv: { 'demo.welcome': 'Välkommen' },
+      },
+    });
+
+    expect(client.translate('demo.welcome', 'Fallback')).toBe('Welcome');
+    await client.setLocale('sv');
+    expect(client.translate('demo.welcome', 'Fallback')).toBe('Välkommen');
+    await client.flush();
+    expect(fetch).not.toHaveBeenCalled();
     client.dispose();
   });
 

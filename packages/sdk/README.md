@@ -137,11 +137,14 @@ That writes `.keykit/catalog.json` and one `.keykit/<locale>.json` per locale. T
 
 ## Keys
 
-Calls to `t()` and `translate()` are ingested when that code runs and an API key is configured. To list calls that have not executed yet:
+Register keys while developing. Page views only read translations.
 
 ```bash
-npx @keykithq/cli scan --root .
+npx @keykithq/cli sync
+npx @keykithq/cli scan --include app
 ```
+
+`sync` uploads keys in small batches and can be paused. See `@keykithq/cli`.
 
 - React: `@keykithq/sdk/react` (`useTranslate`, `useKeykit`, `KeykitProvider`)
 - Next.js App Router: `@keykithq/sdk/next`

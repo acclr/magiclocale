@@ -1,3 +1,4 @@
+import { readThrough, invalidateReads } from '@/lib/cache/read-through';
 import { prisma } from '@/lib/prisma';
 import { getSession } from '@/lib/session';
 import { findOrCreateApp } from '@/lib/svix';
@@ -20,6 +21,7 @@ export const createTeam = async (param: {
       slug,
     },
   });
+  invalidateReads(`teams:${userId}`);
 
   await addTeamMember(team.id, userId, Role.OWNER);
 
@@ -39,14 +41,23 @@ export const getByCustomerId = async (
 };
 
 export const getTeam = async (key: { id: string } | { slug: string }) => {
-  return await prisma.team.findUniqueOrThrow({
-    where: key,
-  });
+  const cacheKey =
+    'id' in key ? `team:id:${key.id}` : `team:slug:${key.slug}`;
+  return readThrough(cacheKey, () =>
+    prisma.team.findUniqueOrThrow({
+      where: key,
+    })
+  );
 };
 
 export const deleteTeam = async (key: { id: string } | { slug: string }) => {
   return await prisma.team.delete({
     where: key,
+  }).then((team) => {
+    invalidateReads('team:');
+    invalidateReads('teams:');
+    invalidateReads('team-member:');
+    return team;
   });
 };
 
@@ -55,7 +66,7 @@ export const addTeamMember = async (
   userId: string,
   role: Role
 ) => {
-  return await prisma.teamMember.upsert({
+  const member = await prisma.teamMember.upsert({
     create: {
       teamId,
       userId,
@@ -71,10 +82,13 @@ export const addTeamMember = async (
       },
     },
   });
+  invalidateReads(`team-member:${userId}:`);
+  invalidateReads(`teams:${userId}`);
+  return member;
 };
 
 export const removeTeamMember = async (teamId: string, userId: string) => {
-  return await prisma.teamMember.delete({
+  const removed = await prisma.teamMember.delete({
     where: {
       teamId_userId: {
         teamId,
@@ -82,6 +96,9 @@ export const removeTeamMember = async (teamId: string, userId: string) => {
       },
     },
   });
+  invalidateReads(`team-member:${userId}:`);
+  invalidateReads(`teams:${userId}`);
+  return removed;
 };
 
 /*
@@ -148,20 +165,22 @@ Planning Time: 2.566 ms
 Execution Time: 0.322 ms
 */
 export const getTeams = async (userId: string) => {
-  return await prisma.team.findMany({
-    where: {
-      members: {
-        some: {
-          userId,
+  return readThrough(`teams:${userId}`, () =>
+    prisma.team.findMany({
+      where: {
+        members: {
+          some: {
+            userId,
+          },
         },
       },
-    },
-    include: {
-      _count: {
-        select: { members: true },
+      include: {
+        _count: {
+          select: { members: true },
+        },
       },
-    },
-  });
+    })
+  );
 };
 
 export async function getTeamRoles(userId: string) {
@@ -268,12 +287,15 @@ export const getTeamMembers = async (slug: string) => {
 };
 
 export const updateTeam = async (slug: string, data: Partial<Team>) => {
-  return await prisma.team.update({
+  const team = await prisma.team.update({
     where: {
       slug,
     },
     data: data,
   });
+  invalidateReads('team:');
+  invalidateReads('team-member:');
+  return team;
 };
 
 /*
@@ -414,20 +436,22 @@ Execution Time: 0.050 ms
 
 // Get the current user's team member object
 export const getTeamMember = async (userId: string, slug: string) => {
-  return await prisma.teamMember.findFirstOrThrow({
-    where: {
-      userId,
-      team: {
-        slug,
+  return readThrough(`team-member:${userId}:${slug}`, () =>
+    prisma.teamMember.findFirstOrThrow({
+      where: {
+        userId,
+        team: {
+          slug,
+        },
+        role: {
+          in: ['ADMIN', 'MEMBER', 'OWNER'],
+        },
       },
-      role: {
-        in: ['ADMIN', 'MEMBER', 'OWNER'],
+      include: {
+        team: true,
       },
-    },
-    include: {
-      team: true,
-    },
-  });
+    })
+  );
 };
 
 // Get current user with team info

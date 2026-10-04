@@ -1,6 +1,7 @@
 import { validateVariables } from '@/domain/keys';
+import { invalidateProjectReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
-import { getTeamTranslationService } from '@/lib/translations';
+import { getTeamTranslationService, getTranslationRepository } from '@/lib/translations';
 import {
   saveManualTranslationSchema,
   translationProjectParamsSchema,
@@ -29,14 +30,12 @@ export default createTeamProjectApiHandler({
         value,
         teamMember.user.email
       );
-      const dashboard = await getTeamTranslationService().dashboard(
-        teamMember.team.id,
-        projectId,
-        environment,
-        { page: 1, pageSize: 1, search: '' }
-      );
-      const row = dashboard.rows.find((item) => item.keyId === keyId);
-      const issues = row ? validateVariables(row.sourceText, value) : [];
+      invalidateProjectReads(projectId);
+      const key = await getTranslationRepository().getKey(keyId);
+      const issues =
+        key && key.projectId === projectId
+          ? validateVariables(key.sourceText, value)
+          : [];
       res.status(200).json({ data: translation, issues });
     },
   },

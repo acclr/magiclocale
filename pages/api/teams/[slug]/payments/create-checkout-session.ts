@@ -10,7 +10,11 @@ import {
 } from '@/lib/stripe';
 import env from '@/lib/env';
 import { ApiError } from '@/lib/errors';
-import { getKeykitStripePriceIds } from '@/lib/billing/entitlement';
+import { KEYKIT_PLANS } from '@/domain/billing';
+import {
+  getKeykitStripePriceIds,
+  getResolvedKeykitStripePriceIds,
+} from '@/lib/billing/entitlement';
 import { resolveStripePriceId } from '@/lib/billing/stripe-price';
 import { getProjectService } from '@/lib/translations';
 import { checkoutSessionSchema, validateWithSchema } from '@/lib/zod';
@@ -46,13 +50,35 @@ const handlePOST = async (req: NextApiRequest, res: NextApiResponse) => {
 
   const teamMember = await throwIfNoTeamAccess(req, res);
   throwIfNotAllowed(teamMember, 'team_payments', 'create');
-  const allowedPrices = Object.values(getKeykitStripePriceIds()).filter(
+  const configured = getKeykitStripePriceIds();
+  const resolved = await getResolvedKeykitStripePriceIds();
+  const enterpriseIds = [configured.enterprise, resolved.enterprise].filter(
     Boolean
   );
-  if (!allowedPrices.includes(price)) {
+  if (!KEYKIT_PLANS.enterprise.selfServe && enterpriseIds.includes(price)) {
+    throw new ApiError(
+      403,
+      'Enterprise is not available for self-serve checkout.'
+    );
+  }
+  const premiumIds = [configured.premium, resolved.premium].filter(Boolean);
+  if (!premiumIds.includes(price)) {
     throw new ApiError(422, 'Unknown Keykit price.');
   }
-  const stripePriceId = await resolveStripePriceId(stripe, price);
+  const stripePriceId =
+    price === resolved.premium
+      ? resolved.premium
+      : await resolveStripePriceId(stripe, price);
+  if (
+    !KEYKIT_PLANS.enterprise.selfServe &&
+    resolved.enterprise &&
+    stripePriceId === resolved.enterprise
+  ) {
+    throw new ApiError(
+      403,
+      'Enterprise is not available for self-serve checkout.'
+    );
+  }
   const session = await getSession(req, res);
 
   let customer: string;

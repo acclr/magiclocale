@@ -137,18 +137,22 @@ npx @keykithq/cli pull
 The SDK reads `.keykit/catalog.json` from that folder. No catalog import in application code.
 
 `translate(key, defaultText)` returns the current bundle value or the source
-text fallback, queues source-key ingestion when an ingest token is set, and
-batches sync requests. Pages Router apps call `createKeykit` and render
-`KeykitProvider` from `@keykithq/sdk/pages`, then read
+text fallback. Rendering a page does not upload keys. Register them from the
+project while developing:
+
+```bash
+npx @keykithq/cli sync
+```
+
+That scans `t()` and `translate()` calls and uploads them in chunks. Pages
+Router apps call `createKeykit` and render `KeykitProvider` from
+`@keykithq/sdk/pages`, then read
 `const { translate, locale, setLocale } = useKeykit()`. Project settings live
 in `keykit.config.ts`. App Router apps wrap the tree in `KeykitProvider` from
 `@keykithq/sdk/next` and call `useTranslate()` from `@keykithq/sdk/react` in
-both Server and Client Components.
-
-Runtime discovery only sees keys executed in the browser (or during SSR for
-that request). Dead or unvisited files are not ingested until those code paths
-run. Use `npx @keykithq/cli scan --root .` to statically list
-`translate(...)` / `t(...)` calls with source text before shipping.
+both Server and Client Components. `scan.include` in `keykit.config.ts` limits
+the scan to part of the repo. `npx @keykithq/cli scan` lists the same keys
+without uploading them.
 
 ## Localize the Keykit landing page and dashboard
 

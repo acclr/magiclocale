@@ -1,3 +1,4 @@
+import { invalidateProjectReads } from '../../lib/cache/read-through';
 import type { EnvironmentRepository } from '../environments/repository';
 import type { Environment } from '../environments/types';
 import { EMPTY_FLAG_SET, type FlagSetSnapshot } from '../flags/types';
@@ -365,6 +366,7 @@ export class VersionService {
       liveVersionId: sealed.id,
     });
     await this.repository.pruneHistory(environmentId, MAX_VERSION_HISTORY);
+    invalidateProjectReads(environment.projectId);
 
     return {
       version: sealed,
@@ -387,6 +389,7 @@ export class VersionService {
     await this.environments.updateEnvironment(environment.id, {
       liveVersionId: version.id,
     });
+    invalidateProjectReads(environment.projectId);
     return version;
   }
 

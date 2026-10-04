@@ -87,7 +87,7 @@ export class LoginPage {
   }
 
   async loggedInCheck(teamSlug: string) {
-    await this.page.waitForURL('/dashboard');
+    await this.page.waitForURL('/teams');
     await this.page.goto(`/teams/${teamSlug}/${loggedInPath}`);
     await expect(this.pageHeading).toBeVisible();
   }
@@ -118,7 +118,7 @@ export class LoginPage {
     await this.continueWithSSOButton.click();
     await expect(this.mockSAMLLoginHeading).toBeVisible();
     await this.signInButton.click();
-    await this.page.waitForURL('/dashboard');
+    await this.page.waitForURL('/teams');
   }
 
   async idpInitiatedLogin() {
@@ -158,7 +158,7 @@ export class LoginPage {
 
   public async acceptInvitation() {
     await this.joinTeamButton.click();
-    await this.page.waitForURL('/dashboard');
+    await this.page.waitForURL('/teams');
   }
 
   async createNewAccountViaInvite(name: string, password: string) {

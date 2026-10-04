@@ -100,7 +100,7 @@ const TranslationDrawer = ({
           onClick={onClose}
           type="button"
         />
-        <aside className="flex min-h-full w-full max-w-md flex-col bg-background shadow-xl">
+        <aside className="flex min-h-full w-full max-w-md flex-col border-l border-border bg-background">
           <header className="flex items-start justify-between p-5">
             <div>
               <h2 className="text-sm font-medium tracking-tight">

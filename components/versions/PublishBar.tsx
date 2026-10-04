@@ -44,7 +44,7 @@ const PublishBar = ({
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 z-50 flex w-[min(36rem,calc(100%-2rem))] -translate-x-1/2 flex-row flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 text-foreground shadow-pill">
+    <div className="fixed bottom-6 left-1/2 z-50 flex w-[min(36rem,calc(100%-2rem))] -translate-x-1/2 flex-row flex-wrap items-center justify-between gap-3 rounded-lg border border-border bg-card p-3 text-foreground">
       <div className="flex flex-row items-start gap-4">
         <div className="flex flex-col">
           <div className="mb-1.5 flex items-center font-semibold text-foreground">

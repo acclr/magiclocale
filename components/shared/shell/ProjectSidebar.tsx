@@ -1,13 +1,9 @@
 import {
   ArrowLeftIcon,
-  ClockIcon,
   Cog6ToothIcon,
-  FlagIcon,
   LanguageIcon,
   RectangleStackIcon,
   ArrowsRightLeftIcon,
-  SparklesIcon,
-  ArrowsUpDownIcon,
 } from '@heroicons/react/24/outline';
 import { useTranslation } from 'next-i18next';
 import Link from 'next/link';
@@ -45,12 +41,6 @@ const ProjectSidebar = ({
   const base = `/teams/${slug}/projects/${projectId}`;
 
   const menus: MenuItem[] = [
-    /*{
-      name: t('keys'),
-      href: `${base}/keys${envQuery}`,
-      icon: Squares2X2Icon,
-      active: pathname === `${base}/keys` || pathname.startsWith(`${base}/keys/`),
-    },*/
     {
       name: t('translation-workspace'),
       href: `${base}${envQuery}`,
@@ -58,34 +48,10 @@ const ProjectSidebar = ({
       active: pathname === base,
     },
     {
-      name: t('feature-flags'),
-      href: `${base}/flags${envQuery}`,
-      icon: FlagIcon,
-      active: pathname === `${base}/flags`,
-    },
-    {
-      name: t('architecture'),
-      href: `${base}/architecture${envQuery}`,
-      icon: SparklesIcon,
-      active: pathname === `${base}/architecture`,
-    },
-    {
       name: t('compare-environments'),
       href: `${base}/compare${envQuery}`,
       icon: ArrowsRightLeftIcon,
       active: pathname === `${base}/compare`,
-    },
-    {
-      name: t('migrations'),
-      href: `${base}/migrations${envQuery}`,
-      icon: ArrowsUpDownIcon,
-      active: pathname === `${base}/migrations`,
-    },
-    {
-      name: t('versions'),
-      href: `${base}/versions${envQuery}`,
-      icon: ClockIcon,
-      active: pathname === `${base}/versions`,
     },
     {
       name: t('project-settings'),

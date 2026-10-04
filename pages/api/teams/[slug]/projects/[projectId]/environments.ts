@@ -1,4 +1,5 @@
 import { canAddEnvironment, environmentLimitMessage } from '@/domain/billing';
+import { readThrough, invalidateProjectReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getProjectEntitlement } from '@/lib/billing/entitlement';
 import { ApiError } from '@/lib/errors';
@@ -24,9 +25,8 @@ export default createTeamProjectApiHandler({
         translationProjectParamsSchema,
         req.query
       );
-      const environments = await getEnvironmentService().list(
-        teamMember.team.id,
-        projectId
+      const environments = await readThrough(`environments:${projectId}`, () =>
+        getEnvironmentService().list(teamMember.team.id, projectId)
       );
       res.status(200).json({ data: environments });
     },
@@ -67,6 +67,7 @@ export default createTeamProjectApiHandler({
         input
       );
       await getFlagService().provisionEnvironment(project.id, environment.id);
+      invalidateProjectReads(projectId);
       res.status(201).json({ data: environment });
     },
   },

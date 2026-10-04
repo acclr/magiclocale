@@ -1,3 +1,4 @@
+import { invalidateProjectReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getEnvironmentService, getVersionService } from '@/lib/translations';
 import { notifyVersionPublished } from '@/lib/versions/notify';
@@ -39,6 +40,7 @@ export default createTeamProjectApiHandler({
         environment,
         result,
       });
+      invalidateProjectReads(projectId);
 
       res.status(200).json({ data: { environment, ...result } });
     },

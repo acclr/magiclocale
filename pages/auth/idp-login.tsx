@@ -1,3 +1,4 @@
+import env from '@/lib/env';
 import { signIn } from 'next-auth/react';
 import { useRouter } from 'next/router';
 import { ReactElement, useEffect } from 'react';
@@ -13,7 +14,7 @@ export default function SAMLIdPLogin() {
     }
 
     signIn('boxyhq-idp', {
-      callbackUrl: '/dashboard',
+      callbackUrl: env.redirectIfAuthenticated,
       code: query?.code,
     });
   }, [isReady, query]);

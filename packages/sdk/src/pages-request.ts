@@ -140,20 +140,22 @@ function toClientConfig(
       delivery: 'static',
       baseUrl: config.baseUrl ?? '',
       projectId: config.projectId ?? '',
-      ingestToken: config.ingestToken ?? '',
+      ingestToken: undefined,
       sourceLocale,
       locale,
       catalogs,
       refreshIntervalMs: 0,
+      ingest: false,
       ...(sourceCatalog ? { sourceCatalog } : {}),
     };
   }
 
   return {
     delivery: 'live',
+    ingest: false,
     baseUrl: config.baseUrl,
     projectId: config.projectId,
-    ingestToken: config.ingestToken,
+    ingestToken: undefined,
     sourceLocale,
     locale,
     ...(config.refreshIntervalMs !== undefined

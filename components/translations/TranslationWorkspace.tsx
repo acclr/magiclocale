@@ -8,6 +8,7 @@ import useCanAccess from '../../hooks/useCanAccess';
 import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
 import { useTranslation } from '@/hooks/useTranslation';
+import { subscribeSourceKeyLimit } from '@/lib/keykit-source-key-limit';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -92,6 +93,12 @@ const TranslationWorkspace = ({
   );
   const rows = view?.rows ?? [];
   const pagination = view?.pagination;
+
+  useEffect(() => {
+    return subscribeSourceKeyLimit((message) => {
+      toast.error(message, { id: 'source-key-limit', duration: 8000 });
+    });
+  }, []);
 
   useEffect(() => {
     setPage(1);

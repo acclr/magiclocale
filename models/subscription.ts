@@ -1,3 +1,4 @@
+import { invalidateReads } from '@/lib/cache/read-through';
 import { prisma } from '@/lib/prisma';
 import { Subscription } from '@prisma/client';
 
@@ -16,7 +17,7 @@ export const createStripeSubscription = async ({
   endDate: Date;
   priceId: string;
 }) => {
-  return await prisma.subscription.create({
+  const created = await prisma.subscription.create({
     data: {
       customerId,
       id,
@@ -26,23 +27,29 @@ export const createStripeSubscription = async ({
       priceId,
     },
   });
+  invalidateReads('subscriptions:');
+  return created;
 };
 
 export const deleteStripeSubscription = async (id: string) => {
-  return await prisma.subscription.deleteMany({
+  const removed = await prisma.subscription.deleteMany({
     where: {
       id,
     },
   });
+  invalidateReads('subscriptions:');
+  return removed;
 };
 
 export const updateStripeSubscription = async (id: string, data: any) => {
-  return await prisma.subscription.update({
+  const updated = await prisma.subscription.update({
     where: {
       id,
     },
     data,
   });
+  invalidateReads('subscriptions:');
+  return updated;
 };
 
 export const getByCustomerId = async (customerId: string) => {

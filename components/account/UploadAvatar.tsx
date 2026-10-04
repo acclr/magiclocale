@@ -144,7 +144,7 @@ const UploadAvatar = ({ user }: { user: Partial<User> }) => {
                 />
               )}
             </label>
-            <div className="mt-1 flex rounded-full shadow-sm">
+            <div className="mt-1 flex rounded-full">
               <input
                 id="image"
                 name="image"

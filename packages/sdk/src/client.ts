@@ -23,6 +23,7 @@ export class KeykitClient {
   private readonly flags: FlagCache;
   private readonly transport: KeykitTransport;
   private readonly refreshIntervalMs: number;
+  private readonly ingestEnabled: boolean;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private readonly onPageHide = () => {
     void this.registry.flush(true).catch(this.onError);
@@ -42,6 +43,7 @@ export class KeykitClient {
   constructor(config: KeykitConfig, transport?: KeykitTransport) {
     const resolved = resolveConfig(config);
     this.onError = resolved.onError;
+    this.ingestEnabled = resolved.ingest;
     this.refreshIntervalMs = resolved.refreshIntervalMs;
     this.cache = new TranslationCache(
       resolved.locale,
@@ -53,7 +55,9 @@ export class KeykitClient {
     this.registry = new SourceKeyRegistry(this.transport, resolved);
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('pagehide', this.onPageHide);
+      if (this.ingestEnabled) {
+        window.addEventListener('pagehide', this.onPageHide);
+      }
       document.addEventListener('visibilitychange', this.onVisibilityChange);
       this.startPolling();
       const bundleIsCurrent =
@@ -61,24 +65,27 @@ export class KeykitClient {
       if (resolved.canPull && !bundleIsCurrent) {
         void this.refreshTranslations().catch(this.onError);
       }
-      if (resolved.canPull && !resolved.initialFlags) {
-        void this.refreshFlags().catch(this.onError);
-      }
     }
   }
 
   translate(key: string, defaultText: string): string {
-    this.registry.enqueue(key, defaultText);
+    if (this.ingestEnabled) {
+      this.registry.enqueue(key, defaultText);
+    }
     return this.cache.get(key.trim(), defaultText);
   }
 
   isEnabled(key: string, fallback = false): boolean {
-    this.registry.enqueueFlag(key);
+    if (this.ingestEnabled) {
+      this.registry.enqueueFlag(key);
+    }
     return this.flags.isEnabled(key, fallback);
   }
 
   getValue(key: string, fallback: FlagValue = null): FlagValue {
-    this.registry.enqueueFlag(key);
+    if (this.ingestEnabled) {
+      this.registry.enqueueFlag(key);
+    }
     return this.flags.getValue(key, fallback);
   }
 
@@ -127,7 +134,9 @@ export class KeykitClient {
     this.registry.dispose();
     this.stopPolling();
     if (typeof window !== 'undefined') {
-      window.removeEventListener('pagehide', this.onPageHide);
+      if (this.ingestEnabled) {
+        window.removeEventListener('pagehide', this.onPageHide);
+      }
       document.removeEventListener('visibilitychange', this.onVisibilityChange);
     }
   }
@@ -141,7 +150,6 @@ export class KeykitClient {
     }
     this.refreshTimer = setInterval(() => {
       void this.refreshTranslations().catch(this.onError);
-      void this.refreshFlags().catch(this.onError);
     }, this.refreshIntervalMs);
   }
 
@@ -155,10 +163,7 @@ export class KeykitClient {
 
 function createTransport(config: ResolvedKeykitConfig) {
   if (config.delivery === 'static') {
-    const ingest = config.canIngest
-      ? new HttpSourceKeyTransport(config)
-      : undefined;
-    return new CatalogTransport(config, ingest);
+    return new CatalogTransport(config);
   }
   return new HttpSourceKeyTransport(config);
 }

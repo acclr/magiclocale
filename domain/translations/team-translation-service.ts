@@ -1,3 +1,7 @@
+import {
+  invalidateProjectReads,
+  invalidateReads,
+} from '../../lib/cache/read-through';
 import type { KeyCatalogRepository } from '../keys/repository';
 import type { KeyMeta, SourceUsage } from '../keys/types';
 import type { EnvironmentService } from '../environments/environment-service';
@@ -164,13 +168,15 @@ export class TeamTranslationService {
       keyId,
       locale
     );
-    return this.translationService.saveManualValue(
+    const saved = await this.translationService.saveManualValue(
       keyId,
       environment.id,
       locale,
       value,
       actor
     );
+    this.changed(teamId, projectId);
+    return saved;
   }
 
   async suggest(
@@ -200,13 +206,15 @@ export class TeamTranslationService {
       keyId,
       locale
     );
-    return this.translationService.acceptSuggestionValue(
+    const saved = await this.translationService.acceptSuggestionValue(
       keyId,
       environment.id,
       locale,
       value,
       actor
     );
+    this.changed(teamId, projectId);
+    return saved;
   }
 
   async markReviewed(
@@ -216,7 +224,12 @@ export class TeamTranslationService {
     actor?: string | null
   ): Promise<Translation> {
     await this.requireTranslation(teamId, projectId, translationId);
-    return this.translationService.markReviewed(translationId, actor);
+    const saved = await this.translationService.markReviewed(
+      translationId,
+      actor
+    );
+    this.changed(teamId, projectId);
+    return saved;
   }
 
   async addLocaleAndFill(
@@ -236,6 +249,7 @@ export class TeamTranslationService {
       locale
     );
     const project = await this.projectService.get(teamId, projectId);
+    this.changed(teamId, projectId);
     return { project, ...result };
   }
 
@@ -251,11 +265,13 @@ export class TeamTranslationService {
       environmentRef
     );
     this.requireProjectLocale(project, locale);
-    return this.translationService.fillMissingForLocale(
+    const result = await this.translationService.fillMissingForLocale(
       project.id,
       environment.id,
       locale
     );
+    this.changed(teamId, projectId);
+    return result;
   }
 
   async retranslate(
@@ -278,7 +294,10 @@ export class TeamTranslationService {
       environment.id,
       locales,
       sourceLocale
-    );
+    ).then((result) => {
+      this.changed(teamId, projectId);
+      return result;
+    });
   }
 
   async queueTranslations(
@@ -379,7 +398,13 @@ export class TeamTranslationService {
         sourceLocale: input.sourceLocale,
       }
     );
+    this.changed(teamId, projectId);
     return { queued, ...result };
+  }
+
+  private changed(teamId: string, projectId: string): void {
+    invalidateProjectReads(projectId);
+    invalidateReads(`projects:${teamId}`);
   }
 
   private async requireScope(

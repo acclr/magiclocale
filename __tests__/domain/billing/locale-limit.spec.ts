@@ -18,11 +18,11 @@ describe('billing limits', () => {
     expect(localeLimitMessage(FREE_MAX_LOCALES)).toContain('3');
   });
 
-  it('caps free environments and flags and leaves paid plans open', () => {
-    expect(canAddEnvironment(0, FREE_MAX_ENVIRONMENTS)).toBe(true);
-    expect(canAddEnvironment(1, FREE_MAX_ENVIRONMENTS)).toBe(false);
-    expect(canAddFlag(9, FREE_MAX_FLAGS)).toBe(true);
-    expect(canAddFlag(10, FREE_MAX_FLAGS)).toBe(false);
+  it('does not cap free environments or flags from the plan', () => {
+    expect(FREE_MAX_ENVIRONMENTS).toBeNull();
+    expect(FREE_MAX_FLAGS).toBeNull();
+    expect(canAddEnvironment(2, FREE_MAX_ENVIRONMENTS)).toBe(true);
+    expect(canAddFlag(11, FREE_MAX_FLAGS)).toBe(true);
     expect(canAddFlag(100, null)).toBe(true);
   });
 });

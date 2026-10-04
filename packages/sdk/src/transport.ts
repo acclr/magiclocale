@@ -1,3 +1,4 @@
+import { KeykitHttpError } from './http-error';
 import type {
   FlagPayload,
   ResolvedKeykitConfig,
@@ -62,10 +63,11 @@ export class HttpSourceKeyTransport implements KeykitTransport {
     });
 
     if (!response.ok) {
-      throw new Error(
+      throw new KeykitHttpError(
         `Keykit ingest failed (${response.status}): ${await readError(
           response
-        )}`
+        )}`,
+        response.status
       );
     }
   }
@@ -90,27 +92,6 @@ export class HttpSourceKeyTransport implements KeykitTransport {
     }
 
     return (await response.json()) as TranslationBundle;
-  }
-
-  async pullFlags(): Promise<FlagPayload> {
-    const endpoint =
-      `${this.config.baseUrl}/api/v1/projects/` +
-      `${encodeURIComponent(this.config.projectId)}/flags` +
-      this.environmentQuery(true);
-    const response = await this.config.fetch(endpoint, {
-      method: 'GET',
-      headers: { Authorization: `Bearer ${this.config.ingestToken}` },
-    });
-
-    if (!response.ok) {
-      throw new Error(
-        `Keykit flag refresh failed (${
-          response.status
-        }): ${await readError(response)}`
-      );
-    }
-
-    return (await response.json()) as FlagPayload;
   }
 
   private environmentQuery(leadingQuestion: boolean): string {

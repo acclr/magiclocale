@@ -44,13 +44,38 @@ npx @keykithq/cli pull --out .keykit --environment production --version 3
 
 `--out` overrides the folder (`dir` in the config, otherwise `.keykit`). `--base-url`, `--project-id`, and `--token` override the environment and the config file.
 
+## sync
+
+```bash
+npx @keykithq/cli sync
+```
+
+Uploads `t('key', 'Source text')` and `translate('key', 'Source text')` calls from the project. Run this while developing. Opening a page does not upload keys.
+
+Requests go out in chunks of 25 keys, with a short pause between them, so a large project does not hit the API all at once. `--chunk` can be 1–100. `--delay` is the pause in milliseconds.
+
+In a terminal, when there is more than one chunk:
+
+- `p` pauses before the next request
+- `c` continues
+- `q` saves progress and quits
+
+Run `sync` again to continue. Completed keys are remembered in `.keykit/sync-state.json` until their source text changes. Do not commit that file.
+
+```bash
+npx @keykithq/cli sync --include app --include components --chunk 25 --delay 200
+```
+
+`scan.include` and `scan.exclude` in `keykit.config.ts` set the default scope. Omit them to scan the whole project. `node_modules`, `dist`, `.next`, `build`, and `vendor` are always skipped.
+
 ## scan
 
 ```bash
 npx @keykithq/cli scan --root .
+npx @keykithq/cli scan --include app
 ```
 
-Prints `t('key', 'Source text')` and `translate('key', 'Source text')` calls found in source files, including ones that have not run yet. The SDK only ingests keys that execute.
+Prints the same keys `sync` would upload, without sending them.
 
 ## rewrite
 

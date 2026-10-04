@@ -1,3 +1,4 @@
+import { readThrough, invalidateReads } from '@/lib/cache/read-through';
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { enforceProjectLimit } from '@/lib/billing/enforce-limits';
 import { getProjectService } from '@/lib/translations';
@@ -8,7 +9,9 @@ export default createTeamProjectApiHandler({
     resource: 'team_translation_project',
     action: 'read',
     async handle({ res, teamMember }) {
-      const projects = await getProjectService().list(teamMember.team.id);
+      const projects = await readThrough(`projects:${teamMember.team.id}`, () =>
+        getProjectService().list(teamMember.team.id)
+      );
       res.status(200).json({ data: projects });
     },
   },
@@ -30,6 +33,7 @@ export default createTeamProjectApiHandler({
         teamMember.team.id,
         input
       );
+      invalidateReads(`projects:${teamMember.team.id}`);
       res.status(201).json({ data: project });
     },
   },

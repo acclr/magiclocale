@@ -166,14 +166,16 @@ export function SeoSection({
   children: ReactNode;
 }) {
   return (
-    <section className="mx-auto max-w-6xl px-6 py-10">
+    <section className="mx-auto max-w-6xl px-6 py-10 items-center justify-center flex flex-col">
       {eyebrow ? (
         <p className="font-mono text-xs font-medium uppercase tracking-[0.28em] text-muted-foreground">
           {eyebrow}
         </p>
       ) : null}
       {title ? (
-        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">{title}</h2>
+        <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight">
+          {title}
+        </h2>
       ) : null}
       <div className="mt-5 max-w-3xl space-y-4 text-sm leading-relaxed text-muted-foreground sm:text-base">
         {children}

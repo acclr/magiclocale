@@ -82,6 +82,16 @@ const KeykitPricing = ({ plans, projectId }: KeykitPricingProps) => {
                 >
                   {t('plan-included')}
                 </Button>
+              ) : !plan.selfServe ? (
+                <Button
+                  variant="outline"
+                  size="md"
+                  fullWidth
+                  disabled
+                  className="rounded-lg"
+                >
+                  {t('plan-coming-soon', 'Coming soon')}
+                </Button>
               ) : (
                 <Button
                   color="primary"

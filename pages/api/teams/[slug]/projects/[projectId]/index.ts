@@ -1,6 +1,7 @@
 import { createTeamProjectApiHandler } from '@/lib/api/team-projects';
 import { getProjectService } from '@/lib/translations';
 import { invalidateProjectCorsCache } from '@/lib/api/public-sdk-cors';
+import { invalidateProjectReads, invalidateReads } from '@/lib/cache/read-through';
 import {
   updateTranslationProjectSchema,
   translationProjectParamsSchema,
@@ -48,6 +49,8 @@ export default createTeamProjectApiHandler({
         );
         invalidateProjectCorsCache(id);
       }
+      invalidateReads(`projects:${teamMember.team.id}`);
+      invalidateProjectReads(id);
       res.status(200).json({ data: project });
     },
   },
@@ -59,6 +62,8 @@ export default createTeamProjectApiHandler({
         teamMember.team.id,
         projectId(req.query)
       );
+      invalidateReads(`projects:${teamMember.team.id}`);
+      invalidateProjectReads(projectId(req.query));
       res.status(204).end();
     },
   },

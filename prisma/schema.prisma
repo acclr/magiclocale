@@ -622,6 +622,21 @@ model Subscription {
   @@index([customerId])
 }
 
+/// Monthly meter for one billing scope. High water does not fall within the month.
+model PlanUsage {
+  id                  String  @id @default(uuid())
+  /// team:${teamId} or project:${projectId}
+  scopeId             String
+  /// YYYY-MM in UTC
+  period              String
+  activeKeyHighWater  Int     @default(0)
+  billedOverageBlocks Int     @default(0)
+  liveRequests        Int     @default(0)
+  stripeCustomerId    String?
+
+  @@unique([scopeId, period])
+}
+
 model Service {
   id          String   @id @default(uuid())
   description String

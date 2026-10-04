@@ -4,7 +4,7 @@ import Link from 'next/link';
 import KeykitLogo from '@/components/shared/KeykitLogo';
 
 const Brand = ({ collapsed = false }: { collapsed?: boolean }) => {
-  const href = '/dashboard';
+  const href = '/teams';
 
   return (
     <Link

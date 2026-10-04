@@ -3,16 +3,15 @@ import {
   CubeIcon,
   FolderIcon,
   FolderPlusIcon,
-  HomeIcon,
   RectangleStackIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
+import useCurrentTeamSlug from 'hooks/useCurrentTeamSlug';
 import useTeamProjects from 'hooks/useTeamProjects';
 import useTeams from 'hooks/useTeams';
 import { useSession } from 'next-auth/react';
 import { useTranslation } from '@/hooks/useTranslation';
 import Link from 'next/link';
-import { useRouter } from 'next/router';
 
 import { cn } from 'cn';
 
@@ -29,11 +28,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
-  const router = useRouter();
   const { teams } = useTeams();
   const { data } = useSession();
   const { t } = useTranslation('common');
-  const slug = typeof router.query.slug === 'string' ? router.query.slug : '';
+  const slug = useCurrentTeamSlug();
   const { projects } = useTeamProjects(slug);
 
   const currentTeam = (teams || []).find((team) => team.slug === slug);
@@ -61,7 +59,7 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
             items: projects.map((project) => ({
               id: project.id,
               name: project.name,
-              href: `/teams/${currentTeam.slug}/projects/${project.id}/keys`,
+              href: `/teams/${currentTeam.slug}/projects/${project.id}`,
               icon: CubeIcon,
             })),
           },
@@ -83,12 +81,6 @@ const TeamDropdown = ({ collapsed = false }: { collapsed?: boolean }) => {
       id: 'actions',
       name: '',
       items: [
-        {
-          id: 'home',
-          name: t('home'),
-          href: '/dashboard',
-          icon: HomeIcon,
-        },
         {
           id: 'all-teams',
           name: t('teams'),

@@ -127,7 +127,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
                     {expanded ? (
                       <div
                         id={`${menuId}-${group.id}`}
-                        className="absolute left-1/2 top-full z-50 mt-3 w-72 -translate-x-1/2 rounded-xl bg-surface p-2 shadow-pill"
+                        className="absolute left-1/2 top-full z-50 mt-3 w-72 -translate-x-1/2 rounded-xl border border-border bg-surface p-2"
                       >
                         {group.items.map((item) => (
                           <a

@@ -1,4 +1,5 @@
 import { EMPTY_FLAG_SET, type FlagSetSnapshot } from '@/domain/flags';
+import { consumeLiveRequest } from '@/lib/billing/plan-usage';
 import { createTtlCache } from '@/lib/cache/ttl-cache';
 import { prisma } from '@/lib/prisma';
 import {
@@ -83,6 +84,13 @@ type ServeInput = {
 export async function servePublicTranslation(
   input: ServeInput & { locale: string; version: number | null }
 ): Promise<PublicServeResult<TranslationBundle>> {
+  const result = await readPublicTranslation(input);
+  return meterSuccessfulLiveRead(input.projectId, result);
+}
+
+async function readPublicTranslation(
+  input: ServeInput & { locale: string; version: number | null }
+): Promise<PublicServeResult<TranslationBundle>> {
   const token = extractBearerToken(input.authorization);
   if (!token) {
     return { kind: 'error', status: 401, error: 'Invalid API key.' };
@@ -139,7 +147,15 @@ export async function servePublicTranslation(
     const etag = `"${body.environment}:${body.version}:${input.locale}"`;
     rememberApiKeyUse(row.apiKeyId, row.lastUsedAt);
     await touchApiKeyIfStale(row.apiKeyId);
-    return store(cacheKey, row.apiKeyId, body, etag, PUBLIC_LIVE_CACHE_CONTROL, PUBLISHED_TTL_MS, input.ifNoneMatch);
+    return store(
+      cacheKey,
+      row.apiKeyId,
+      body,
+      etag,
+      PUBLIC_LIVE_CACHE_CONTROL,
+      PUBLISHED_TTL_MS,
+      input.ifNoneMatch
+    );
   } catch (error) {
     console.error('Published translation read failed.', error);
     return servePinnedTranslation(input, cacheKey);
@@ -155,6 +171,13 @@ export type PublicFlagBody = {
 };
 
 export async function servePublicFlags(
+  input: ServeInput
+): Promise<PublicServeResult<PublicFlagBody>> {
+  const result = await readPublicFlags(input);
+  return meterSuccessfulLiveRead(input.projectId, result);
+}
+
+async function readPublicFlags(
   input: ServeInput
 ): Promise<PublicServeResult<PublicFlagBody>> {
   const token = extractBearerToken(input.authorization);
@@ -185,7 +208,11 @@ export async function servePublicFlags(
     if (gate.kind === 'error') {
       return gate;
     }
-    if (gate.kind === 'repository' || !row?.environmentId || !row.environmentSlug) {
+    if (
+      gate.kind === 'repository' ||
+      !row?.environmentId ||
+      !row.environmentSlug
+    ) {
       return serveRepositoryFlags(input, cacheKey);
     }
 
@@ -217,6 +244,20 @@ export async function servePublicFlags(
     console.error('Published flag read failed.', error);
     return serveRepositoryFlags(input, cacheKey);
   }
+}
+
+async function meterSuccessfulLiveRead<T>(
+  projectId: string,
+  result: PublicServeResult<T>
+): Promise<PublicServeResult<T>> {
+  if (result.kind === 'error') {
+    return result;
+  }
+  const decision = await consumeLiveRequest(projectId);
+  if (!decision.allowed) {
+    return { kind: 'error', status: 402, error: decision.message };
+  }
+  return result;
 }
 
 function asFlagSet(value: unknown): FlagSetSnapshot {

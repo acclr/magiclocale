@@ -47,9 +47,10 @@ export default createTeamProjectApiHandler({
         teamMember.team.billingId
       );
       await enforceSourceKeyCapacity(
-        projectId,
+        project,
         entitlement,
-        keys.map((item) => item.key)
+        keys.map((item) => item.key),
+        teamMember.team.billingId
       );
       const data = await getTranslationService().syncFromSource(
         projectId,

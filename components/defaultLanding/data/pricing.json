@@ -6,6 +6,7 @@
     "currency": "USD",
     "duration": "month",
     "highlight": false,
+    "available": true,
     "pricePrefix": "",
     "description": "For side projects, prototypes, and trying Keykit with a real application.",
     "benefits": [
@@ -23,12 +24,16 @@
     "currency": "USD",
     "duration": "month",
     "highlight": true,
+    "available": true,
     "pricePrefix": "",
     "description": "Everything a software team needs. Unlimited languages and seats.",
     "benefits": [
       { "id": "active-keys", "text": "3,000 active keys included" },
       { "id": "overage", "text": "+$4 per extra 1,000 active keys" },
-      { "id": "unlimited", "text": "Unlimited languages, projects, and members" },
+      {
+        "id": "unlimited",
+        "text": "Unlimited languages, projects, and members"
+      },
       { "id": "sources", "text": "5 connected sources" },
       { "id": "live-delivery", "text": "1M live requests and static delivery" },
       { "id": "deprecated", "text": "Deprecated and archived keys are free" }
@@ -41,11 +46,15 @@
     "currency": "USD",
     "duration": "month",
     "highlight": false,
+    "available": false,
     "pricePrefix": "From",
     "description": "Governance, security, support, and higher committed capacity.",
     "benefits": [
       { "id": "active-keys", "text": "25,000+ active keys" },
-      { "id": "unlimited", "text": "Unlimited languages, projects, members, and sources" },
+      {
+        "id": "unlimited",
+        "text": "Unlimited languages, projects, members, and sources"
+      },
       { "id": "security", "text": "SAML SSO, SCIM, and audit logs" },
       { "id": "assistance", "text": "SLA, onboarding, and migration help" }
     ]

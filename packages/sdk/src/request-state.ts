@@ -1,5 +1,4 @@
 import { cookies, headers } from 'next/headers';
-import { after } from 'next/server';
 import { cache } from 'react';
 import { KeykitClient } from './client';
 import { createKeykit } from './create-keykit';
@@ -71,8 +70,9 @@ export const getKeykitRequestState = cache(
       locale,
       initialBundle,
       refreshIntervalMs: 0,
+      ingest: false,
     });
-    const state: KeykitRequestState = {
+    return {
       locale,
       client,
       initialBundle,
@@ -80,16 +80,6 @@ export const getKeykitRequestState = cache(
       cookieName,
       sourceCatalog: config.sourceCatalog,
     };
-
-    after(async () => {
-      try {
-        await state.client.flush();
-      } finally {
-        state.client.dispose();
-      }
-    });
-
-    return state;
   }
 );
 
@@ -169,13 +159,14 @@ function toBrowserConfig(config: KeykitNextConfig): KeykitConfig {
     delivery: config.delivery,
     baseUrl: config.baseUrl,
     projectId: config.projectId,
-    ingestToken: config.ingestToken,
+    ingestToken: undefined,
     sourceLocale: config.sourceLocale,
     locale: config.locale,
     catalogs: config.catalogs,
     sourceCatalog: config.sourceCatalog,
     refreshIntervalMs:
       config.delivery === 'static' ? 0 : config.refreshIntervalMs,
+    ingest: false,
     debounceMs: config.debounceMs,
     batchSize: config.batchSize,
     maxRetries: config.maxRetries,

@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 // src/index.ts
-import { readFileSync as readFileSync3 } from "fs";
-import { resolve as resolve2 } from "path";
+import { readFileSync as readFileSync4 } from "fs";
+import { resolve as resolve3 } from "path";
 import { resolveKeykitSetup } from "@keykithq/sdk/project-config";
 
 // src/pull.ts
@@ -114,8 +114,8 @@ function walk(directory) {
 }
 
 // src/scan.ts
-import { readFileSync as readFileSync2, readdirSync as readdirSync2, statSync as statSync2 } from "fs";
-import { extname as extname2, join as join3 } from "path";
+import { existsSync, readFileSync as readFileSync2, readdirSync as readdirSync2, statSync as statSync2 } from "fs";
+import { extname as extname2, isAbsolute, join as join3, relative, resolve as resolve2, sep } from "path";
 var SOURCE_EXTENSIONS2 = /* @__PURE__ */ new Set([
   ".ts",
   ".tsx",
@@ -128,56 +128,587 @@ var TRANSLATE_PATTERNS = [
   /\btranslate\s*\(\s*[`'"]([^`'"]+)[`'"]\s*,\s*[`'"]([^`'"]*)[`'"]/g,
   /\bt\s*\(\s*[`'"]([^`'"]+)[`'"]\s*,\s*[`'"]([^`'"]*)[`'"]/g
 ];
-function scanSourceTree(root) {
+var DEFAULT_SKIP_DIRECTORIES = [
+  "node_modules",
+  ".git",
+  "dist",
+  ".next",
+  "coverage",
+  "out",
+  "build",
+  ".keykit",
+  "vendor"
+];
+function scanSourceTree(root, options = {}) {
+  return scanProject(root, options).keys;
+}
+function scanProject(root, options = {}) {
+  const projectRoot = resolve2(root);
+  const exclude = excludeRules(options.exclude);
   const found = /* @__PURE__ */ new Map();
-  for (const file of walk2(root)) {
-    const content = readFileSync2(file, "utf8");
-    const lines = content.split(/\r?\n/);
-    for (let index = 0; index < lines.length; index += 1) {
-      const line = lines[index];
-      for (const pattern of TRANSLATE_PATTERNS) {
-        pattern.lastIndex = 0;
-        let match;
-        while ((match = pattern.exec(line)) !== null) {
-          const key = match[1].trim();
-          const sourceText = match[2];
-          if (!key || !sourceText.trim()) {
-            continue;
-          }
-          const existing = found.get(key);
-          const entry = {
+  let fileCount = 0;
+  for (const target of scanTargets(projectRoot, options.include)) {
+    for (const file of walk2(target, projectRoot, exclude)) {
+      fileCount += 1;
+      collectKeys(file, found);
+    }
+  }
+  return {
+    fileCount,
+    keys: Array.from(found.values()).sort(
+      (left, right) => left.key.localeCompare(right.key)
+    )
+  };
+}
+function collectKeys(file, found) {
+  const content = readFileSync2(file, "utf8");
+  const lines = content.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    for (const pattern of TRANSLATE_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(line)) !== null) {
+        const key = match[1].trim();
+        const sourceText = match[2];
+        if (!key || !sourceText.trim()) {
+          continue;
+        }
+        if (!found.has(key)) {
+          found.set(key, {
             key,
             sourceText,
             file,
             line: index + 1
-          };
-          if (!existing) {
-            found.set(key, entry);
-          }
+          });
         }
       }
     }
   }
-  return Array.from(found.values()).sort(
-    (left, right) => left.key.localeCompare(right.key)
-  );
 }
-function walk2(directory) {
-  const skip = /* @__PURE__ */ new Set(["node_modules", ".git", "dist", ".next"]);
-  const files = [];
-  for (const entry of readdirSync2(directory)) {
-    if (skip.has(entry)) {
+function scanTargets(root, include) {
+  if (!include?.length) {
+    return [root];
+  }
+  return include.map((entry) => {
+    const full = resolve2(root, entry);
+    const fromRoot = relative(root, full);
+    if (fromRoot.startsWith("..") || isAbsolute(fromRoot)) {
+      throw new Error(`Scan path must stay inside the project: ${entry}`);
+    }
+    if (!existsSync(full)) {
+      throw new Error(`Scan path does not exist: ${entry}`);
+    }
+    return full;
+  });
+}
+function excludeRules(extra) {
+  const names = new Set(DEFAULT_SKIP_DIRECTORIES);
+  const prefixes = [];
+  for (const entry of extra ?? []) {
+    const normalized = entry.trim().replace(/\\/g, "/").replace(/^\.\/+/, "").replace(/\/+$/, "");
+    if (!normalized || normalized === ".") {
       continue;
     }
+    if (normalized.includes("/")) {
+      prefixes.push(normalized);
+    } else {
+      names.add(normalized);
+    }
+  }
+  return { names, prefixes };
+}
+function walk2(directory, root, exclude) {
+  if (!statSync2(directory).isDirectory()) {
+    return shouldSkip(directory, root, exclude) || !SOURCE_EXTENSIONS2.has(extname2(directory)) ? [] : [directory];
+  }
+  const files = [];
+  for (const entry of readdirSync2(directory)) {
     const full = join3(directory, entry);
+    if (shouldSkip(full, root, exclude)) {
+      continue;
+    }
     const stat = statSync2(full);
     if (stat.isDirectory()) {
-      files.push(...walk2(full));
+      files.push(...walk2(full, root, exclude));
     } else if (SOURCE_EXTENSIONS2.has(extname2(entry))) {
       files.push(full);
     }
   }
   return files;
+}
+function shouldSkip(full, root, exclude) {
+  const rel = relative(root, full).split(sep).join("/");
+  if (!rel || rel === ".") {
+    return false;
+  }
+  const segments = rel.split("/");
+  if (segments.some((segment) => exclude.names.has(segment))) {
+    return true;
+  }
+  return exclude.prefixes.some(
+    (prefix) => rel === prefix || rel.startsWith(`${prefix}/`)
+  );
+}
+
+// src/push-keys.ts
+async function pushSourceKeys(options) {
+  const baseUrl = options.baseUrl.replace(/\/+$/, "");
+  const params = new URLSearchParams();
+  if (options.environment && options.environment !== "production") {
+    params.set("environment", options.environment);
+  }
+  const query = params.toString();
+  const endpoint = `${baseUrl}/api/v1/projects/${encodeURIComponent(options.projectId)}/keys/sync${query ? `?${query}` : ""}`;
+  const fetchImpl = options.fetch ?? globalThis.fetch.bind(globalThis);
+  const maxRetries = options.maxRetries ?? 2;
+  const retryDelayMs = options.retryDelayMs ?? 300;
+  let lastError = null;
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    try {
+      const response = await fetchImpl(endpoint, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${options.token}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ keys: options.keys })
+      });
+      if (response.ok) {
+        return;
+      }
+      const message = `Keykit sync failed (${response.status}): ${await readError2(response)}`;
+      if (response.status === 401 || response.status === 403 || response.status === 402 || response.status === 422) {
+        throw new Error(message);
+      }
+      lastError = new Error(message);
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (isTerminal(lastError) || attempt >= maxRetries) {
+        break;
+      }
+    }
+    await delay(retryDelayMs * 2 ** attempt);
+  }
+  throw lastError ?? new Error("Keykit sync failed.");
+}
+function isTerminal(error) {
+  return /\(401\)|\(403\)|\(402\)|\(422\)/.test(error.message);
+}
+function delay(milliseconds) {
+  return new Promise((resolve4) => setTimeout(resolve4, milliseconds));
+}
+async function readError2(response) {
+  try {
+    const body = await response.json();
+    if (typeof body.error === "string") {
+      return body.error;
+    }
+  } catch {
+  }
+  return response.statusText || "Unknown error";
+}
+
+// src/sync-control.ts
+function createSyncSession(input = process.stdin, onChange) {
+  let paused = false;
+  let aborted = false;
+  const waiters = [];
+  const release = (decision) => {
+    const pending = waiters.splice(0);
+    for (const waiter of pending) {
+      waiter(decision);
+    }
+  };
+  const onData = (key) => {
+    if (key === "" || key === "q" || key === "Q") {
+      aborted = true;
+      onChange?.("abort");
+      release("abort");
+      return;
+    }
+    if (key === "p" || key === "P" || key === " ") {
+      paused = true;
+      onChange?.("pause");
+      return;
+    }
+    if (key === "c" || key === "C") {
+      paused = false;
+      onChange?.("resume");
+      release("continue");
+    }
+  };
+  const interactive = Boolean(input.isTTY && input.setRawMode);
+  if (interactive) {
+    input.setRawMode(true);
+    input.resume();
+    input.setEncoding("utf8");
+    input.on("data", onData);
+  }
+  return {
+    pause() {
+      paused = true;
+    },
+    resume() {
+      paused = false;
+      release("continue");
+    },
+    abort() {
+      aborted = true;
+      release("abort");
+    },
+    isPaused() {
+      return paused;
+    },
+    isAborted() {
+      return aborted;
+    },
+    async waitIfPaused() {
+      if (aborted) {
+        return "abort";
+      }
+      if (!paused) {
+        return "continue";
+      }
+      return new Promise((resolve4) => {
+        waiters.push(resolve4);
+      });
+    },
+    detach() {
+      if (!interactive) {
+        return;
+      }
+      input.off("data", onData);
+      input.setRawMode(false);
+      input.pause();
+    }
+  };
+}
+
+// src/sync-batch.ts
+import { relative as relative2, sep as sep2 } from "path";
+var DEFAULT_CHUNK_SIZE = 25;
+var MAX_CHUNK_SIZE = 100;
+var DEFAULT_CHUNK_DELAY_MS = 200;
+function chunkItems(items, size) {
+  const chunkSize = normalizeChunkSize(size);
+  const chunks = [];
+  for (let index = 0; index < items.length; index += chunkSize) {
+    chunks.push(items.slice(index, index + chunkSize));
+  }
+  return chunks;
+}
+function normalizeChunkSize(size) {
+  if (!Number.isInteger(size) || size < 1) {
+    throw new Error("--chunk must be a positive integer.");
+  }
+  if (size > MAX_CHUNK_SIZE) {
+    throw new Error(`--chunk may not exceed ${MAX_CHUNK_SIZE}.`);
+  }
+  return size;
+}
+function pendingKeys(keys, synced) {
+  if (!synced) {
+    return [...keys];
+  }
+  return keys.filter((item) => synced[item.key] !== item.sourceText);
+}
+function toIngestKey(item, root) {
+  const file = relative2(root, item.file).split(sep2).join("/").slice(0, 500);
+  return {
+    key: item.key,
+    sourceText: item.sourceText,
+    type: "translation",
+    usage: {
+      file: file || item.file,
+      line: item.line
+    }
+  };
+}
+async function runChunkedSync(options) {
+  const chunks = chunkItems(options.keys, options.chunkSize);
+  const synced = { ...options.synced ?? {} };
+  const sleep = options.sleep ?? delay2;
+  let sent = 0;
+  for (let index = 0; index < chunks.length; index += 1) {
+    const chunk = chunks[index];
+    if (options.control) {
+      const decision = await options.control.waitIfPaused();
+      if (decision === "abort" || options.control.isAborted()) {
+        return { sent, stopped: "aborted", synced };
+      }
+    }
+    options.onProgress?.({
+      sent,
+      total: options.keys.length,
+      chunkIndex: index + 1,
+      chunkCount: chunks.length,
+      phase: "start",
+      status: "syncing",
+      preview: chunk.map((item) => item.key),
+      synced
+    });
+    try {
+      await options.push(chunk.map((item) => toIngestKey(item, options.root)));
+    } catch (error) {
+      return {
+        sent,
+        stopped: "error",
+        error: error instanceof Error ? error : new Error(String(error)),
+        synced
+      };
+    }
+    for (const item of chunk) {
+      synced[item.key] = item.sourceText;
+    }
+    sent += chunk.length;
+    options.onProgress?.({
+      sent,
+      total: options.keys.length,
+      chunkIndex: index + 1,
+      chunkCount: chunks.length,
+      phase: "complete",
+      status: index === chunks.length - 1 ? "done" : "syncing",
+      preview: chunk.map((item) => item.key),
+      synced
+    });
+    if (index < chunks.length - 1 && options.delayMs > 0) {
+      await sleep(options.delayMs);
+    }
+  }
+  return { sent, stopped: "done", synced };
+}
+function delay2(milliseconds) {
+  return new Promise((resolve4) => setTimeout(resolve4, milliseconds));
+}
+
+// src/sync-state.ts
+import { mkdirSync as mkdirSync2, readFileSync as readFileSync3, writeFileSync as writeFileSync3 } from "fs";
+import { join as join4 } from "path";
+var FILE_NAME = "sync-state.json";
+function syncStatePath(directory) {
+  return join4(directory, FILE_NAME);
+}
+function readSyncCheckpoint(directory, projectId) {
+  const empty = { version: 1, projectId, synced: {} };
+  try {
+    const parsed = JSON.parse(readFileSync3(syncStatePath(directory), "utf8"));
+    if (parsed?.version !== 1 || parsed.projectId !== projectId) {
+      return empty;
+    }
+    if (!parsed.synced || typeof parsed.synced !== "object") {
+      return empty;
+    }
+    return { version: 1, projectId, synced: parsed.synced };
+  } catch {
+    return empty;
+  }
+}
+function writeSyncCheckpoint(directory, checkpoint) {
+  mkdirSync2(directory, { recursive: true });
+  writeFileSync3(
+    syncStatePath(directory),
+    `${JSON.stringify(checkpoint, null, 2)}
+`,
+    "utf8"
+  );
+}
+
+// src/sync-ui.ts
+var BAR_WIDTH = 24;
+function formatSyncFrame(frame) {
+  const ratio = frame.total === 0 ? 1 : Math.min(1, frame.sent / frame.total);
+  const filled = Math.round(ratio * BAR_WIDTH);
+  const bar = "#".repeat(filled) + "-".repeat(BAR_WIDTH - filled);
+  const lines = [
+    "Keykit sync",
+    `Project  ${frame.projectId}`,
+    `Scope    ${frame.scope}`,
+    "",
+    `${frame.total} keys \xB7 ${frame.chunkSize} per request \xB7 ${frame.chunkCount} ${frame.chunkCount === 1 ? "request" : "requests"}`,
+    `[${bar}]  ${frame.sent}/${frame.total}  chunk ${Math.max(frame.chunkIndex, 1)}/${frame.chunkCount}  ${frame.status}`
+  ];
+  for (const key of frame.preview.slice(0, 5)) {
+    lines.push(`  ${key}`);
+  }
+  if (frame.preview.length > 5) {
+    lines.push(`  \u2026 ${frame.preview.length - 5} more in this chunk`);
+  }
+  if (frame.message) {
+    lines.push("", frame.message);
+  }
+  lines.push("", "p pause \xB7 c continue \xB7 q quit and save");
+  return lines.join("\n");
+}
+function createSyncDisplay(stream = process.stdout) {
+  let previousLines = 0;
+  let current = null;
+  const interactive = Boolean(stream.isTTY);
+  return {
+    show(frame) {
+      current = frame;
+      const text = formatSyncFrame(frame);
+      if (!interactive) {
+        stream.write(
+          `chunk ${frame.chunkIndex}/${frame.chunkCount}  ${frame.sent}/${frame.total}  ${frame.status}
+`
+        );
+        return;
+      }
+      if (previousLines > 0) {
+        stream.write(`\x1B[${previousLines}A\x1B[0J`);
+      }
+      stream.write(`${text}
+`);
+      previousLines = text.split("\n").length;
+    },
+    replaceStatus(status, message) {
+      if (!current) {
+        return;
+      }
+      this.show({ ...current, status, message });
+    },
+    finish(text) {
+      if (interactive && previousLines > 0) {
+        stream.write(`\x1B[${previousLines}A\x1B[0J`);
+        previousLines = 0;
+      }
+      stream.write(`${text}
+`);
+    }
+  };
+}
+
+// src/sync-command.ts
+async function executeSync(options) {
+  const scan = scanProject(options.root, options.scan);
+  const scope = options.scan.include && options.scan.include.length > 0 ? options.scan.include.join(", ") : "entire project";
+  const checkpoint = readSyncCheckpoint(options.directory, options.projectId);
+  const queued = pendingKeys(scan.keys, checkpoint.synced);
+  if (queued.length === 0) {
+    console.log(
+      scan.keys.length === 0 ? `No translation keys found in ${scope} (${scan.fileCount} files).` : `Scanned ${scan.keys.length} keys in ${scan.fileCount} files. Nothing new to sync.`
+    );
+    return;
+  }
+  const unchanged = scan.keys.length - queued.length;
+  const interactive = queued.length > options.chunkSize && Boolean(process.stdout.isTTY);
+  const display = interactive ? createSyncDisplay() : null;
+  const session = interactive ? createSyncSession(process.stdin, (event) => {
+    if (event === "pause") {
+      display?.replaceStatus("paused", "Paused. c continues, q saves and quits.");
+    } else if (event === "resume") {
+      display?.replaceStatus("syncing");
+    }
+  }) : null;
+  const frame = () => ({
+    projectId: options.projectId,
+    scope,
+    sent: 0,
+    total: queued.length,
+    chunkIndex: 0,
+    chunkCount: Math.ceil(queued.length / options.chunkSize),
+    chunkSize: options.chunkSize,
+    status: "syncing",
+    preview: []
+  });
+  if (!interactive) {
+    const skipped = unchanged > 0 ? ` ${unchanged} unchanged.` : "";
+    console.log(
+      `Syncing ${queued.length} keys from ${scope} (${scan.fileCount} files) in batches of ${options.chunkSize}.${skipped}`
+    );
+  } else {
+    display?.show({
+      ...frame(),
+      message: unchanged > 0 ? `${unchanged} unchanged keys skipped.` : void 0
+    });
+  }
+  try {
+    const result = await runChunkedSync({
+      keys: queued,
+      root: options.root,
+      chunkSize: options.chunkSize,
+      delayMs: options.delayMs,
+      synced: checkpoint.synced,
+      control: session ?? void 0,
+      push: (batch) => pushSourceKeys({
+        baseUrl: options.baseUrl,
+        projectId: options.projectId,
+        token: options.token,
+        environment: options.environment,
+        keys: batch,
+        fetch: options.fetch
+      }),
+      onProgress: (progress) => {
+        if (progress.phase === "complete") {
+          writeSyncCheckpoint(options.directory, {
+            version: 1,
+            projectId: options.projectId,
+            synced: progress.synced
+          });
+        }
+        if (!display) {
+          if (progress.phase === "complete") {
+            console.log(
+              `chunk ${progress.chunkIndex}/${progress.chunkCount}  ${progress.sent}/${progress.total}`
+            );
+          }
+          return;
+        }
+        const status = session?.isPaused() ? "paused" : progress.status;
+        display.show({
+          ...frame(),
+          sent: progress.sent,
+          chunkIndex: progress.chunkIndex,
+          status,
+          preview: progress.preview
+        });
+      }
+    });
+    writeSyncCheckpoint(options.directory, {
+      version: 1,
+      projectId: options.projectId,
+      synced: result.synced
+    });
+    if (result.stopped === "error") {
+      const message = result.error?.message ?? "Keykit sync failed.";
+      const summary2 = `Synced ${result.sent} of ${queued.length} keys. ${message} Run keykit sync again to continue.`;
+      if (display) {
+        display.finish(summary2);
+      }
+      throw new Error(summary2);
+    }
+    if (result.stopped === "aborted") {
+      const summary2 = `Saved progress at ${result.sent} of ${queued.length} keys. Run keykit sync again to continue.`;
+      if (display) {
+        display.finish(summary2);
+      } else {
+        console.log(summary2);
+      }
+      return;
+    }
+    const summary = `Synced ${result.sent} keys.`;
+    if (display) {
+      display.finish(summary);
+    } else {
+      console.log(summary);
+    }
+  } finally {
+    session?.detach();
+  }
+}
+function resolveScanOptions(config, include, exclude) {
+  const scan = readScanConfig(config);
+  return {
+    include: include.length > 0 ? include : scan?.include,
+    exclude: exclude.length > 0 ? exclude : scan?.exclude
+  };
+}
+function readScanConfig(config) {
+  if (!("scan" in config) || !config.scan || typeof config.scan !== "object") {
+    return void 0;
+  }
+  return config.scan;
 }
 
 // src/index.ts
@@ -204,8 +735,8 @@ async function main() {
     if (!file) {
       throw new Error("Usage: keykit rewrite --file migration.json --root .");
     }
-    const plan = JSON.parse(readFileSync3(resolve2(file), "utf8"));
-    const changed = rewriteSourceTree(resolve2(root), plan);
+    const plan = JSON.parse(readFileSync4(resolve3(file), "utf8"));
+    const changed = rewriteSourceTree(resolve3(root), plan);
     console.log(
       `Rewrote ${changed} file(s). Upload completion in the Keykit migrations UI.`
     );
@@ -245,10 +776,57 @@ async function main() {
     );
     return;
   }
-  if (command === "scan") {
-    const root = argValue(args, "--root") ?? process.cwd();
-    const keys = scanSourceTree(resolve2(root));
-    console.log(JSON.stringify(keys, null, 2));
+  if (command === "scan" || command === "sync") {
+    const requestedRoot = argValue(args, "--root");
+    const setup = await resolveKeykitSetup(
+      {},
+      requestedRoot ? resolve3(requestedRoot) : process.cwd()
+    );
+    const root = resolve3(requestedRoot ?? setup.root);
+    const scanOptions = resolveScanOptions(
+      root === resolve3(setup.root) ? setup.config : {},
+      argValues(args, "--include"),
+      argValues(args, "--exclude")
+    );
+    if (command === "scan") {
+      const keys = scanSourceTree(root, scanOptions);
+      console.log(JSON.stringify(keys, null, 2));
+      return;
+    }
+    const chunkSize = normalizeChunkSize(
+      parsePositiveInteger(argValue(args, "--chunk"), DEFAULT_CHUNK_SIZE, "--chunk")
+    );
+    const delayMs = parseNonNegativeInteger(
+      argValue(args, "--delay"),
+      DEFAULT_CHUNK_DELAY_MS,
+      "--delay"
+    );
+    await executeSync({
+      root,
+      directory: setup.directory,
+      baseUrl: requiredSetting(
+        args,
+        "--base-url",
+        setup.config.baseUrl,
+        "KEYKIT_BASE_URL"
+      ),
+      projectId: requiredSetting(
+        args,
+        "--project-id",
+        setup.config.projectId,
+        "KEYKIT_PROJECT_ID"
+      ),
+      token: requiredSetting(
+        args,
+        "--token",
+        setup.config.apiKey ?? setup.config.ingestToken,
+        "KEYKIT_API_KEY"
+      ),
+      environment: argValue(args, "--environment") ?? setup.config.environment ?? process.env.KEYKIT_ENVIRONMENT,
+      scan: scanOptions,
+      chunkSize,
+      delayMs
+    });
     return;
   }
   if (command === "flatten-json") {
@@ -256,15 +834,29 @@ async function main() {
     if (!file) {
       throw new Error("Usage: keykit flatten-json --file messages.json");
     }
-    const parsed = JSON.parse(readFileSync3(resolve2(file), "utf8"));
+    const parsed = JSON.parse(readFileSync4(resolve3(file), "utf8"));
     console.log(JSON.stringify(flatten(parsed), null, 2));
     return;
   }
   console.log(`Keykit CLI
-  scan --root .
+  scan [--root .] [--include path] [--exclude path]
+  sync [--root .] [--include path] [--exclude path] [--chunk 25] [--delay 200]
   pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json
+
+sync uploads t() and translate() calls while you are developing.
+It sends them in chunks (25 keys per request by default) and waits
+between requests. In a terminal, p pauses, c continues, and q saves
+progress so the next sync continues. Page views do not upload keys.
+
+scan and sync read scan.include and scan.exclude from keykit.config.ts.
+Repeat --include or --exclude, or pass a comma-separated list.
+Omit them to scan the whole project. node_modules, dist, .next, and
+other build folders are always skipped.
+
+Progress is stored in .keykit/sync-state.json. That file is local;
+do not commit it.
 
 pull writes .keykit/catalog.json plus one JSON file per locale for
 @keykithq/sdk static delivery. It reads keykit.config.ts when present.
@@ -278,6 +870,45 @@ locally, then commit the result.`);
 function argValue(args, name) {
   const index = args.indexOf(name);
   return index >= 0 ? args[index + 1] : void 0;
+}
+function argValues(args, name) {
+  const values = [];
+  for (let index = 0; index < args.length; index += 1) {
+    if (args[index] !== name) {
+      continue;
+    }
+    const value = args[index + 1];
+    if (!value || value.startsWith("--")) {
+      continue;
+    }
+    for (const part of value.split(",")) {
+      const trimmed = part.trim();
+      if (trimmed) {
+        values.push(trimmed);
+      }
+    }
+  }
+  return values;
+}
+function parsePositiveInteger(value, fallback, flag) {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 1) {
+    throw new Error(`${flag} must be a positive integer.`);
+  }
+  return parsed;
+}
+function parseNonNegativeInteger(value, fallback, flag) {
+  if (!value) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  if (!Number.isInteger(parsed) || parsed < 0) {
+    throw new Error(`${flag} must be a non-negative integer.`);
+  }
+  return parsed;
 }
 function requiredSetting(args, flag, fromConfig, envName) {
   const value = argValue(args, flag) ?? process.env[envName] ?? fromConfig;

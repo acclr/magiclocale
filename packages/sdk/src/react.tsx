@@ -65,6 +65,8 @@ export function KeykitProvider({
       ...config,
       locale: initialLocale ?? config.locale ?? config.sourceLocale ?? 'en',
       initialBundle: initialBundle ?? config.initialBundle,
+      // Page views read catalogs. `keykit sync` registers keys during development.
+      ingest: false,
     });
   }
 
@@ -76,7 +78,15 @@ export function KeykitProvider({
       setRevision((revision) => revision + 1);
       onServerRefresh?.();
     });
-    void client.flush();
+    void client.flush().catch((error: unknown) => {
+      const normalized =
+        error instanceof Error ? error : new Error(String(error));
+      if (config.onError) {
+        config.onError(normalized);
+        return;
+      }
+      console.warn('[Keykit]', normalized.message);
+    });
     return () => {
       unsubscribe();
       client.dispose();
@@ -117,7 +127,7 @@ export function KeykitProvider({
   const refresh = useCallback(async () => {
     setIsLoading(true);
     try {
-      await Promise.all([client.refreshTranslations(), client.refreshFlags()]);
+      await client.refreshTranslations();
     } finally {
       setIsLoading(false);
     }

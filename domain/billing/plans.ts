@@ -10,9 +10,20 @@ export type KeykitPlan = {
   maxTeamMembers: number | null;
   maxProjects: number | null;
   maxLocales: number | null;
+  /** Hard cap on active keys when overage billing is null. Null means extra keys are not blocked. */
   maxSourceKeysPerProject: number | null;
   maxEnvironments: number | null;
   maxFlags: number | null;
+  /** Connected apps. A team API key is one source. Null is unlimited. */
+  maxConnectedSources: number | null;
+  /** Successful public live reads per UTC month. Null is unlimited. */
+  maxLiveRequestsPerMonth: number | null;
+  /** Active keys included before a hard stop or overage. Null is unlimited. Account-level for the billing scope. */
+  includedActiveKeys: number | null;
+  /** Cents charged per extra 1,000 active keys. Null is a hard stop (or unlimited when included is null). */
+  activeKeyOverageCentsPerThousand: number | null;
+  /** False hides self-serve checkout. Existing subscriptions still resolve. */
+  selfServe: boolean;
   description: string;
   features: string[];
 };
@@ -22,8 +33,13 @@ export const FREE_MAX_TEAM_MEMBERS = 2;
 export const FREE_MAX_PROJECTS = 1;
 export const FREE_MAX_LOCALES = 3;
 export const FREE_MAX_SOURCE_KEYS = 500;
-export const FREE_MAX_ENVIRONMENTS = 1;
-export const FREE_MAX_FLAGS = 10;
+/** Not sold on the landing page. The domain still caps environments at 3. */
+export const FREE_MAX_ENVIRONMENTS = null;
+export const FREE_MAX_FLAGS = null;
+export const FREE_MAX_CONNECTED_SOURCES = 1;
+/** What "limited live delivery" means. Not printed on the landing card. */
+export const FREE_MAX_LIVE_REQUESTS_PER_MONTH = 100_000;
+export const FREE_INCLUDED_ACTIVE_KEYS = FREE_MAX_SOURCE_KEYS;
 
 /**
  * Pro (`premium` id, kept so existing Stripe price env vars stay valid).
@@ -32,13 +48,24 @@ export const FREE_MAX_FLAGS = 10;
 export const PREMIUM_MAX_TEAM_MEMBERS = null;
 export const PREMIUM_MAX_PROJECTS = null;
 export const PREMIUM_MAX_LOCALES = null;
-export const PREMIUM_MAX_SOURCE_KEYS = 3_000;
+/** Extra keys are billed, not blocked. */
+export const PREMIUM_MAX_SOURCE_KEYS = null;
 export const PREMIUM_MAX_ENVIRONMENTS = null;
 export const PREMIUM_MAX_FLAGS = null;
+export const PREMIUM_MAX_CONNECTED_SOURCES = 5;
+export const PREMIUM_MAX_LIVE_REQUESTS_PER_MONTH = 1_000_000;
+export const PREMIUM_INCLUDED_ACTIVE_KEYS = 3_000;
+export const PREMIUM_ACTIVE_KEY_OVERAGE_CENTS_PER_THOUSAND = 400;
 export const PREMIUM_AMOUNT_CENTS = 2_900;
 
 export const ENTERPRISE_MAX_ENVIRONMENTS = null;
 export const ENTERPRISE_AMOUNT_CENTS = 29_900;
+
+/** Lifecycles that do not count as active keys. UNUSED still counts. */
+export const ACTIVE_KEY_EXCLUDED_LIFECYCLES = [
+  'DEPRECATED',
+  'ARCHIVED',
+] as const;
 
 /** @deprecated Use PREMIUM_* — kept for tests referencing old names. */
 export const STARTER_MAX_LOCALES = PREMIUM_MAX_LOCALES;
@@ -57,14 +84,18 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxSourceKeysPerProject: FREE_MAX_SOURCE_KEYS,
     maxEnvironments: FREE_MAX_ENVIRONMENTS,
     maxFlags: FREE_MAX_FLAGS,
+    maxConnectedSources: FREE_MAX_CONNECTED_SOURCES,
+    maxLiveRequestsPerMonth: FREE_MAX_LIVE_REQUESTS_PER_MONTH,
+    includedActiveKeys: FREE_INCLUDED_ACTIVE_KEYS,
+    activeKeyOverageCentsPerThousand: null,
+    selfServe: true,
     description:
       'For side projects, prototypes, and trying Keykit with a real application.',
     features: [
       '500 active translation keys',
-      '3 languages',
-      '1 project · 1 connected source',
-      '2 team members',
-      'Automatic key discovery and deprecation',
+      '3 languages · 1 project',
+      '2 team members · 1 connected source',
+      'Automatic discovery and deprecation',
       'Static delivery and limited live delivery',
     ],
   },
@@ -79,14 +110,20 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxSourceKeysPerProject: PREMIUM_MAX_SOURCE_KEYS,
     maxEnvironments: PREMIUM_MAX_ENVIRONMENTS,
     maxFlags: PREMIUM_MAX_FLAGS,
+    maxConnectedSources: PREMIUM_MAX_CONNECTED_SOURCES,
+    maxLiveRequestsPerMonth: PREMIUM_MAX_LIVE_REQUESTS_PER_MONTH,
+    includedActiveKeys: PREMIUM_INCLUDED_ACTIVE_KEYS,
+    activeKeyOverageCentsPerThousand:
+      PREMIUM_ACTIVE_KEY_OVERAGE_CENTS_PER_THOUSAND,
+    selfServe: true,
     description:
-      'Everything a software team needs. Unlimited languages and seats. Pay for active keys, not people.',
+      'Everything a software team needs. Unlimited languages and seats.',
     features: [
       '3,000 active keys included',
-      'Unlimited languages, projects, and team members',
+      '+$4 per extra 1,000 active keys',
+      'Unlimited languages, projects, and members',
       '5 connected sources',
-      'Live and static delivery',
-      'Review workflow and translation history',
+      '1M live requests and static delivery',
       'Deprecated and archived keys are free',
     ],
   },
@@ -101,14 +138,18 @@ export const KEYKIT_PLANS: Record<KeykitPlanId, KeykitPlan> = {
     maxSourceKeysPerProject: null,
     maxEnvironments: ENTERPRISE_MAX_ENVIRONMENTS,
     maxFlags: null,
+    maxConnectedSources: null,
+    maxLiveRequestsPerMonth: null,
+    includedActiveKeys: null,
+    activeKeyOverageCentsPerThousand: null,
+    selfServe: false,
     description:
-      'From $299/month for governance, security, support, and higher committed capacity.',
+      'Governance, security, support, and higher committed capacity.',
     features: [
       '25,000+ active keys',
       'Unlimited languages, projects, members, and sources',
       'SAML SSO, SCIM, and audit logs',
-      'Custom delivery and AI allowance',
-      'SLA and migration assistance',
+      'SLA, onboarding, and migration help',
     ],
   },
 };
@@ -188,6 +229,67 @@ export function sourceKeyLimitMessage(maxKeys: number): string {
   );
 }
 
+export function connectedSourceLimitMessage(max: number): string {
+  const noun = max === 1 ? 'connected source' : 'connected sources';
+  return (
+    `Your plan includes up to ${max} ${noun}. ` +
+    'Upgrade to Pro for more connected sources.'
+  );
+}
+
+export function liveRequestLimitMessage(max: number): string {
+  return (
+    `Your plan includes up to ${max.toLocaleString('en-US')} live requests this month. ` +
+    'Upgrade to Pro for a higher live-delivery allowance.'
+  );
+}
+
+/**
+ * Extra 1,000-key blocks above the included pool.
+ * Exactly 1,000 over is one block (4,000 keys on Pro). The next key starts another.
+ */
+export function overageBlocks(
+  activeKeys: number,
+  included: number | null
+): number {
+  if (included === null || activeKeys <= included) {
+    return 0;
+  }
+  return Math.ceil((activeKeys - included) / 1000);
+}
+
+/**
+ * A translation key counts unless a TRANSLATION KeyMeta marks it deprecated
+ * or archived. Missing KeyMeta counts. UNUSED counts. A feature-flag meta
+ * does not exempt the translation key.
+ */
+export function countsAsActiveTranslationKey(
+  meta: { type: string; lifecycle: string } | null | undefined
+): boolean {
+  if (!meta || meta.type !== 'TRANSLATION') {
+    return true;
+  }
+  return !(ACTIVE_KEY_EXCLUDED_LIFECYCLES as readonly string[]).includes(
+    meta.lifecycle
+  );
+}
+
+/** `team:${teamId}` or `project:${projectId}` — one usage row per billing scope. */
+export function planUsageScopeId(
+  billingScope: BillingScope,
+  teamId: string,
+  projectId: string
+): string {
+  return billingScope === 'project' ? `project:${projectId}` : `team:${teamId}`;
+}
+
+/** UTC `YYYY-MM`. A new month starts a fresh high-water and request counter. */
+export function planUsagePeriod(now = new Date()): string {
+  const year = now.getUTCFullYear();
+  const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+  return `${year}-${month}`;
+}
+
 export type KeykitEntitlement = {
   planId: KeykitPlanId;
   plan: KeykitPlan;
@@ -199,6 +301,11 @@ export type KeykitEntitlement = {
   maxSourceKeysPerProject: number | null;
   maxEnvironments: number | null;
   maxFlags: number | null;
+  maxConnectedSources: number | null;
+  maxLiveRequestsPerMonth: number | null;
+  includedActiveKeys: number | null;
+  activeKeyOverageCentsPerThousand: number | null;
+  selfServe: boolean;
   priceId: string | null;
   billingScope: BillingScope;
 };
@@ -219,6 +326,11 @@ function entitlementFromPlan(
     maxSourceKeysPerProject: plan.maxSourceKeysPerProject,
     maxEnvironments: plan.maxEnvironments,
     maxFlags: plan.maxFlags,
+    maxConnectedSources: plan.maxConnectedSources,
+    maxLiveRequestsPerMonth: plan.maxLiveRequestsPerMonth,
+    includedActiveKeys: plan.includedActiveKeys,
+    activeKeyOverageCentsPerThousand: plan.activeKeyOverageCentsPerThousand,
+    selfServe: plan.selfServe,
     priceId: options.priceId,
     billingScope,
   };

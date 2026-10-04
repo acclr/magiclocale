@@ -1,5 +1,6 @@
 import {
   ArrowRightOnRectangleIcon,
+  ShieldCheckIcon,
   UserCircleIcon,
 } from '@heroicons/react/24/outline';
 import { useSession } from 'next-auth/react';
@@ -44,10 +45,15 @@ const AccountMenu = ({ collapsed = false }: { collapsed?: boolean }) => {
         <UserCircleIcon className={collapsed ? 'h-5 w-5' : 'mr-0.5'} />
         {collapsed ? <span className="sr-only">{user.name}</span> : user.name}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align={collapsed ? 'start' : 'end'} className="w-40">
+      <DropdownMenuContent align={collapsed ? 'start' : 'end'} className="w-44">
         <DropdownMenuItem asChild>
           <Link href="/settings/account">
             <UserCircleIcon className="mr-1 h-5 w-5" /> {t('account')}
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link href="/settings/security">
+            <ShieldCheckIcon className="mr-1 h-5 w-5" /> {t('security')}
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem
