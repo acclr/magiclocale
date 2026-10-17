@@ -1,7 +1,12 @@
 import {
   asAiTranslation,
   asCodeTranslation,
+  asManualTranslation,
   canAutomaticAiWrite,
+  detectKeyRenames,
+  findDuplicateKeyGroups,
+  projectTranslationDashboard,
+  suggestMergedKeyName,
   TranslationService,
   TranslatorError,
   type Translation,
@@ -508,5 +513,362 @@ describe('TranslationService', () => {
       { text: 'Save changes', sourceLocale: 'sv', targetLocale: 'en' },
       { text: 'Cancel', sourceLocale: 'sv', targetLocale: 'en' },
     ]);
+  });
+
+  it('recognizes a renamed key (accept-invite -> invitations.acceptInvite) and renames it in-place without retranslating', async () => {
+    const state = seedState();
+    const updatedAt = new Date('2026-01-01T00:00:00.000Z');
+    state.keys.push({
+      id: 'key_accept_invite',
+      projectId: PROJECT_ID,
+      key: 'accept-invite',
+      sourceText: 'Accept invitation',
+    });
+    state.translations.push(
+      {
+        id: 'tr_en_accept',
+        translationKeyId: 'key_accept_invite',
+        environmentId: ENV_ID,
+        locale: 'en',
+        ...asCodeTranslation('Accept invitation'),
+        updatedAt,
+      },
+      {
+        id: 'tr_sv_accept',
+        translationKeyId: 'key_accept_invite',
+        environmentId: ENV_ID,
+        locale: 'sv',
+        ...asManualTranslation('Acceptera inbjudan'),
+        updatedAt,
+      },
+      {
+        id: 'tr_de_accept',
+        translationKeyId: 'key_accept_invite',
+        environmentId: ENV_ID,
+        locale: 'de',
+        ...asAiTranslation('Einladung annehmen'),
+        updatedAt,
+      }
+    );
+
+    const translator = new RecordingTranslator();
+    const repository = new MemoryRepository(state);
+    const service = new TranslationService(repository, translator);
+
+    const result = await service.syncFromSource(
+      PROJECT_ID,
+      ENV_ID,
+      [
+        {
+          key: 'invitations.acceptInvite',
+          sourceText: 'Accept invitation',
+          usage: { file: 'components/invitation/AcceptInvitation.tsx', line: 39 },
+        },
+      ],
+      { removed: ['accept-invite'] }
+    );
+
+    expect(result).toEqual({
+      createdKeys: 0,
+      sourceChanges: 0,
+      filled: 0,
+      regenerated: 0,
+      needsReview: 0,
+      fillFailed: 0,
+      renamedKeys: [
+        { fromKey: 'accept-invite', toKey: 'invitations.acceptInvite' },
+      ],
+    });
+    expect(translator.calls).toEqual([]);
+    expect(
+      await repository.findKeyByName(PROJECT_ID, 'accept-invite')
+    ).toBeNull();
+    const renamedKey = await repository.findKeyByName(
+      PROJECT_ID,
+      'invitations.acceptInvite'
+    );
+    expect(renamedKey).toMatchObject({
+      id: 'key_accept_invite',
+      key: 'invitations.acceptInvite',
+      sourceText: 'Accept invitation',
+    });
+    expect(
+      await repository.findTranslation('key_accept_invite', ENV_ID, 'sv')
+    ).toMatchObject({
+      value: 'Acceptera inbjudan',
+      source: 'manual',
+      aiLocked: true,
+    });
+  });
+
+  it('merges duplicate keys (feature1.ok, feature2.ok -> common.ok), preserves human edits, and protects against recreating merged keys on sync', async () => {
+    const state = seedState();
+    const updatedAt = new Date('2026-01-01T00:00:00.000Z');
+    state.keys.push(
+      {
+        id: 'key_feature1_ok',
+        projectId: PROJECT_ID,
+        key: 'feature1.ok',
+        sourceText: 'Okay',
+      },
+      {
+        id: 'key_feature2_ok',
+        projectId: PROJECT_ID,
+        key: 'feature2.ok',
+        sourceText: 'Okay',
+      }
+    );
+    state.translations.push(
+      {
+        id: 'tr_en_f1_ok',
+        translationKeyId: 'key_feature1_ok',
+        environmentId: ENV_ID,
+        locale: 'en',
+        ...asCodeTranslation('Okay'),
+        updatedAt,
+      },
+      {
+        id: 'tr_sv_f1_ok',
+        translationKeyId: 'key_feature1_ok',
+        environmentId: ENV_ID,
+        locale: 'sv',
+        ...asAiTranslation('Okej (AI)'),
+        updatedAt,
+      },
+      {
+        id: 'tr_en_f2_ok',
+        translationKeyId: 'key_feature2_ok',
+        environmentId: ENV_ID,
+        locale: 'en',
+        ...asCodeTranslation('Okay'),
+        updatedAt,
+      },
+      {
+        id: 'tr_sv_f2_ok',
+        translationKeyId: 'key_feature2_ok',
+        environmentId: ENV_ID,
+        locale: 'sv',
+        ...asManualTranslation('Okej'),
+        updatedAt,
+      },
+      {
+        id: 'tr_de_f2_ok',
+        translationKeyId: 'key_feature2_ok',
+        environmentId: ENV_ID,
+        locale: 'de',
+        ...asAiTranslation('Okay'),
+        updatedAt,
+      }
+    );
+
+    const catalogEntries = new Map<
+      string,
+      {
+        id: string;
+        projectId: string;
+        type: 'translation';
+        key: string;
+        namespace: string | null;
+        description: null;
+        developerNote: null;
+        owner: null;
+        tags: string[];
+        lifecycle: 'active' | 'deprecated';
+        replacementKey: string | null;
+        firstSeenAt: Date;
+        lastSeenAt: Date;
+        reviewAt: null;
+        usageCount: number;
+      }
+    >();
+
+    const translator = new RecordingTranslator();
+    const repository = new MemoryRepository(state);
+    const service = new TranslationService(repository, translator, undefined, {
+      async recordDetection(input) {
+        const existing = catalogEntries.get(input.key);
+        if (existing) {
+          return existing;
+        }
+        const entry = {
+          id: `meta_${input.key}`,
+          projectId: input.projectId,
+          type: 'translation' as const,
+          key: input.key,
+          namespace: null,
+          description: null,
+          developerNote: null,
+          owner: null,
+          tags: [],
+          lifecycle: 'active' as const,
+          replacementKey: null,
+          firstSeenAt: updatedAt,
+          lastSeenAt: updatedAt,
+          reviewAt: null,
+          usageCount: 1,
+        };
+        catalogEntries.set(input.key, entry);
+        return entry;
+      },
+      async upsertDefinition(input) {
+        const entry = {
+          id: `meta_${input.key}`,
+          projectId: input.projectId,
+          type: 'translation' as const,
+          key: input.key,
+          namespace: null,
+          description: null,
+          developerNote: null,
+          owner: null,
+          tags: [],
+          lifecycle: (input.lifecycle ?? 'active') as 'active' | 'deprecated',
+          replacementKey: null,
+          firstSeenAt: updatedAt,
+          lastSeenAt: updatedAt,
+          reviewAt: null,
+          usageCount: 1,
+        };
+        catalogEntries.set(input.key, entry);
+        return entry;
+      },
+      async listAll() {
+        return Array.from(catalogEntries.values());
+      },
+      async markMergedKeys(input) {
+        for (const fromKey of input.fromKeys) {
+          catalogEntries.set(fromKey, {
+            id: `meta_${fromKey}`,
+            projectId: input.projectId,
+            type: 'translation',
+            key: fromKey,
+            namespace: null,
+            description: null,
+            developerNote: null,
+            owner: null,
+            tags: [],
+            lifecycle: 'deprecated',
+            replacementKey: input.toKey,
+            firstSeenAt: updatedAt,
+            lastSeenAt: updatedAt,
+            reviewAt: null,
+            usageCount: 1,
+          });
+        }
+      },
+    });
+
+    const dashboardBefore = projectTranslationDashboard(
+      state.projects[0],
+      state.environments[0],
+      await repository.listKeys(PROJECT_ID),
+      await repository.listTranslations(PROJECT_ID, ENV_ID)
+    );
+    const duplicateGroups = findDuplicateKeyGroups(dashboardBefore.rows);
+    expect(duplicateGroups).toHaveLength(1);
+    expect(duplicateGroups[0]).toMatchObject({
+      sourceText: 'Okay',
+      suggestedKey: 'common.ok',
+    });
+    expect(suggestMergedKeyName(['feature1.ok', 'feature2.ok'])).toBe(
+      'common.ok'
+    );
+
+    const mergeResult = await service.mergeKeys({
+      projectId: PROJECT_ID,
+      environmentId: ENV_ID,
+      sourceKeys: ['feature1.ok', 'feature2.ok'],
+      targetKey: 'common.ok',
+    });
+
+    expect(mergeResult).toMatchObject({
+      targetKey: 'common.ok',
+      sourceText: 'Okay',
+      mergedKeys: ['feature1.ok', 'feature2.ok'],
+    });
+    expect(
+      await repository.findKeyByName(PROJECT_ID, 'feature1.ok')
+    ).toBeNull();
+    expect(
+      await repository.findKeyByName(PROJECT_ID, 'feature2.ok')
+    ).toBeNull();
+
+    const commonOk = await repository.findKeyByName(PROJECT_ID, 'common.ok');
+    expect(commonOk).not.toBeNull();
+    expect(
+      await repository.findTranslation(commonOk!.id, ENV_ID, 'sv')
+    ).toMatchObject({
+      value: 'Okej',
+      source: 'manual',
+      status: 'manual',
+      aiLocked: true,
+    });
+
+    const activeMerges = await service.listActiveKeyMerges(PROJECT_ID);
+    expect(activeMerges).toEqual([
+      { fromKey: 'feature1.ok', toKey: 'common.ok', sourceText: 'Okay' },
+      { fromKey: 'feature2.ok', toKey: 'common.ok', sourceText: 'Okay' },
+    ]);
+
+    // If an un-rewritten client pushes feature1.ok, syncFromSource does not recreate it
+    const syncResult = await service.syncFromSource(PROJECT_ID, ENV_ID, [
+      { key: 'feature1.ok', sourceText: 'Okay' },
+    ]);
+    expect(syncResult.createdKeys).toBe(0);
+    expect(syncResult.mergedKeys).toEqual([
+      { fromKey: 'feature1.ok', toKey: 'common.ok', sourceText: 'Okay' },
+    ]);
+  });
+
+  it('does not confuse active duplicate keys in different files with a rename', () => {
+    const renames = detectKeyRenames({
+      missingIncoming: [
+        {
+          key: 'feature2.ok',
+          sourceText: 'Okay',
+          usage: { file: 'components/Feature2.tsx', line: 10 },
+        },
+      ],
+      allIncomingKeyNames: ['feature2.ok'],
+      removedKeys: [],
+      existingKeys: [
+        {
+          id: 'key_f1',
+          projectId: PROJECT_ID,
+          key: 'feature1.ok',
+          sourceText: 'Okay',
+        },
+      ],
+      catalogMeta: [
+        {
+          id: 'meta_f1',
+          projectId: PROJECT_ID,
+          type: 'translation',
+          key: 'feature1.ok',
+          namespace: 'feature1',
+          description: null,
+          developerNote: null,
+          owner: null,
+          tags: [],
+          lifecycle: 'active',
+          replacementKey: null,
+          firstSeenAt: new Date(),
+          lastSeenAt: new Date(),
+          reviewAt: null,
+          usageCount: 1,
+        },
+      ],
+      usages: [
+        {
+          id: 'usage_f1',
+          keyMetaId: 'meta_f1',
+          file: 'components/Feature1.tsx',
+          line: 12,
+          column: 4,
+          snippet: null,
+          detectedAt: new Date(),
+        },
+      ],
+    });
+    expect(renames).toEqual([]);
   });
 });

@@ -25,8 +25,8 @@ export default async function handler(
     return;
   }
 
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST, OPTIONS');
+  if (req.method !== 'POST' && req.method !== 'GET') {
+    res.setHeader('Allow', 'GET, POST, OPTIONS');
     return res.status(405).json({ error: `Method ${req.method} Not Allowed` });
   }
 
@@ -43,15 +43,25 @@ export default async function handler(
     );
     const { environmentRef } = auth;
 
-    const parsed = parseSourceKeyPayload(req.body);
-    if (!parsed.success) {
-      return res.status(422).json({ error: parsed.error });
-    }
-
     const environment = await getEnvironmentService().resolve(
       projectId,
       environmentRef
     );
+
+    if (req.method === 'GET') {
+      const merges = await getTranslationService().listActiveKeyMerges(
+        projectId
+      );
+      return res.status(200).json({
+        merges,
+        environment: environment.slug,
+      });
+    }
+
+    const parsed = parseSourceKeyPayload(req.body);
+    if (!parsed.success) {
+      return res.status(422).json({ error: parsed.error });
+    }
 
     const translations = parsed.keys.filter(
       (item) => (item.type ?? 'translation') === 'translation'
@@ -85,7 +95,8 @@ export default async function handler(
         ? await getTranslationService().syncFromSource(
             projectId,
             environment.id,
-            translations
+            translations,
+            { removed: parsed.removed }
           )
         : {
             createdKeys: 0,
@@ -94,12 +105,28 @@ export default async function handler(
             regenerated: 0,
             needsReview: 0,
             fillFailed: 0,
+            renamedKeys: [] as Array<{ fromKey: string; toKey: string }>,
+            mergedKeys: [] as Array<{
+              fromKey: string;
+              toKey: string;
+              sourceText: string;
+            }>,
           };
+
+    const renamedFromSet = new Set(
+      (result.renamedKeys ?? []).map((item) => item.fromKey)
+    );
+    const remainingRemoved = parsed.removed.filter(
+      (key) => !renamedFromSet.has(key)
+    );
 
     const catalog = getKeyCatalogService();
     const deprecated =
-      parsed.removed.length > 0
-        ? await catalog.deprecateMissingTranslations(projectId, parsed.removed)
+      remainingRemoved.length > 0
+        ? await catalog.deprecateMissingTranslations(
+            projectId,
+            remainingRemoved
+          )
         : [];
     let detectedFlags = 0;
     for (const item of flags) {
@@ -112,11 +139,14 @@ export default async function handler(
       detectedFlags += 1;
     }
 
+    const merges = await getTranslationService().listActiveKeyMerges(projectId);
+
     invalidateProjectReads(projectId);
     return res.status(200).json({
       ...result,
       deprecated,
       detectedFlags,
+      merges,
       environment: environment.slug,
     });
   } catch (error) {

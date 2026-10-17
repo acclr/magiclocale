@@ -4,8 +4,10 @@ import Head from 'next/head';
 import type { ReactNode } from 'react';
 
 import LandingShell from '@/components/defaultLanding/LandingShell';
+import JsonLd from '@/components/defaultLanding/seo/JsonLd';
 import { landingRouting, landingSite } from '@/content/landing/site';
 import app from '@/lib/app';
+import { faqPageJsonLd } from '@/lib/seo/json-ld';
 
 export function marketingPath(locale: string, slug: string) {
   return hrefForLocaleSlug(locale, slug, landingRouting);
@@ -27,7 +29,12 @@ type MarketingPageProps = {
   secondaryCta?: { label: string; href: string };
   children: ReactNode;
   faq?: { title: string; items: FaqItem[] };
-  finalCta: { title: string; description: string; button: string; href?: string };
+  finalCta: {
+    title: string;
+    description: string;
+    button: string;
+    href?: string;
+  };
 };
 
 const origin = () => (app.url || '').replace(/\/$/, '');
@@ -48,17 +55,7 @@ const MarketingPage = ({
   const { locale } = useKeykit();
   const path = marketingPath(locale, slug);
   const canonical = `${origin()}${path}`;
-  const faqJson = faq
-    ? {
-        '@context': 'https://schema.org',
-        '@type': 'FAQPage',
-        mainEntity: faq.items.map((item) => ({
-          '@type': 'Question',
-          name: item.question,
-          acceptedAnswer: { '@type': 'Answer', text: item.answer },
-        })),
-      }
-    : null;
+  const faqJson = faq ? faqPageJsonLd(faq.items) : null;
 
   return (
     <>
@@ -82,13 +79,8 @@ const MarketingPage = ({
           hrefLang="x-default"
           href={`${origin()}${marketingPath(landingSite.defaultLocale, slug)}`}
         />
-        {faqJson ? (
-          <script
-            type="application/ld+json"
-            dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJson) }}
-          />
-        ) : null}
       </Head>
+      {faqJson ? <JsonLd data={faqJson} /> : null}
       <LandingShell>
         <article className="w-full">
           <header className="mx-auto max-w-6xl px-6 pt-36 pb-8 sm:pt-44">
@@ -121,10 +113,15 @@ const MarketingPage = ({
           {children}
           {faq ? (
             <section className="mx-auto max-w-6xl px-6 py-16">
-              <h2 className="text-3xl font-semibold tracking-tight">{faq.title}</h2>
+              <h2 className="text-3xl font-semibold tracking-tight">
+                {faq.title}
+              </h2>
               <div className="mt-8 max-w-3xl rounded-xl bg-surface px-6">
                 {faq.items.map((item) => (
-                  <div key={item.question} className="border-b border-white/5 py-5 last:border-0">
+                  <div
+                    key={item.question}
+                    className="border-b border-white/5 py-5 last:border-0"
+                  >
                     <h3 className="text-base font-semibold">{item.question}</h3>
                     <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                       {item.answer}
@@ -193,7 +190,9 @@ export function SeoCards({
     <div className="mt-6 grid gap-3 sm:grid-cols-2">
       {items.map((item) => (
         <div key={item.title} className="rounded-xl bg-surface p-6">
-          <h3 className="text-base font-semibold text-foreground">{item.title}</h3>
+          <h3 className="text-base font-semibold text-foreground">
+            {item.title}
+          </h3>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
             {item.description}
           </p>

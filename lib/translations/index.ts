@@ -107,6 +107,34 @@ export function createTranslationServices(
     ) => keyCatalogRepository.touchDetections(input),
     upsertDefinition: (input: Parameters<KeyCatalogRepository['upsert']>[0]) =>
       keyCatalogRepository.upsert(input),
+    listAll: (projectId: string) => keyCatalogRepository.listAll(projectId),
+    listUsagesForProject: (projectId: string) =>
+      keyCatalogRepository.listUsagesForProject(projectId),
+    renameDetectedKey: (
+      input: NonNullable<KeyCatalogRepository['renameDetectedKey']> extends (
+        arg: infer A
+      ) => unknown
+        ? A
+        : never
+    ) =>
+      keyCatalogRepository.renameDetectedKey
+        ? keyCatalogRepository.renameDetectedKey(input)
+        : keyCatalogRepository.recordDetection({
+            projectId: input.projectId,
+            type: input.type,
+            key: input.toKey,
+            usage: input.usage,
+          }),
+    markMergedKeys: (
+      input: NonNullable<KeyCatalogRepository['markMergedKeys']> extends (
+        arg: infer A
+      ) => unknown
+        ? A
+        : never
+    ) =>
+      keyCatalogRepository.markMergedKeys
+        ? keyCatalogRepository.markMergedKeys(input)
+        : Promise.resolve(),
   };
 
   const flagService = new FlagService(

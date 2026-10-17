@@ -42,6 +42,7 @@ export interface TranslationRepository extends ProjectLocaleRepository {
   createKey(input: Omit<TranslationKey, 'id'>): Promise<TranslationKey>;
   updateKeySourceText(id: string, sourceText: string): Promise<TranslationKey>;
   renameKey(id: string, key: string): Promise<TranslationKey>;
+  deleteKey?(id: string): Promise<void>;
 
   listTranslations(
     projectId: string,

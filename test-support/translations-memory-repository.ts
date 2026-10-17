@@ -239,6 +239,16 @@ export class MemoryRepository
     return existing;
   }
 
+  async deleteKey(id: string): Promise<void> {
+    const index = this.state.keys.findIndex((item) => item.id === id);
+    if (index >= 0) {
+      this.state.keys.splice(index, 1);
+    }
+    this.state.translations = this.state.translations.filter(
+      (item) => item.translationKeyId !== id
+    );
+  }
+
   async listTranslations(
     projectId: string,
     environmentId: string
@@ -252,6 +262,17 @@ export class MemoryRepository
       (item) =>
         keyIds.has(item.translationKeyId) &&
         item.environmentId === environmentId
+    );
+  }
+
+  async listProjectTranslations(projectId: string): Promise<Translation[]> {
+    const keyIds = new Set(
+      this.state.keys
+        .filter((key) => key.projectId === projectId)
+        .map((key) => key.id)
+    );
+    return this.state.translations.filter((item) =>
+      keyIds.has(item.translationKeyId)
     );
   }
 

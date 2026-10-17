@@ -289,12 +289,166 @@ export class PrismaKeyCatalogRepository implements KeyCatalogRepository {
     if (!existing) {
       throw new Error(`Key not found: ${fromKey}`);
     }
+    const colliding = await this.findByKey(projectId, type, toKey);
+    if (colliding && colliding.id !== existing.id) {
+      await this.client.keyMeta.delete({ where: { id: colliding.id } });
+    }
     const row = await this.client.keyMeta.update({
       where: { id: existing.id },
-      data: { key: toKey, namespace: namespaceFromKey(toKey) },
+      data: {
+        key: toKey,
+        namespace: namespaceFromKey(toKey),
+        lifecycle: 'ACTIVE',
+        replacementKey: null,
+      },
       include: { _count: { select: { usages: true } } },
     });
     return toMeta(row);
+  }
+
+  async renameDetectedKey(input: {
+    projectId: string;
+    type: KeyType;
+    fromKey: string;
+    toKey: string;
+    usage?: DetectedKeyInput['usage'];
+  }): Promise<KeyMeta> {
+    const existing = await this.findByKey(
+      input.projectId,
+      input.type,
+      input.fromKey
+    );
+    if (!existing) {
+      return this.recordDetection({
+        projectId: input.projectId,
+        type: input.type,
+        key: input.toKey,
+        usage: input.usage,
+      });
+    }
+
+    const colliding = await this.findByKey(
+      input.projectId,
+      input.type,
+      input.toKey
+    );
+    if (colliding && colliding.id !== existing.id) {
+      await this.client.keyMeta.delete({ where: { id: colliding.id } });
+    }
+
+    const now = new Date();
+    await this.client.keyMeta.update({
+      where: { id: existing.id },
+      data: {
+        key: input.toKey,
+        namespace: namespaceFromKey(input.toKey),
+        lifecycle: 'ACTIVE',
+        replacementKey: null,
+        lastSeenAt: now,
+      },
+    });
+
+    if (input.usage) {
+      await this.client.sourceUsage.deleteMany({
+        where: { keyMetaId: existing.id },
+      });
+      await this.client.sourceUsage.upsert({
+        where: {
+          keyMetaId_filePath_line: {
+            keyMetaId: existing.id,
+            filePath: input.usage.filePath,
+            line: input.usage.line,
+          },
+        },
+        create: {
+          keyMetaId: existing.id,
+          filePath: input.usage.filePath,
+          line: input.usage.line,
+          column: input.usage.column ?? null,
+          snippet: input.usage.snippet ?? null,
+        },
+        update: {
+          column: input.usage.column ?? null,
+          snippet: input.usage.snippet ?? null,
+          detectedAt: now,
+        },
+      });
+    }
+
+    const refreshed = await this.client.keyMeta.findUniqueOrThrow({
+      where: { id: existing.id },
+      include: { _count: { select: { usages: true } } },
+    });
+    return toMeta(refreshed);
+  }
+
+  async markMergedKeys(input: {
+    projectId: string;
+    fromKeys: readonly string[];
+    toKey: string;
+  }): Promise<void> {
+    const targetMeta = await this.upsert({
+      projectId: input.projectId,
+      type: 'translation',
+      key: input.toKey,
+      lifecycle: 'active',
+    });
+    if (targetMeta.replacementKey !== null) {
+      await this.update(targetMeta.id, {
+        lifecycle: 'active',
+        replacementKey: null,
+      });
+    }
+
+    const uniqueFrom = Array.from(
+      new Set(
+        input.fromKeys
+          .map((key) => key.trim())
+          .filter((key) => Boolean(key) && key !== input.toKey)
+      )
+    );
+
+    for (const fromKey of uniqueFrom) {
+      const fromMeta = await this.upsert({
+        projectId: input.projectId,
+        type: 'translation',
+        key: fromKey,
+        lifecycle: 'deprecated',
+      });
+      await this.client.keyMeta.update({
+        where: { id: fromMeta.id },
+        data: {
+          lifecycle: 'DEPRECATED',
+          replacementKey: input.toKey,
+        },
+      });
+
+      const oldUsages = await this.client.sourceUsage.findMany({
+        where: { keyMetaId: fromMeta.id },
+      });
+      for (const usage of oldUsages) {
+        await this.client.sourceUsage.upsert({
+          where: {
+            keyMetaId_filePath_line: {
+              keyMetaId: targetMeta.id,
+              filePath: usage.filePath,
+              line: usage.line,
+            },
+          },
+          create: {
+            keyMetaId: targetMeta.id,
+            filePath: usage.filePath,
+            line: usage.line,
+            column: usage.column,
+            snippet: usage.snippet,
+          },
+          update: {
+            column: usage.column,
+            snippet: usage.snippet,
+          },
+        });
+      }
+    }
   }
 
   async deprecateMissingTranslations(

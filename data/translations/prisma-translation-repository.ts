@@ -369,6 +369,12 @@ export class PrismaTranslationRepository
     return toKey(updated);
   }
 
+  async deleteKey(id: string): Promise<void> {
+    await this.client.translationKey.delete({
+      where: { id },
+    });
+  }
+
   async listTranslations(
     projectId: string,
     environmentId: string

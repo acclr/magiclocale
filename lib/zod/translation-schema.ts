@@ -150,6 +150,7 @@ export const queueTranslationsSchema = z
         'missing',
         'unused',
         'deprecated',
+        'duplicates',
       ])
       .optional(),
     search: z.string().trim().max(200).optional(),
@@ -163,6 +164,23 @@ export const queueTranslationsSchema = z
       });
     }
   });
+
+export const mergeKeysSchema = z.object({
+  sourceKeys: z
+    .array(z.string().trim().min(1).max(255))
+    .min(1, 'Select at least one key to merge')
+    .max(200),
+  targetKey: z
+    .string()
+    .trim()
+    .min(1, 'Target key is required')
+    .max(255)
+    .regex(
+      /^[A-Za-z0-9_.:-]+$/,
+      'Key name may only contain letters, numbers, dots, hyphens, underscores, and colons'
+    ),
+  sourceText: z.string().trim().max(10_000).optional(),
+});
 
 export const translationDashboardQuerySchema = z.object({
   projectId,
@@ -178,6 +196,7 @@ export const translationDashboardQuerySchema = z.object({
       'missing',
       'unused',
       'deprecated',
+      'duplicates',
     ])
     .optional(),
   search: z.string().trim().max(200).optional(),

@@ -1,4 +1,10 @@
-import type { DetectedKeyInput, KeyLifecycle, KeyMeta, KeyType } from './types';
+import type {
+  DetectedKeyInput,
+  KeyLifecycle,
+  KeyMeta,
+  KeyType,
+  SourceUsage,
+} from './types';
 
 export interface KeyCatalogWriter {
   recordDetection(input: DetectedKeyInput): Promise<KeyMeta>;
@@ -18,6 +24,20 @@ export interface KeyCatalogWriter {
     description?: string | null;
     lifecycle?: KeyLifecycle;
   }): Promise<KeyMeta>;
+  listAll?(projectId: string): Promise<KeyMeta[]>;
+  listUsagesForProject?(projectId: string): Promise<SourceUsage[]>;
+  renameDetectedKey?(input: {
+    projectId: string;
+    type: KeyType;
+    fromKey: string;
+    toKey: string;
+    usage?: DetectedKeyInput['usage'];
+  }): Promise<KeyMeta>;
+  markMergedKeys?(input: {
+    projectId: string;
+    fromKeys: readonly string[];
+    toKey: string;
+  }): Promise<void>;
 }
 
 export const noopKeyCatalogWriter: KeyCatalogWriter = {

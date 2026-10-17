@@ -10,10 +10,14 @@ import { useEffect, useId, useState, type ReactNode } from 'react';
 
 import { LogoWhite } from '@/components/shared/logo';
 import { marketingDirectories } from '@/content/landing/directory';
-import { landingRouting } from '@/content/landing/site';
+import { landingRouting, landingSite } from '@/content/landing/site';
+import app from '@/lib/app';
+import { organizationJsonLd } from '@/lib/seo/json-ld';
+import { siteOrigin } from '@/lib/seo/sitemap';
 
 import LandingAccountNav from './LandingAccountNav';
 import LandingLocaleSwitcher from './LandingLocaleSwitcher';
+import JsonLd from './seo/JsonLd';
 
 type LandingShellProps = {
   children: ReactNode;
@@ -22,6 +26,16 @@ type LandingShellProps = {
 const LandingShell = ({ children }: LandingShellProps) => {
   const { translate, locale } = useKeykit();
   const homeHref = hrefForLocaleSlug(locale, '', landingRouting);
+  const origin = siteOrigin(app.url);
+  const organization = organizationJsonLd({
+    name: app.name,
+    url: `${origin}${hrefForLocaleSlug(landingSite.defaultLocale, '', landingRouting)}`,
+    logo: `${origin}/logo.svg`,
+    description: translate(
+      'landing.meta.description',
+      'Discover translation keys, review copy with your team, and ship every locale from one dashboard.'
+    ),
+  });
   const pageHref = (slug: string) =>
     hrefForLocaleSlug(locale, slug, landingRouting);
   const productLinks = [
@@ -77,6 +91,7 @@ const LandingShell = ({ children }: LandingShellProps) => {
 
   return (
     <div className="relative min-h-screen bg-background text-foreground">
+      <JsonLd data={organization} />
       <header className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-4 sm:px-6">
         <div
           className={`w-full transition-[max-width] duration-500 ease-out ${

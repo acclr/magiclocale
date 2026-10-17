@@ -1,5 +1,7 @@
 import {
+  findDuplicateKeyGroups,
   paginateTranslationDashboard,
+  type DuplicateKeyGroup,
   type TranslationFilter,
 } from '../../domain/translations';
 import { getLocaleDisplay } from '../../domain/translations';
@@ -11,6 +13,8 @@ import useTranslationWorkspace from '../../hooks/useTranslationWorkspace';
 import { useProjectEnvironment } from '../../hooks/useProjectEnvironment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { subscribeSourceKeyLimit } from '@/lib/keykit-source-key-limit';
+import { Button } from '@/components/ui/button';
+import { GitMergeIcon } from 'lucide-react';
 import { useDeferredValue, useEffect, useMemo, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -21,6 +25,7 @@ import LocaleSelect from './LocaleSelect';
 import TranslationDrawer from './TranslationDrawer';
 import TranslationGrid from './TranslationGrid';
 import CollapsibleSearch from './workflow/CollapsibleSearch';
+import MergeKeysDialog from './workflow/MergeKeysDialog';
 import NextStepButton from './workflow/NextStepButton';
 import TranslateMenu from './workflow/TranslateMenu';
 
@@ -50,6 +55,7 @@ const TranslationWorkspace = ({
       label: t('translation-filter-needs-review'),
     },
     { id: 'missing', label: t('translation-filter-missing') },
+    { id: 'duplicates', label: t('translation-filter-duplicates') },
     { id: 'unused', label: t('translation-filter-unused') },
     { id: 'deprecated', label: t('translation-filter-deprecated') },
   ];
@@ -69,7 +75,23 @@ const TranslationWorkspace = ({
   const [locale, setLocale] = useState('');
   const [fillLocale, setFillLocale] = useState('');
   const [isRunning, setIsRunning] = useState(false);
+  const [mergeDialogState, setMergeDialogState] = useState<{
+    open: boolean;
+    initialKeys: string[];
+    initialTargetKey?: string;
+  }>({
+    open: false,
+    initialKeys: [],
+  });
   const dashboard = workspace.dashboard;
+  const duplicateGroups = useMemo(
+    () => (dashboard ? findDuplicateKeyGroups(dashboard.rows) : []),
+    [dashboard]
+  );
+  const duplicateKeyCount = useMemo(
+    () => duplicateGroups.reduce((sum, group) => sum + group.keys.length, 0),
+    [duplicateGroups]
+  );
   const view = useMemo(
     () =>
       dashboard
@@ -121,6 +143,18 @@ const TranslationWorkspace = ({
     ? dashboard?.rows.find((row) => row.keyId === selected.keyId)
     : undefined;
 
+  const selectedKeyNames = useMemo(() => {
+    if (!dashboard) {
+      return [];
+    }
+    const sourceRows = keySelection.allMatching
+      ? (view?.rows ?? [])
+      : dashboard.rows;
+    return sourceRows
+      .filter((row) => keySelection.isSelected(row.keyId))
+      .map((row) => row.key);
+  }, [dashboard, keySelection, view]);
+
   if (!dashboard && workspace.isLoading) {
     return <WorkspaceSkeleton />;
   }
@@ -166,10 +200,42 @@ const TranslationWorkspace = ({
     setLocale('');
   };
 
+  const openMergeForSelection = () => {
+    setMergeDialogState({
+      open: true,
+      initialKeys: selectedKeyNames,
+    });
+  };
+
+  const openMergeForGroup = (group: DuplicateKeyGroup) => {
+    setMergeDialogState({
+      open: true,
+      initialKeys: group.keys.map((item) => item.key),
+      initialTargetKey: group.suggestedKey,
+    });
+  };
+
   return (
     <CellDraftsProvider>
       <WorkspaceToolbarPortal>
         <CollapsibleSearch onChange={setSearch} value={search} />
+        {canEdit ? (
+          <Button
+            onClick={openMergeForSelection}
+            type="button"
+            variant="outline"
+          >
+            <GitMergeIcon data-icon="inline-start" />
+            {selectedKeyNames.length >= 2
+              ? t('merge-selected-keys', { count: selectedKeyNames.length })
+              : t('merge-keys')}
+            {selectedKeyNames.length < 2 && duplicateGroups.length > 0 ? (
+              <span className="badge badge-ghost badge-xs ml-1">
+                {duplicateGroups.length}
+              </span>
+            ) : null}
+          </Button>
+        ) : null}
         {canEdit && keySelection.count > 0 ? (
           <TranslateMenu
             allMatching={keySelection.allMatching}
@@ -281,11 +347,49 @@ const TranslationWorkspace = ({
             >
               {item.label}
               <span className="badge badge-ghost badge-sm ml-2">
-                {dashboard.counts[item.id]}
+                {item.id === 'duplicates'
+                  ? duplicateKeyCount
+                  : dashboard.counts[item.id]}
               </span>
             </button>
           ))}
         </nav>
+
+        {filter === 'duplicates' && duplicateGroups.length > 0 ? (
+          <div className="space-y-2 rounded-lg border border-border bg-card p-3">
+            <div className="text-xs font-medium text-muted-foreground">
+              {t('merge-keys-detected-groups')} ({duplicateGroups.length})
+            </div>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {duplicateGroups.map((group) => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-md border border-border bg-elevated px-3 py-2 text-xs"
+                  key={group.id}
+                >
+                  <div className="min-w-0 space-y-0.5">
+                    <div className="truncate font-medium">
+                      &ldquo;{group.sourceText}&rdquo;
+                    </div>
+                    <div className="truncate font-mono text-muted-foreground">
+                      {group.keys.map((item) => item.key).join(', ')}
+                    </div>
+                  </div>
+                  {canEdit ? (
+                    <Button
+                      onClick={() => openMergeForGroup(group)}
+                      size="xs"
+                      type="button"
+                      variant="outline"
+                    >
+                      <GitMergeIcon className="size-3" />
+                      {t('merge-into-key', { key: group.suggestedKey })}
+                    </Button>
+                  ) : null}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
 
         <TranslationGrid
           canEdit={canEdit}
@@ -395,6 +499,24 @@ const TranslationWorkspace = ({
             sourceLocale={dashboard.project.sourceLocale}
           />
         )}
+
+        <MergeKeysDialog
+          canPublish={canAccess('team_version', ['publish'])}
+          duplicateGroups={duplicateGroups}
+          environmentName={dashboard.environment.name}
+          initialSelectedKeys={mergeDialogState.initialKeys}
+          initialTargetKey={mergeDialogState.initialTargetKey}
+          onMerge={(input) => workspace.mergeKeys(input)}
+          onMerged={() => {
+            keySelection.clear();
+          }}
+          onOpenChange={(open) =>
+            setMergeDialogState((current) => ({ ...current, open }))
+          }
+          onPublish={(message) => workspace.publish(message)}
+          open={mergeDialogState.open}
+          rows={dashboard.rows}
+        />
       </div>
     </CellDraftsProvider>
   );

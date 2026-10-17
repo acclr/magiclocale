@@ -14,6 +14,7 @@ import {
   type TranslationDashboard,
 } from './dashboard-projector';
 import type { TranslationRepository } from './repository';
+import type { MergeKeysResult } from './key-merge';
 import type { ProjectService } from './project-service';
 import type { TranslationService } from './translation-service';
 import type {
@@ -400,6 +401,34 @@ export class TeamTranslationService {
     );
     this.changed(teamId, projectId);
     return { queued, ...result };
+  }
+
+  async mergeKeys(
+    teamId: string,
+    projectId: string,
+    environmentRef: string | null | undefined,
+    input: {
+      sourceKeys: readonly string[];
+      targetKey: string;
+      sourceText?: string;
+      actor?: string | null;
+    }
+  ): Promise<MergeKeysResult> {
+    const { project, environment } = await this.requireScope(
+      teamId,
+      projectId,
+      environmentRef
+    );
+    const result = await this.translationService.mergeKeys({
+      projectId: project.id,
+      environmentId: environment.id,
+      sourceKeys: input.sourceKeys,
+      targetKey: input.targetKey,
+      sourceText: input.sourceText,
+      actor: input.actor,
+    });
+    this.changed(teamId, project.id);
+    return result;
   }
 
   private changed(teamId: string, projectId: string): void {

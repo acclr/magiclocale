@@ -86,7 +86,8 @@ export type TranslationFilter =
   | 'needs-review'
   | 'missing'
   | 'unused'
-  | 'deprecated';
+  | 'deprecated'
+  | 'duplicates';
 
 export type AutomaticAiSkipReason =
   | 'ai-locked'

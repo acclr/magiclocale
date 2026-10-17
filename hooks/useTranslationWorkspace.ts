@@ -3,6 +3,7 @@ import fetcher from '@/lib/fetcher';
 import type { Environment } from '../domain/environments';
 import {
   applySavedCell,
+  type MergeKeysResult,
   type Project,
   type Translation,
   type TranslationDashboard,
@@ -190,6 +191,12 @@ const useTranslationWorkspace = (
         skipped: number;
         failed: number;
       }>(envUrl('/translations/queue'), body),
+    mergeKeys: (body: {
+      sourceKeys: string[];
+      targetKey: string;
+      sourceText?: string;
+    }) =>
+      mutateAndRefresh<MergeKeysResult>(envUrl('/translations/merge'), body),
     publish: (message?: string) =>
       mutateAndRefresh<{ pendingCount?: number }>(
         `${baseUrl}/versions/publish`,
@@ -208,6 +215,7 @@ export type TranslationWorkspaceActions = Pick<
   | 'fillMissing'
   | 'retranslate'
   | 'queueTranslations'
+  | 'mergeKeys'
 >;
 
 export default useTranslationWorkspace;

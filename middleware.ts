@@ -77,6 +77,8 @@ const unAuthenticatedRoutes = [
   '/auth/**',
   '/invitations/*',
   '/terms-condition',
+  '/sitemap.xml',
+  '/robots.txt',
   '/unlock-account',
   '/login/saml',
   '/.well-known/*',

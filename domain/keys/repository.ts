@@ -34,6 +34,18 @@ export interface KeyCatalogRepository {
     fromKey: string,
     toKey: string
   ): Promise<KeyMeta>;
+  renameDetectedKey?(input: {
+    projectId: string;
+    type: KeyType;
+    fromKey: string;
+    toKey: string;
+    usage?: DetectedKeyInput['usage'];
+  }): Promise<KeyMeta>;
+  markMergedKeys?(input: {
+    projectId: string;
+    fromKeys: readonly string[];
+    toKey: string;
+  }): Promise<void>;
   recordDetection(input: DetectedKeyInput): Promise<KeyMeta>;
   /**
    * Marks translation keys that disappeared from a full source scan.

@@ -8,6 +8,7 @@ import { scanSourceTree } from './scan';
 import {
   DEFAULT_CHUNK_DELAY_MS,
   DEFAULT_CHUNK_SIZE,
+  executeMergeKeys,
   executeSync,
   resolveScanOptions,
   type SyncCommandOptions,
@@ -94,6 +95,41 @@ async function main() {
     return;
   }
 
+  if (command === 'merge-keys' || command === 'merge') {
+    const requestedRoot = argValue(args, '--root');
+    const setup = await resolveKeykitSetup(
+      {},
+      requestedRoot ? resolve(requestedRoot) : process.cwd()
+    );
+    const root = resolve(requestedRoot ?? setup.root);
+    await executeMergeKeys({
+      root,
+      directory: setup.directory,
+      baseUrl: resolveBaseUrl(
+        argValue(args, '--base-url'),
+        process.env.KEYKIT_BASE_URL,
+        setup.config.baseUrl
+      ),
+      projectId: requiredSetting(
+        args,
+        '--project-id',
+        setup.config.projectId,
+        'KEYKIT_PROJECT_ID'
+      ),
+      token: requiredSetting(
+        args,
+        '--token',
+        setup.config.apiKey ?? setup.config.ingestToken,
+        'KEYKIT_API_KEY'
+      ),
+      environment:
+        argValue(args, '--environment') ??
+        setup.config.environment ??
+        process.env.KEYKIT_ENVIRONMENT,
+    });
+    return;
+  }
+
   if (command === 'scan' || command === 'sync') {
     const requestedRoot = argValue(args, '--root');
     const setup = await resolveKeykitSetup(
@@ -177,6 +213,7 @@ async function main() {
   scan [--root .] [--include path] [--exclude path]
   sync [--root .] [--include path] [--exclude path] [--chunk 25] [--delay 200]
        [--watch] [--debounce 400]
+  merge-keys [--root .] [--environment ENV] [--base-url URL] [--project-id ID] [--token KEY]
   pull [--out .keykit] [--base-url URL] [--project-id ID] [--token KEY]
   rewrite --file migration.json --root .
   flatten-json --file messages.json

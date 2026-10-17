@@ -1,4 +1,9 @@
-import { pushSourceKeys } from './push-keys';
+import {
+  fetchKeyMerges,
+  pushSourceKeys,
+  type KeyMergeMapping,
+} from './push-keys';
+import { rewriteSourceTreeDetailed, type RewriteResult } from './rewrite';
 import { scanProject, type ScanOptions } from './scan';
 import { createSyncSession } from './sync-control';
 import {
@@ -31,6 +36,56 @@ export type SyncCommandOptions = {
   quietWhenUnchanged?: boolean;
 };
 
+export type MergeKeysCommandOptions = {
+  root: string;
+  directory: string;
+  baseUrl: string;
+  projectId: string;
+  token: string;
+  environment?: string;
+  fetch?: typeof fetch;
+};
+
+export async function executeMergeKeys(
+  options: MergeKeysCommandOptions
+): Promise<RewriteResult> {
+  const merges = await fetchKeyMerges({
+    baseUrl: options.baseUrl,
+    projectId: options.projectId,
+    token: options.token,
+    environment: options.environment,
+    fetch: options.fetch,
+  });
+
+  if (merges.length === 0) {
+    console.log(`No merged keys found for project ${options.projectId}.`);
+    return {
+      filesChanged: 0,
+      rewrittenFiles: [],
+      appliedOperations: [],
+    };
+  }
+
+  const checkpoint = readSyncCheckpoint(options.directory, options.projectId);
+  const rewrite = applyKeyMergesToSourceTree(
+    options.root,
+    options.directory,
+    options.projectId,
+    checkpoint.synced,
+    merges
+  );
+
+  if (rewrite.filesChanged === 0) {
+    console.log(
+      `Checked ${merges.length} merged key mapping(s). Source files are already up to date.`
+    );
+  } else {
+    console.log(mergedSummary(rewrite));
+  }
+
+  return rewrite;
+}
+
 export async function executeSync(options: SyncCommandOptions): Promise<void> {
   const scan = scanProject(options.root, options.scan);
   const scope =
@@ -45,6 +100,37 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
       : keysMissingFromScan(scan, options.scan, checkpoint.synced);
 
   if (queued.length === 0 && removed.length === 0) {
+    if (scan.keys.length > 0) {
+      try {
+        const remoteMerges = await fetchKeyMerges({
+          baseUrl: options.baseUrl,
+          projectId: options.projectId,
+          token: options.token,
+          environment: options.environment,
+          fetch: options.fetch,
+        });
+        const scannedKeySet = new Set(scan.keys.map((item) => item.key));
+        const applicableMerges = remoteMerges.filter((m) =>
+          scannedKeySet.has(m.fromKey)
+        );
+        if (applicableMerges.length > 0) {
+          const rewrite = applyKeyMergesToSourceTree(
+            options.root,
+            options.directory,
+            options.projectId,
+            checkpoint.synced,
+            applicableMerges
+          );
+          if (rewrite.filesChanged > 0) {
+            console.log(mergedSummary(rewrite));
+            return;
+          }
+        }
+      } catch {
+        // Ignore remote merge lookup failure when nothing local changed.
+      }
+    }
+
     if (options.quietWhenUnchanged) {
       return;
     }
@@ -57,15 +143,31 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
   }
 
   if (queued.length === 0) {
-    const deprecated = await reportRemovedKeys(options, removed);
+    const { deprecated, merges } = await reportRemovedKeys(options, removed);
+    const nextSynced = withoutKeys(checkpoint.synced, removed);
     writeSyncCheckpoint(options.directory, {
       version: 1,
       projectId: options.projectId,
-      synced: withoutKeys(checkpoint.synced, removed),
+      synced: nextSynced,
     });
-    console.log(
-      `Scanned ${scan.keys.length} keys in ${scan.fileCount} files. Nothing new to sync. ${deprecatedSummary(deprecated)}`
+    const rewrite = applyKeyMergesIfPresent(
+      options.root,
+      options.directory,
+      options.projectId,
+      nextSynced,
+      scan.keys.map((item) => item.key),
+      merges
     );
+    const parts = [
+      `Scanned ${scan.keys.length} keys in ${scan.fileCount} files. Nothing new to sync.`,
+    ];
+    if (deprecated.length > 0) {
+      parts.push(deprecatedSummary(deprecated));
+    }
+    if (rewrite && rewrite.filesChanged > 0) {
+      parts.push(mergedSummary(rewrite));
+    }
+    console.log(parts.join(' '));
     return;
   }
 
@@ -77,7 +179,10 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
   const session = interactive
     ? createSyncSession(process.stdin, (event) => {
         if (event === 'pause') {
-          display?.replaceStatus('paused', 'Paused. c continues, q saves and quits.');
+          display?.replaceStatus(
+            'paused',
+            'Paused. c continues, q saves and quits.'
+          );
         } else if (event === 'resume') {
           display?.replaceStatus('syncing');
         }
@@ -104,9 +209,17 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
   } else {
     display?.show({
       ...frame(),
-      message: unchanged > 0 ? `${unchanged} unchanged keys skipped.` : undefined,
+      message:
+        unchanged > 0 ? `${unchanged} unchanged keys skipped.` : undefined,
     });
   }
+
+  const renamedKeys: Array<{ fromKey: string; toKey: string }> = [];
+  const deprecatedFromSync: string[] = [];
+  let remoteMerges: KeyMergeMapping[] = [];
+  const inlineRemoved = removed.slice(0, options.chunkSize);
+  const trailingRemoved = removed.slice(options.chunkSize);
+  let inlineRemovedSent = false;
 
   try {
     const result = await runChunkedSync({
@@ -116,15 +229,33 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
       delayMs: options.delayMs,
       synced: checkpoint.synced,
       control: session ?? undefined,
-      push: (batch) =>
-        pushSourceKeys({
+      push: async (batch) => {
+        const removedBatch =
+          !inlineRemovedSent && inlineRemoved.length > 0
+            ? inlineRemoved
+            : undefined;
+        inlineRemovedSent = true;
+        const response = await pushSourceKeys({
           baseUrl: options.baseUrl,
           projectId: options.projectId,
           token: options.token,
           environment: options.environment,
           keys: batch,
+          removed: removedBatch,
           fetch: options.fetch,
-        }),
+        });
+        if (response.renamedKeys?.length) {
+          renamedKeys.push(...response.renamedKeys);
+        }
+        if (response.deprecated?.length) {
+          deprecatedFromSync.push(...response.deprecated);
+        }
+        if (response.merges?.length) {
+          remoteMerges = response.merges;
+        } else if (response.mergedKeys?.length) {
+          remoteMerges = response.mergedKeys;
+        }
+      },
       onProgress: (progress) => {
         if (progress.phase === 'complete') {
           writeSyncCheckpoint(options.directory, {
@@ -152,27 +283,23 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
       },
     });
 
+    let finalSynced = result.synced;
+    if (result.stopped === 'done' && removed.length > 0) {
+      if (trailingRemoved.length > 0) {
+        const extra = await reportRemovedKeys(options, trailingRemoved);
+        deprecatedFromSync.push(...extra.deprecated);
+        if (extra.merges.length > 0) {
+          remoteMerges = extra.merges;
+        }
+      }
+      finalSynced = withoutKeys(finalSynced, removed);
+    }
+
     writeSyncCheckpoint(options.directory, {
       version: 1,
       projectId: options.projectId,
-      synced: result.synced,
+      synced: finalSynced,
     });
-
-    if (result.stopped === 'done' && removed.length > 0) {
-      const deprecated = await reportRemovedKeys(options, removed);
-      writeSyncCheckpoint(options.directory, {
-        version: 1,
-        projectId: options.projectId,
-        synced: withoutKeys(result.synced, removed),
-      });
-      const summary = `Synced ${result.sent} keys. ${deprecatedSummary(deprecated)}`;
-      if (display) {
-        display.finish(summary);
-      } else {
-        console.log(summary);
-      }
-      return;
-    }
 
     if (result.stopped === 'error') {
       const message = result.error?.message ?? 'Keykit sync failed.';
@@ -193,7 +320,27 @@ export async function executeSync(options: SyncCommandOptions): Promise<void> {
       return;
     }
 
-    const summary = `Synced ${result.sent} keys.`;
+    const rewrite = applyKeyMergesIfPresent(
+      options.root,
+      options.directory,
+      options.projectId,
+      finalSynced,
+      scan.keys.map((item) => item.key),
+      remoteMerges
+    );
+
+    const summaryParts = [`Synced ${result.sent} keys.`];
+    if (renamedKeys.length > 0) {
+      summaryParts.push(renamedSummary(renamedKeys));
+    }
+    if (deprecatedFromSync.length > 0) {
+      summaryParts.push(deprecatedSummary(deprecatedFromSync));
+    }
+    if (rewrite && rewrite.filesChanged > 0) {
+      summaryParts.push(mergedSummary(rewrite));
+    }
+
+    const summary = summaryParts.join(' ');
     if (display) {
       display.finish(summary);
     } else {
@@ -244,11 +391,12 @@ function keysMissingFromScan(
 async function reportRemovedKeys(
   options: SyncCommandOptions,
   removed: readonly string[]
-): Promise<string[]> {
+): Promise<{ deprecated: string[]; merges: KeyMergeMapping[] }> {
   const deprecated: string[] = [];
+  let merges: KeyMergeMapping[] = [];
   for (let index = 0; index < removed.length; index += options.chunkSize) {
     const batch = removed.slice(index, index + options.chunkSize);
-    await pushSourceKeys({
+    const response = await pushSourceKeys({
       baseUrl: options.baseUrl,
       projectId: options.projectId,
       token: options.token,
@@ -257,9 +405,100 @@ async function reportRemovedKeys(
       removed: batch,
       fetch: options.fetch,
     });
-    deprecated.push(...batch);
+    if (response.deprecated) {
+      deprecated.push(...response.deprecated);
+    } else {
+      deprecated.push(...batch);
+    }
+    if (response.merges?.length) {
+      merges = response.merges;
+    }
   }
-  return deprecated;
+  return { deprecated, merges };
+}
+
+function applyKeyMergesIfPresent(
+  root: string,
+  directory: string,
+  projectId: string,
+  synced: Record<string, string>,
+  scannedKeys: readonly string[],
+  merges: readonly KeyMergeMapping[]
+): RewriteResult | null {
+  if (!merges.length) {
+    return null;
+  }
+  const present = new Set(scannedKeys);
+  const matching = merges.filter((item) => present.has(item.fromKey));
+  if (!matching.length) {
+    return null;
+  }
+  return applyKeyMergesToSourceTree(
+    root,
+    directory,
+    projectId,
+    synced,
+    matching
+  );
+}
+
+function applyKeyMergesToSourceTree(
+  root: string,
+  directory: string,
+  projectId: string,
+  synced: Record<string, string>,
+  merges: readonly KeyMergeMapping[]
+): RewriteResult {
+  const rewrite = rewriteSourceTreeDetailed(root, {
+    operations: merges.map((item) => ({
+      type: 'merge-translations',
+      fromKey: item.fromKey,
+      toKey: item.toKey,
+      sourceText: item.sourceText,
+    })),
+  });
+
+  if (rewrite.appliedOperations.length > 0) {
+    const nextSynced = { ...synced };
+    const mergeByFrom = new Map(merges.map((item) => [item.fromKey, item]));
+    for (const op of rewrite.appliedOperations) {
+      const previousSource = nextSynced[op.fromKey];
+      const mapping = mergeByFrom.get(op.fromKey);
+      const targetSource = mapping?.sourceText ?? previousSource;
+      delete nextSynced[op.fromKey];
+      if (targetSource !== undefined) {
+        nextSynced[op.toKey] = targetSource;
+      }
+    }
+    writeSyncCheckpoint(directory, {
+      version: 1,
+      projectId,
+      synced: nextSynced,
+    });
+  }
+
+  return rewrite;
+}
+
+function renamedSummary(
+  renamed: ReadonlyArray<{ fromKey: string; toKey: string }>
+): string {
+  const preview = renamed
+    .slice(0, 6)
+    .map((item) => `${item.fromKey} -> ${item.toKey}`)
+    .join(', ');
+  const extra = renamed.length > 6 ? `, and ${renamed.length - 6} more` : '';
+  return `Renamed ${renamed.length} ${renamed.length === 1 ? 'key' : 'keys'}: ${preview}${extra}.`;
+}
+
+function mergedSummary(rewrite: RewriteResult): string {
+  const count = rewrite.appliedOperations.length;
+  const preview = rewrite.appliedOperations
+    .slice(0, 6)
+    .map((item) => `${item.fromKey} -> ${item.toKey}`)
+    .join(', ');
+  const extra = count > 6 ? `, and ${count - 6} more` : '';
+  return `Merged ${count} ${count === 1 ? 'key' : 'keys'} in ${rewrite.filesChanged} ${rewrite.filesChanged === 1 ? 'file' : 'files'}: ${preview}${extra}.`;
 }
 
 function deprecatedSummary(keys: readonly string[]): string {

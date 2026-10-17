@@ -12,6 +12,7 @@ import type {
   ArchitectureRuleConfig,
   FindingKind,
 } from '../../domain/architecture';
+import { suggestMergedKeyName } from '../../domain/translations/key-merge';
 import { defaultHeaders } from '@/lib/common';
 import toast from 'react-hot-toast';
 
@@ -135,6 +136,39 @@ const ArchitectureExplorer = ({
     }
     await mutate();
     toast.success(t('cleanup-migration-created'));
+  };
+
+  const mergeFindingKeys = async (finding: ArchitectureFinding) => {
+    const rawKeys = finding.details?.keys;
+    const keys = Array.isArray(rawKeys)
+      ? rawKeys.filter((item): item is string => typeof item === 'string')
+      : [];
+    if (keys.length < 2) {
+      return;
+    }
+    const targetKey = suggestMergedKeyName(keys);
+    const response = await fetch(
+      `/api/teams/${slug}/projects/${projectId}/translations/merge`,
+      {
+        method: 'POST',
+        headers: defaultHeaders,
+        body: JSON.stringify({
+          sourceKeys: keys,
+          targetKey,
+        }),
+      }
+    );
+    if (!response.ok) {
+      const json = (await response.json()) as { error?: { message?: string } };
+      throw new Error(json.error?.message ?? t('migration-failed'));
+    }
+    await setFinding(finding.id, 'reviewed');
+    toast.success(
+      t('merge-keys-success', {
+        count: keys.length,
+        targetKey,
+      })
+    );
   };
 
   const openFindings = FINDING_LABELS.filter(
@@ -298,6 +332,31 @@ const ArchitectureExplorer = ({
                       type="button"
                     >
                       {t('create-cleanup-migration')}
+                    </button>
+                  ) : null}
+                  {finding.kind === 'duplicate-translation' &&
+                  Array.isArray(finding.details?.keys) &&
+                  finding.details.keys.length >= 2 ? (
+                    <button
+                      className="btn btn-primary btn-xs"
+                      onClick={() =>
+                        void mergeFindingKeys(finding).catch((error) =>
+                          toast.error(
+                            error instanceof Error
+                              ? error.message
+                              : t('migration-failed')
+                          )
+                        )
+                      }
+                      type="button"
+                    >
+                      {t('merge-into-key', {
+                        key: suggestMergedKeyName(
+                          finding.details.keys.filter(
+                            (item): item is string => typeof item === 'string'
+                          )
+                        ),
+                      })}
                     </button>
                   ) : null}
                 </div>

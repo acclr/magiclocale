@@ -1,6 +1,7 @@
 import type { Environment } from '../environments/types';
 import type { KeyMeta } from '../keys/types';
 import { parseSearchQuery } from '../keys/search';
+import { findDuplicateKeyIds } from './key-merge';
 import type {
   Project,
   Translation,
@@ -9,6 +10,8 @@ import type {
   TranslationSource,
   TranslationStatus,
 } from './types';
+
+export type DashboardCountKey = Exclude<TranslationFilter, 'duplicates'>;
 
 export type DashboardCell = {
   translationId: string | null;
@@ -42,7 +45,7 @@ export type TranslationDashboard = {
   environment: Environment;
   locales: string[];
   rows: DashboardRow[];
-  counts: Record<TranslationFilter, number>;
+  counts: Record<DashboardCountKey, number>;
   pagination: DashboardPagination;
 };
 
@@ -96,7 +99,7 @@ export function projectTranslationDashboard(
       translation,
     ])
   );
-  const counts: Record<TranslationFilter, number> = {
+  const counts: Record<DashboardCountKey, number> = {
     all: 0,
     ai: 0,
     manual: 0,
@@ -287,8 +290,14 @@ export function filterDashboardRows(
 ): DashboardRow[] {
   const query = normalizeDashboardQuery(queryInput);
   const parsed = parseSearchQuery(query.search);
+  const duplicateKeyIds =
+    query.filter === 'duplicates' ? findDuplicateKeyIds(rows) : null;
   return rows.filter((row) => {
-    if (query.filter === 'unused') {
+    if (query.filter === 'duplicates') {
+      if (!duplicateKeyIds?.has(row.keyId)) {
+        return false;
+      }
+    } else if (query.filter === 'unused') {
       if (row.lifecycle === 'deprecated' || row.lifecycle === 'archived') {
         return false;
       }
