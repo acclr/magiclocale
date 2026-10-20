@@ -10,6 +10,14 @@ const Custom404 = () => {
   const { t } = useTranslation('common');
   return (
     <div className="w-full items-center justify-center text-center lg:px-2 xl:px-0">
+      <script
+        type="application/ld+json"
+        data-seo-block="1"
+        dangerouslySetInnerHTML={{
+          __html:
+            '{"@context":"https://schema.org","@type":"WebPage","@id":"https://keykit.dev/404#webpage","url":"https://keykit.dev/404","name":"Keykit","description":"Keykit - Enterprise SaaS Starter Kit","inLanguage":"en","isPartOf":{"@type":"WebSite","@id":"https://keykit.dev/#website","url":"https://keykit.dev/","name":"Keykit"}}',
+        }}
+      />
       <p className="text-7xl font-bold tracking-wider text-foreground md:text-8xl lg:text-9xl">
         {t('error-404')}
       </p>
