@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Managed blog sitemap: rewritten with every article added. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://keykit.dev/blog</loc></url>
-  <url><loc>https://keykit.dev/blog/duplicate-translation-keys-how-to-find-merge-and-sync-them-back-to-code</loc></url>
-  <url><loc>https://keykit.dev/blog/how-to-manage-translation-keys-in-code</loc></url>
-  <url><loc>https://keykit.dev/blog/localization-testing-environments-staging-vs-production-for-translations</loc></url>
-  <url><loc>https://keykit.dev/blog/nextjs-i18n-setup-keys-locales-runtime-bundles</loc></url>
-  <url><loc>https://keykit.dev/blog/software-localization-tools-what-to-check-before-you-pick-one</loc></url>
-  <url><loc>https://keykit.dev/blog/translation-keys-discovered-automatically-from-application-code</loc></url>
-  <url><loc>https://keykit.dev/blog/unused-and-deprecated-translation-keys-in-a-codebase</loc></url>
-  <url><loc>https://keykit.dev/blog/why-spreadsheet-based-localization-breaks-as-your-product-grows</loc></url>
+  <url><loc>https://www.keykit.dev/blog</loc></url>
+  <url><loc>https://www.keykit.dev/blog/duplicate-translation-keys-how-to-find-merge-and-sync-them-back-to-code</loc></url>
+  <url><loc>https://www.keykit.dev/blog/how-to-manage-translation-keys-in-code</loc></url>
+  <url><loc>https://www.keykit.dev/blog/localization-testing-environments-staging-vs-production-for-translations</loc></url>
+  <url><loc>https://www.keykit.dev/blog/nextjs-i18n-setup-keys-locales-runtime-bundles</loc></url>
+  <url><loc>https://www.keykit.dev/blog/software-localization-tools-what-to-check-before-you-pick-one</loc></url>
+  <url><loc>https://www.keykit.dev/blog/translation-keys-discovered-automatically-from-application-code</loc></url>
+  <url><loc>https://www.keykit.dev/blog/unused-and-deprecated-translation-keys-in-a-codebase</loc></url>
+  <url><loc>https://www.keykit.dev/blog/why-spreadsheet-based-localization-breaks-as-your-product-grows</loc></url>
 </urlset>

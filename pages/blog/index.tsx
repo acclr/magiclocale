@@ -7,7 +7,7 @@ import { getAllPosts } from '../../lib/blog-posts';
 // The site's address with its basePath (next.config): next/link adds
 // basePath and the trailing slash itself; canonical and structured data
 // URLs are absolute and built here.
-const SITE = 'https://keykit.dev';
+const SITE = 'https://www.keykit.dev';
 
 // The blog's own small style (scoped to .blog-page): these pages render
 // outside your app's signed-in layout.
