@@ -49,6 +49,11 @@ const LandingShell = ({ children }: LandingShellProps) => {
       key: 'landing.nav.pricing',
       fallback: 'Pricing',
     },
+    {
+      href: '/blog',
+      key: 'landing.nav.blog',
+      fallback: 'Blog',
+    },
   ];
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);

@@ -73,6 +73,7 @@ Disallow: /teams/
 Disallow: /well-known/
 
 Sitemap: ${base}/sitemap.xml
+Sitemap: ${base}/blog/sitemap.xml
 `;
 }
 
